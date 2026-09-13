@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { verifyAdminSessionToken } from '@/lib/auth/session'
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
@@ -9,7 +10,8 @@ export async function updateSession(request: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-  const adminSession = request.cookies.get('kotaku_admin_session')?.value === 'true'
+  const adminSessionCookie = request.cookies.get('kotaku_admin_session')?.value
+  const adminSession = await verifyAdminSessionToken(adminSessionCookie)
 
   if (!supabaseUrl || !supabaseUrl.startsWith('http') || !supabaseAnonKey || supabaseAnonKey.includes('your_')) {
     if (!adminSession && request.nextUrl.pathname.startsWith('/dashboard')) {

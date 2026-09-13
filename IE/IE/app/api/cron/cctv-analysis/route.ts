@@ -17,20 +17,21 @@ async function handleCron(request: NextRequest) {
   const startTime = Date.now()
   const { searchParams } = new URL(request.url)
 
-  // 1. Authorization: Verify CRON_SECRET (Section 21 & 23)
+  // 1. Authorization: Verify CRON_SECRET (Bearer token header only)
   const cronSecret = process.env.CRON_SECRET
   const authHeader = request.headers.get('authorization')
-  const querySecret = searchParams.get('secret')
 
-  if (cronSecret) {
-    const isAuthorized =
-      authHeader === `Bearer ${cronSecret}` || querySecret === cronSecret
-    if (!isAuthorized) {
-      return NextResponse.json(
-        { success: false, error: 'Unauthorized: Invalid or missing CRON_SECRET' },
-        { status: 401 }
-      )
-    }
+  // Require authorization: either matching CRON_SECRET or an internal authorized key
+  const isAuthorized =
+    (cronSecret && authHeader === `Bearer ${cronSecret}`) ||
+    (process.env.INTERNAL_API_KEY && authHeader === `Bearer ${process.env.INTERNAL_API_KEY}`)
+
+  if (!isAuthorized) {
+    // In production, or whenever CRON_SECRET/INTERNAL_API_KEY is unset or mismatched, deny access
+    return NextResponse.json(
+      { success: false, error: 'Unauthorized: Invalid or missing authorization header.' },
+      { status: 401 }
+    )
   }
 
   // 2. Select priority batch (Section 10 Batch Processing)

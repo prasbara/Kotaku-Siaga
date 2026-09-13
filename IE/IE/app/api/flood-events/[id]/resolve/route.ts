@@ -1,10 +1,18 @@
 import { NextResponse } from 'next/server'
 import { floodEventManager } from '@/lib/services/flood-event-manager'
+import { isRequestAuthorizedAdmin } from '@/lib/auth/session'
 
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  if (!(await isRequestAuthorizedAdmin(request))) {
+    return NextResponse.json(
+      { success: false, error: 'Unauthorized: Diperlukan hak akses petugas/admin untuk meresolusi event banjir.' },
+      { status: 401 }
+    )
+  }
+
   try {
     const { id } = await params
     const body = await request.json().catch(() => ({}))

@@ -1,7 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { analyzeAggregate } from '@/lib/ai/openrouter'
 
+const requestCounts = new Map<string, { count: number; resetAt: number }>()
+
+function isRateLimited(ip: string): boolean {
+  const now = Date.now()
+  const limit = requestCounts.get(ip)
+  if (!limit || now > limit.resetAt) {
+    requestCounts.set(ip, { count: 1, resetAt: now + 60_000 })
+    return false
+  }
+  if (limit.count >= 10) return true
+  limit.count++
+  return false
+}
+
 export async function POST(request: NextRequest) {
+  const ip = request.headers.get('x-forwarded-for') || 'unknown'
+  if (isRateLimited(ip)) {
+    return NextResponse.json(
+      { error: 'Terlalu banyak permintaan AI. Coba lagi dalam beberapa menit.' },
+      { status: 429 }
+    )
+  }
+
   try {
     const body = await request.json()
     const {

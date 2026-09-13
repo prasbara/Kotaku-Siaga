@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient, isSupabaseConfigured } from '@/lib/supabase/server'
+import { isRequestAuthorizedAdmin } from '@/lib/auth/session'
 
 // PRODUCTION: citizen reports come from the real database only.
 // No hardcoded citizen reports are used as fallback data.
@@ -51,6 +52,13 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  if (!(await isRequestAuthorizedAdmin(request))) {
+    return NextResponse.json(
+      { error: 'Unauthorized: Diperlukan autentikasi administrator untuk memperbarui status laporan.' },
+      { status: 401 }
+    )
+  }
+
   if (!isSupabaseConfigured()) {
     return NextResponse.json(
       { error: 'Database not configured.' },

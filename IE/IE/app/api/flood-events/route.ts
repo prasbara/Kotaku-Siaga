@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { floodEventManager } from '@/lib/services/flood-event-manager'
 import { FloodEventStatus, RawInferenceOutput } from '@/types/flood-event'
+import { isRequestAuthorizedAdmin } from '@/lib/auth/session'
 
 export async function GET(request: Request) {
   try {
@@ -43,6 +44,13 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  if (!(await isRequestAuthorizedAdmin(request))) {
+    return NextResponse.json(
+      { success: false, error: 'Unauthorized: Diperlukan autentikasi untuk memproses inferensi event banjir.' },
+      { status: 401 }
+    )
+  }
+
   try {
     const body: RawInferenceOutput = await request.json()
 

@@ -1,11 +1,19 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { fetchBMKGPublicWeather } from '@/lib/ingestion/bmkg'
 import { fetchOSMWaterwaysAndFacilities } from '@/lib/ingestion/osm'
 import { fetchBNPBHistoricalDisasters } from '@/lib/ingestion/bnpb'
 import { SEMARANG_KECAMATAN, STUDY_AREA_CONFIG } from '@/lib/ingestion/semarang-admin'
 import { auditDatasetQuality } from '@/lib/audit/data-quality'
+import { isRequestAuthorizedAdmin } from '@/lib/auth/session'
 
-export async function POST() {
+export async function POST(request: NextRequest) {
+  if (!(await isRequestAuthorizedAdmin(request))) {
+    return NextResponse.json(
+      { success: false, error: 'Unauthorized: Akses ditolak. Diperlukan autentikasi administrator.' },
+      { status: 401 }
+    )
+  }
+
   try {
     const weather = await fetchBMKGPublicWeather()
     const osm = await fetchOSMWaterwaysAndFacilities()

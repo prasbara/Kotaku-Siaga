@@ -30,6 +30,16 @@ const DEFAULT_ZOOM = 13
 const EMPTY_CCTV: CCTVPoint[] = []
 const EMPTY_FLOOD: FloodEvent[] = []
 
+function escapeHtml(str: unknown): string {
+  if (str === null || str === undefined) return ''
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
 export function InteractiveMap({
   reports,
   viewMode = 'markers',
@@ -208,24 +218,30 @@ export function InteractiveMap({
           // Popup
           const popupContent = document.createElement('div')
           popupContent.className = 'text-xs'
+          const safeCode = escapeHtml(report.report_code || 'SMG-ALERT')
+          const safeUrgency = escapeHtml(urgency.toUpperCase())
+          const safeTitle = escapeHtml(report.title || report.category)
+          const safeAddress = escapeHtml(report.address || report.district_name || 'Kota Semarang')
+          const safeTime = escapeHtml(formatRelativeTime(report.created_at))
+
           popupContent.innerHTML = `
             <div style="min-width: 170px;">
               <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
                 <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: ${colorBg}; font-weight: bold; text-transform: uppercase;">
-                  ${report.report_code || 'SMG-ALERT'}
+                  ${safeCode}
                 </span>
                 <span style="font-size: 9px; padding: 2px 6px; border-radius: 4px; background: rgba(255,255,255,0.1); font-family: 'JetBrains Mono', monospace;">
-                  ${urgency.toUpperCase()}
+                  ${safeUrgency}
                 </span>
               </div>
               <div style="font-weight: bold; font-size: 13px; color: #F8FAFC; margin-bottom: 4px;">
-                ${report.title || report.category}
+                ${safeTitle}
               </div>
               <div style="color: #94A3B8; font-size: 11px; margin-bottom: 6px;">
-                ${report.address || report.district_name || 'Kota Semarang'}
+                ${safeAddress}
               </div>
               <div style="font-size: 10px; color: #64748B; font-family: 'JetBrains Mono', monospace;">
-                ${formatRelativeTime(report.created_at)}
+                ${safeTime}
               </div>
             </div>
           `
@@ -295,21 +311,25 @@ export function InteractiveMap({
 
           const popupContent = document.createElement('div')
           popupContent.className = 'text-xs'
+          const safeCctvCode = escapeHtml(cctv.code)
+          const safeCctvName = escapeHtml(cctv.name)
+          const safeCctvOpd = escapeHtml(cctv.opd)
+
           popupContent.innerHTML = `
             <div style="min-width: 170px;">
               <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
                 <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #4edea3; font-weight: bold;">
-                  ${cctv.code}
+                  ${safeCctvCode}
                 </span>
                 <span style="font-size: 9px; padding: 1px 5px; border-radius: 4px; background: rgba(78, 222, 163, 0.15); color: #4edea3; font-family: 'JetBrains Mono', monospace; font-weight: bold;">
                   TITIK PRIORITAS
                 </span>
               </div>
               <div style="font-weight: bold; font-size: 12px; color: #F8FAFC; margin-bottom: 3px;">
-                ${cctv.name}
+                ${safeCctvName}
               </div>
               <div style="color: #94A3B8; font-size: 10px; margin-bottom: 6px;">
-                ${cctv.opd} • Sumber: PantauSemar
+                ${safeCctvOpd} • Sumber: PantauSemar
               </div>
               <div style="font-size: 9px; color: #4cd7f6; font-family: 'JetBrains Mono', monospace; font-weight: bold;">
                 KLIK UNTUK CEK STREAM REAL-TIME
@@ -367,6 +387,13 @@ export function InteractiveMap({
           const timeWib = ev.timeline?.[0]?.time_wib || new Date(ev.started_at).toLocaleTimeString('id-ID') + ' WIB'
           const popupContent = document.createElement('div')
           popupContent.className = 'text-xs'
+          const safeStatus = escapeHtml(ev.status.toUpperCase())
+          const safeDistrict = escapeHtml(ev.district_name)
+          const safeCamera = escapeHtml(ev.camera_name)
+          const safeTimeWib = escapeHtml(timeWib)
+          const safeCategory = escapeHtml(ev.confidence_category)
+          const safeSeverity = escapeHtml(ev.estimated_visual_severity)
+
           popupContent.innerHTML = `
             <div style="min-width: 200px; font-family: inherit;">
               <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
@@ -374,23 +401,23 @@ export function InteractiveMap({
                   🔴 FLOOD EVENT
                 </span>
                 <span style="font-size: 9px; padding: 2px 6px; border-radius: 4px; background: ${floodColor}26; color: ${floodColor}; font-family: 'JetBrains Mono', monospace; font-weight: bold;">
-                  ${ev.status.toUpperCase()}
+                  ${safeStatus}
                 </span>
               </div>
               <div style="font-size: 12px; font-weight: bold; color: #F8FAFC; margin-bottom: 4px;">
-                Lokasi: <span style="color: #93C5FD;">${ev.district_name}</span>
+                Lokasi: <span style="color: #93C5FD;">${safeDistrict}</span>
               </div>
               <div style="color: #94A3B8; font-size: 10px; margin-bottom: 3px;">
-                Detected by: <span style="color: #F1F5F9; font-weight: 600;">CCTV PantauSemar (${ev.camera_name})</span>
+                Detected by: <span style="color: #F1F5F9; font-weight: 600;">CCTV PantauSemar (${safeCamera})</span>
               </div>
               <div style="color: #94A3B8; font-size: 10px; margin-bottom: 3px;">
-                Started: <span style="color: #F1F5F9; font-weight: 600;">${timeWib}</span>
+                Started: <span style="color: #F1F5F9; font-weight: 600;">${safeTimeWib}</span>
               </div>
               <div style="color: #94A3B8; font-size: 10px; margin-bottom: 3px;">
-                Confidence: <span style="color: #4EDE78; font-weight: 700; font-family: 'JetBrains Mono', monospace;">${(ev.model_confidence * 100).toFixed(0)}%</span> (Overall: ${ev.confidence_category})
+                Confidence: <span style="color: #4EDE78; font-weight: 700; font-family: 'JetBrains Mono', monospace;">${(ev.model_confidence * 100).toFixed(0)}%</span> (Overall: ${safeCategory})
               </div>
               <div style="color: #94A3B8; font-size: 10px; margin-bottom: 6px;">
-                Severity: <span style="color: #F59E0B; font-weight: 700; text-transform: capitalize;">${ev.estimated_visual_severity}</span>
+                Severity: <span style="color: #F59E0B; font-weight: 700; text-transform: capitalize;">${safeSeverity}</span>
               </div>
               <div style="font-size: 9px; color: #38BDF8; font-family: 'JetBrains Mono', monospace; font-weight: bold; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 5px;">
                 KLIK UNTUK EVIDEN & TIMELINE

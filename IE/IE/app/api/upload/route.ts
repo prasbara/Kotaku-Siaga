@@ -4,8 +4,31 @@ import { processAndValidateImage } from '@/lib/verification/image-validator'
 import fs from 'fs'
 import path from 'path'
 
+// Rate limit store for file uploads (max 6 uploads per IP per 5 minutes)
+const uploadRateLimits = new Map<string, { count: number; resetAt: number }>()
+
+function isUploadRateLimited(ip: string): boolean {
+  const now = Date.now()
+  const limit = uploadRateLimits.get(ip)
+  if (!limit || now > limit.resetAt) {
+    uploadRateLimits.set(ip, { count: 1, resetAt: now + 5 * 60 * 1000 })
+    return false
+  }
+  if (limit.count >= 6) return true
+  limit.count++
+  return false
+}
+
 // POST /api/upload — upload photo, validate magic bytes, compute dHash and SHA-256
 export async function POST(request: NextRequest) {
+  const ip = request.headers.get('x-forwarded-for') || 'unknown'
+  if (isUploadRateLimited(ip)) {
+    return NextResponse.json(
+      { error: 'Batas unggah foto tercapai. Silakan coba lagi dalam beberapa menit.' },
+      { status: 429 }
+    )
+  }
+
   try {
     const formData = await request.formData()
     const file = formData.get('file') as File | null
@@ -23,8 +46,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: validation.error || 'File tidak valid.' }, { status: 400 })
     }
 
-    // 2. Generate unique filename
-    const ext = file.name.split('.').pop() || 'jpg'
+    // 2. Generate unique filename based strictly on validated MIME type (never trust client filename extension)
+    const mimeToExt: Record<string, string> = {
+      'image/jpeg': 'jpg',
+      'image/png': 'png',
+      'image/webp': 'webp',
+    }
+    const ext = mimeToExt[validation.mimeType || 'image/jpeg'] || 'jpg'
     const filename = `${Date.now()}-${crypto.randomUUID()}.${ext}`
     let publicUrl = `/uploads/reports/${filename}`
     let storagePath = `reports/${filename}`

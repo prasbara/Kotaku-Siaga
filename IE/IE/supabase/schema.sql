@@ -288,14 +288,26 @@ ALTER TABLE flood_detections ENABLE ROW LEVEL SECURITY;
 ALTER TABLE cctv_health ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "flood_events_select" ON flood_events FOR SELECT USING (true);
-CREATE POLICY "flood_events_insert" ON flood_events FOR INSERT WITH CHECK (true);
-CREATE POLICY "flood_events_update" ON flood_events FOR UPDATE USING (true);
+CREATE POLICY "flood_events_insert" ON flood_events FOR INSERT WITH CHECK (
+  auth.role() = 'service_role' OR
+  EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('admin', 'government'))
+);
+CREATE POLICY "flood_events_update" ON flood_events FOR UPDATE USING (
+  auth.role() = 'service_role' OR
+  EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('admin', 'government'))
+);
 
 CREATE POLICY "flood_detections_select" ON flood_detections FOR SELECT USING (true);
-CREATE POLICY "flood_detections_insert" ON flood_detections FOR INSERT WITH CHECK (true);
+CREATE POLICY "flood_detections_insert" ON flood_detections FOR INSERT WITH CHECK (
+  auth.role() = 'service_role' OR
+  EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('admin', 'government'))
+);
 
 CREATE POLICY "cctv_health_select" ON cctv_health FOR SELECT USING (true);
-CREATE POLICY "cctv_health_all" ON cctv_health FOR ALL USING (true);
+CREATE POLICY "cctv_health_admin_write" ON cctv_health FOR ALL USING (
+  auth.role() = 'service_role' OR
+  EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('admin', 'government'))
+);
 
 -- Indexes
 CREATE INDEX IF NOT EXISTS idx_flood_events_status ON flood_events(status);
@@ -324,7 +336,10 @@ CREATE TABLE IF NOT EXISTS cctv_observations (
 
 ALTER TABLE cctv_observations ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "cctv_observations_select" ON cctv_observations FOR SELECT USING (true);
-CREATE POLICY "cctv_observations_insert" ON cctv_observations FOR INSERT WITH CHECK (true);
+CREATE POLICY "cctv_observations_insert" ON cctv_observations FOR INSERT WITH CHECK (
+  auth.role() = 'service_role' OR
+  EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('admin', 'government'))
+);
 
 CREATE INDEX IF NOT EXISTS idx_cctv_observations_camera_id ON cctv_observations(camera_id);
 CREATE INDEX IF NOT EXISTS idx_cctv_observations_timestamp ON cctv_observations(timestamp DESC);

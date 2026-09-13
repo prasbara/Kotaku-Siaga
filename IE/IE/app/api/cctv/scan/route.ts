@@ -2,8 +2,16 @@ import { NextResponse } from 'next/server'
 import { PANTAUSEMAR_CCTV_POINTS } from '@/lib/data/cctv-pantausemar'
 import { floodEventManager } from '@/lib/services/flood-event-manager'
 import { getFloodDetectionEngine } from '@/lib/cv/engine-factory'
+import { isRequestAuthorizedAdmin } from '@/lib/auth/session'
 
 export async function POST(request: Request) {
+  if (!(await isRequestAuthorizedAdmin(request))) {
+    return NextResponse.json(
+      { success: false, error: 'Unauthorized: Akses ditolak. Diperlukan autentikasi admin untuk trigger scan manual CCTV.' },
+      { status: 401 }
+    )
+  }
+
   try {
     const body = await request.json().catch(() => ({}))
     const { cameraId, count = 1 } = body

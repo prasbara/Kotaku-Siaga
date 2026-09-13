@@ -1,29 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminSessionToken } from '@/lib/auth/session'
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const identifier = (body.email || body.username || '').trim().toLowerCase()
+    const identifier = (body.identifier || body.email || body.username || '').trim().toLowerCase()
     const password = body.password || ''
 
-    // 1. Cek Kredensial Super Admin Khusus
+    // 1. Cek Kredensial Super Admin Khusus (mendukung konfigurasi environment variable)
+    const configuredAdminUser = (process.env.ADMIN_USERNAME || 'admin').toLowerCase()
+    const configuredAdminEmail = (process.env.ADMIN_EMAIL || 'admin@kotakusiaga.id').toLowerCase()
+    const configuredAdminPass = process.env.ADMIN_PASSWORD || 'superadmin.'
+
     if (
-      (identifier === 'admin' || identifier === 'admin@kotakusiaga.id') &&
-      password === 'superadmin.'
+      (identifier === configuredAdminUser || identifier === configuredAdminEmail) &&
+      password === configuredAdminPass
     ) {
+      const sessionToken = await createAdminSessionToken()
+
       const response = NextResponse.json({
         success: true,
         user: {
           id: 'admin-super-001',
           name: 'Super Administrator',
           role: 'admin',
-          email: 'admin@kotakusiaga.id',
+          email: configuredAdminEmail,
         },
       })
 
-      // Set cookie session admin (berlaku 7 hari)
-      response.cookies.set('kotaku_admin_session', 'true', {
+      // Set cookie session admin dengan HMAC signature (berlaku 7 hari)
+      response.cookies.set('kotaku_admin_session', sessionToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
