@@ -1,0 +1,187 @@
+/* Google Fonts loaded via <link> in app/layout.tsx — no duplicate @import needed */
+@import url('https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Municipal Civic Intelligence (Dark Mode Standard) */
+    --background: #0c1421;
+    --foreground: #dbe2f5;
+
+    --card: #141c29;
+    --card-foreground: #dbe2f5;
+
+    --popover: #18202d;
+    --popover-foreground: #dbe2f5;
+
+    --primary: #4cd7f6;
+    --primary-foreground: #003640;
+
+    --secondary: #4edea3;
+    --secondary-foreground: #003824;
+
+    --muted: #222a38;
+    --muted-foreground: #bcc9cd;
+
+    --accent: #18202d;
+    --accent-foreground: #dbe2f5;
+
+    --destructive: #ffb4ab;
+    --destructive-foreground: #690005;
+
+    --border: #243654;
+    --input: #18202d;
+    --ring: #4cd7f6;
+
+    --radius: 0.25rem;
+  }
+
+  * {
+    border-color: #243654;
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background-color: #0c1421;
+    color: #dbe2f5;
+    color-scheme: dark;
+  }
+  
+  body {
+    background-color: #0c1421;
+    color: #dbe2f5;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    line-height: 1.6;
+    font-size: 15px;
+    min-height: 100vh;
+    min-height: 100dvh;
+    padding-left: env(safe-area-inset-left, 0px);
+    padding-right: env(safe-area-inset-right, 0px);
+  }
+
+  /* Responsive image and asset baseline */
+  img, video {
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* Reduced motion preference */
+  @media (prefers-reduced-motion: reduce) {
+    *, ::before, ::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  /* Typography Defaults */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    letter-spacing: -0.02em;
+  }
+
+  code, pre, .font-mono {
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* Custom Slim Scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #070e1b;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #222a38;
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #323948;
+  }
+}
+
+/* Material Symbols Icon Helper */
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 20px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Leaflet Dark Map Tweaks (Tactical Dark Filter, Zero Watermark) */
+.leaflet-container {
+  background-color: #0c1421 !important;
+  font-family: 'Inter', sans-serif !important;
+}
+
+.leaflet-tile {
+  filter: brightness(0.6) invert(1) contrast(2.5) hue-rotate(200deg) saturate(0.35) brightness(0.75) !important;
+}
+
+.leaflet-popup-content-wrapper {
+  background-color: #141c29 !important;
+  color: #dbe2f5 !important;
+  border: 1px solid #243654 !important;
+  border-radius: 0.375rem !important;
+  box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.6) !important;
+}
+
+.leaflet-popup-tip {
+  background-color: #141c29 !important;
+  border: 1px solid #243654 !important;
+}
+
+.leaflet-popup-content {
+  margin: 12px 14px !important;
+  line-height: 1.5 !important;
+}
+
+.leaflet-container a.leaflet-popup-close-button {
+  color: #bcc9cd !important;
+  padding: 6px !important;
+}
+.leaflet-container a.leaflet-popup-close-button:hover {
+  color: #4cd7f6 !important;
+}
+
+/* Tactical HUD Glassmorphism & Elevation */
+.tactical-panel {
+  background-color: rgba(20, 28, 41, 0.88);
+  backdrop-filter: blur(12px);
+  border: 1px solid #243654;
+}
+
+.tactical-card {
+  background-color: #141c29;
+  border: 1px solid #243654;
+  transition: all 0.2s ease;
+}
+
+.tactical-card:hover {
+  background-color: #18202d;
+  border-color: #323948;
+}
+
+.editorial-container {
+  max-width: 1320px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
