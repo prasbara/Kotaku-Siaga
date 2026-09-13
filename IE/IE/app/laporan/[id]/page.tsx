@@ -3,7 +3,6 @@ import { createClient } from '@/lib/supabase/server'
 import type { Report } from '@/types'
 import { CATEGORY_LABELS, URGENCY_LABELS, STATUS_LABELS } from '@/types'
 import { formatDate, formatRelativeTime } from '@/lib/utils'
-import { findFallbackReport } from '@/lib/data/reports'
 import { ArrowLeft, MapPin, Clock, User, AlertCircle, Bot } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -35,27 +34,21 @@ export default async function ReportDetailPage({ params }: Props) {
   const { id } = await params
   let report: Report | null = null
 
-  const isDummySupabase = !process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL.includes('dummy')
+  // PRODUCTION: Always query the real database.
+  // No fallback to hardcoded reports.
+  try {
+    const supabase = await createClient()
+    const { data, error } = await supabase
+      .from('reports')
+      .select('*, ai_analysis(*)')
+      .eq('id', id)
+      .single()
 
-  if (!isDummySupabase) {
-    try {
-      const supabase = await createClient()
-      const { data, error } = await supabase
-        .from('reports')
-        .select('*, ai_analysis(*)')
-        .eq('id', id)
-        .single()
-
-      if (!error && data) {
-        report = data as Report
-      }
-    } catch (err) {
-      console.warn('Failed to fetch report from Supabase:', err)
+    if (!error && data) {
+      report = data as Report
     }
-  }
-
-  if (!report) {
-    report = findFallbackReport(id) || null
+  } catch (err) {
+    console.warn('Failed to fetch report from Supabase:', err)
   }
 
   if (!report) {

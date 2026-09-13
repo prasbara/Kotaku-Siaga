@@ -488,6 +488,15 @@ export default function PrioritiesPage() {
                 </button>
               </div>
 
+              {/* Simulation-only notice */}
+              <div className="px-3 py-2 rounded-lg bg-tertiary/10 border border-tertiary/30 flex items-center gap-2">
+                <span className="material-symbols-outlined text-tertiary text-[16px]">science</span>
+                <span className="font-mono text-[11px] text-tertiary font-bold uppercase tracking-wider">
+                  Simulasi Saja — Tidak mempengaruhi data produksi, database, atau statistik dashboard
+                </span>
+              </div>
+
+
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 text-xs font-mono">
                 <div>
                   <div className="flex justify-between mb-1">

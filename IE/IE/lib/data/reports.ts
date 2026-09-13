@@ -1,28 +1,11 @@
-﻿// ============================================================
+// ============================================================
 // KotaKu Siaga — Citizen Reports Data Module
-// PRODUCTION: Reports berasal dari database Supabase nyata
-// File ini tidak mengandung demo/fallback/hardcoded data
+// PRODUCTION: citizen reports come from the real database only.
+// No hardcoded citizen reports are used as fallback data.
 // ============================================================
 
-import type { Report } from '@/types'
+// PRODUCTION: All citizen reports come from the Supabase database (table `reports`).
+// This module intentionally exports NO data.
+// If the database is not configured, the API will return an explicit error —
+// not fake data that could mislead EOC operators.
 
-/**
- * PRODUCTION MODE: Array ini SENGAJA KOSONG.
- * Semua laporan warga berasal dari database Supabase (tabel `reports`).
- * Tidak ada fallback hardcoded ke data demo/testing.
- *
- * Jika database tidak dikonfigurasi, API akan return error eksplisit —
- * bukan fake data yang menyesatkan operator EOC.
- */
-export const FALLBACK_SEMARANG_REPORTS: Report[] = []
-
-/**
- * findFallbackReport — hanya untuk kompatibilitas backward.
- * PRODUCTION: Selalu return undefined karena array kosong.
- * Caller harus menggunakan Supabase query langsung.
- */
-export function findFallbackReport(idOrCode: string): Report | undefined {
-  return FALLBACK_SEMARANG_REPORTS.find(
-    (r) => r.id === idOrCode || r.report_code === idOrCode
-  )
-}

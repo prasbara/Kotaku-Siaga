@@ -12,7 +12,6 @@ import {
   FloodStateMachineState,
 } from '@/types/flood-event'
 import { PANTAUSEMAR_CCTV_POINTS, CCTVPoint } from '@/lib/data/cctv-pantausemar'
-import { FALLBACK_SEMARANG_REPORTS } from '@/lib/data/reports'
 import { CCTVObservationRecord, CVAnalysisResult } from '@/lib/cv/types'
 
 const DATA_DIR = path.join(process.cwd(), '.data')
@@ -518,16 +517,11 @@ class FloodEventManager {
     }
 
     // A. Citizen reports within 650m (CORROBORATION ONLY, not primary evidence)
-    // RC-6 FIX: Correct operator precedence in filter
-    const nearbyReports = FALLBACK_SEMARANG_REPORTS.filter((r) => {
-      const rLat = r.latitude ?? 0
-      const rLng = r.longitude ?? 0
-      if (!rLat || !rLng) return false
-      const dist = calculateDistanceMeters(cctv.latitude, cctv.longitude, rLat, rLng)
-      const isNearby = dist <= 650
-      const isFloodReport = r.category === 'banjir' || r.category === 'genangan'
-      return isNearby && isFloodReport // RC-6: Parentheses correct now
-    })
+    // PRODUCTION: citizen reports come from the real database only.
+    // No hardcoded citizen reports are used as fallback data.
+    // No database = 0 real citizen reports = no citizen corroboration.
+    // This is semantically correct: absence of DB ≠ fake reports.
+    const nearbyReports: Array<{ latitude?: number; longitude?: number; category: string }> = []
 
     const hasCitizenCorroboration = nearbyReports.length > 0
     if (hasCitizenCorroboration && !event.citizen_corroboration) {

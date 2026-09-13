@@ -16,7 +16,6 @@ import {
 } from 'lucide-react'
 import { AnimatedSeal } from '@/components/visuals/AnimatedSeal'
 import { AnimatedRadar } from '@/components/visuals/AnimatedRadar'
-import { FALLBACK_SEMARANG_REPORTS } from '@/lib/data/reports'
 import { PANTAUSEMAR_CCTV_POINTS } from '@/lib/data/cctv-pantausemar'
 
 export const metadata: Metadata = {
@@ -25,9 +24,11 @@ export const metadata: Metadata = {
 }
 
 export default function LandingPage() {
-  const totalReports = FALLBACK_SEMARANG_REPORTS.length
-  const criticalReports = FALLBACK_SEMARANG_REPORTS.filter((r) => r.urgency === 'kritis').length
-  const activeReports = FALLBACK_SEMARANG_REPORTS.filter((r) => r.status !== 'resolved').length
+  // PRODUCTION: citizen reports stats come from the real database (via /api/dashboard/stats).
+  // Static display shows 0 — real-time counts are fetched client-side on the dashboard.
+  const totalReports = 0
+  const criticalReports = 0
+  const activeReports = 0
   const cctvCount = PANTAUSEMAR_CCTV_POINTS.length
 
   return (

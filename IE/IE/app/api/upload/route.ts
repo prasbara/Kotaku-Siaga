@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createAdminClient } from '@/lib/supabase/server'
+import { createAdminClient, isSupabaseConfigured } from '@/lib/supabase/server'
 import { processAndValidateImage } from '@/lib/verification/image-validator'
 import fs from 'fs'
 import path from 'path'
@@ -30,9 +30,7 @@ export async function POST(request: NextRequest) {
     let storagePath = `reports/${filename}`
 
     // 3. Try uploading to Supabase Storage if configured
-    const isDummySupabase = !process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL.includes('dummy')
-
-    if (!isDummySupabase) {
+    if (isSupabaseConfigured()) {
       try {
         const supabase = await createAdminClient()
         const { data, error } = await supabase.storage

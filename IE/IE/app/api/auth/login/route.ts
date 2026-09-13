@@ -34,29 +34,28 @@ export async function POST(request: NextRequest) {
       return response
     }
 
-    // 2. Jika bukan admin built-in, coba Supabase Auth jika terkonfigurasi
-    const isDummy = !process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL.includes('dummy')
-    if (!isDummy) {
-      try {
-        const supabase = await createClient()
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email: identifier,
-          password,
+    // 2. Jika bukan admin built-in, coba Supabase Auth
+    // PRODUCTION: Always attempt Supabase auth when credentials are provided.
+    // If Supabase is not configured, auth will fail gracefully and return 401.
+    try {
+      const supabase = await createClient()
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: identifier,
+        password,
+      })
+      if (!error && data?.user) {
+        return NextResponse.json({
+          success: true,
+          user: {
+            id: data.user.id,
+            name: data.user.user_metadata?.full_name || data.user.email,
+            role: 'user',
+            email: data.user.email,
+          },
         })
-        if (!error && data?.user) {
-          return NextResponse.json({
-            success: true,
-            user: {
-              id: data.user.id,
-              name: data.user.user_metadata?.full_name || data.user.email,
-              role: 'user',
-              email: data.user.email,
-            },
-          })
-        }
-      } catch (authErr) {
-        console.warn('Supabase auth attempt failed:', authErr)
       }
+    } catch (authErr) {
+      console.warn('Supabase auth attempt failed:', authErr)
     }
 
     return NextResponse.json(

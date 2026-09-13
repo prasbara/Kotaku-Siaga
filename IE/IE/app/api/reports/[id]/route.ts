@@ -1,38 +1,46 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createAdminClient } from '@/lib/supabase/server'
-import { findFallbackReport } from '@/lib/data/reports'
+import { createAdminClient, isSupabaseConfigured } from '@/lib/supabase/server'
+
+// PRODUCTION: citizen reports come from the real database only.
+// No hardcoded citizen reports are used as fallback data.
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  if (!isSupabaseConfigured()) {
+    return NextResponse.json(
+      { error: 'Database not configured.' },
+      { status: 503 }
+    )
+  }
+
   try {
     const { id } = await params
-    const isDummySupabase = !process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL.includes('dummy')
+    const supabase = await createAdminClient()
+    const { data, error } = await supabase
+      .from('reports')
+      .select('*, ai_analysis(*)')
+      .eq('id', id)
+      .single()
 
-    if (!isDummySupabase) {
-      try {
-        const supabase = await createAdminClient()
-        const { data, error } = await supabase
-          .from('reports')
-          .select('*, ai_analysis(*)')
-          .eq('id', id)
-          .single()
-
-        if (!error && data) {
-          return NextResponse.json({ success: true, data })
-        }
-      } catch (dbErr) {
-        console.warn('Supabase query failed in /api/reports/[id]:', dbErr)
+    if (error) {
+      if (error.code === 'PGRST116') {
+        // PostgREST "no rows returned" — report genuinely not found
+        return NextResponse.json({ error: 'Laporan tidak ditemukan.' }, { status: 404 })
       }
+      console.error('GET /api/reports/[id] database error:', error.message)
+      return NextResponse.json(
+        { error: 'Database query failed.', detail: error.message },
+        { status: 503 }
+      )
     }
 
-    const fallback = findFallbackReport(id)
-    if (fallback) {
-      return NextResponse.json({ success: true, data: fallback, is_fallback: true })
+    if (!data) {
+      return NextResponse.json({ error: 'Laporan tidak ditemukan.' }, { status: 404 })
     }
 
-    return NextResponse.json({ error: 'Laporan tidak ditemukan.' }, { status: 404 })
+    return NextResponse.json({ success: true, data })
   } catch (error) {
     console.error('GET /api/reports/[id] error:', error)
     return NextResponse.json({ error: 'Gagal mengambil laporan.' }, { status: 500 })
@@ -43,6 +51,13 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  if (!isSupabaseConfigured()) {
+    return NextResponse.json(
+      { error: 'Database not configured.' },
+      { status: 503 }
+    )
+  }
+
   try {
     const { id } = await params
     const body = await request.json()
@@ -60,33 +75,26 @@ export async function PATCH(
       return NextResponse.json({ error: 'Tidak ada field yang diperbarui.' }, { status: 400 })
     }
 
-    const isDummySupabase = !process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL.includes('dummy')
+    const supabase = await createAdminClient()
+    const { data, error } = await supabase
+      .from('reports')
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single()
 
-    if (!isDummySupabase) {
-      try {
-        const supabase = await createAdminClient()
-        const { data, error } = await supabase
-          .from('reports')
-          .update(updateData)
-          .eq('id', id)
-          .select()
-          .single()
-
-        if (!error && data) {
-          return NextResponse.json({ success: true, data })
-        }
-      } catch (dbErr) {
-        console.warn('Supabase update failed, updating local repository:', dbErr)
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return NextResponse.json({ error: 'Laporan tidak ditemukan.' }, { status: 404 })
       }
+      console.error('PATCH /api/reports/[id] database error:', error.message)
+      return NextResponse.json(
+        { error: 'Database update failed.', detail: error.message },
+        { status: 503 }
+      )
     }
 
-    const report = findFallbackReport(id)
-    if (report) {
-      Object.assign(report, updateData, { updated_at: new Date().toISOString() })
-      return NextResponse.json({ success: true, data: report })
-    }
-    const updated = { id, ...updateData, updated_at: new Date().toISOString() }
-    return NextResponse.json({ success: true, data: updated })
+    return NextResponse.json({ success: true, data })
   } catch (error) {
     console.error('PATCH /api/reports/[id] error:', error)
     return NextResponse.json({ error: 'Gagal memperbarui laporan.' }, { status: 500 })

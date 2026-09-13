@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createAdminClient } from '@/lib/supabase/server'
+import { createAdminClient, isSupabaseConfigured } from '@/lib/supabase/server'
 import { analyzeReport, MODEL_NAME } from '@/lib/ai/openrouter'
 
 // Rate limiting — simple in-memory store (use Redis in production)
@@ -56,25 +56,22 @@ export async function POST(request: NextRequest) {
     })
 
     // Save to database if report_id provided
-    if (report_id) {
+    if (report_id && isSupabaseConfigured()) {
       try {
-        const isDummySupabase = !process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL.includes('dummy')
-        if (!isDummySupabase) {
-          const supabase = await createAdminClient()
-          const { error: dbError } = await supabase.from('ai_analysis').insert({
-            report_id,
-            original_category: category,
-            ai_category: analysis.classification,
-            ai_confidence: analysis.confidence,
-            severity: analysis.severity,
-            summary: analysis.summary,
-            recommended_action: analysis.recommended_action,
-            model_name: MODEL_NAME,
-          })
+        const supabase = await createAdminClient()
+        const { error: dbError } = await supabase.from('ai_analysis').insert({
+          report_id,
+          original_category: category,
+          ai_category: analysis.classification,
+          ai_confidence: analysis.confidence,
+          severity: analysis.severity,
+          summary: analysis.summary,
+          recommended_action: analysis.recommended_action,
+          model_name: MODEL_NAME,
+        })
 
-          if (dbError) {
-            console.warn('Failed to save AI analysis to DB:', dbError)
-          }
+        if (dbError) {
+          console.warn('Failed to save AI analysis to DB:', dbError)
         }
       } catch (dbErr) {
         console.warn('Supabase client init failed in analyze-report:', dbErr)

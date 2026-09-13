@@ -5,9 +5,11 @@
 // ============================================================
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createAdminClient } from '@/lib/supabase/server'
-import { FALLBACK_SEMARANG_REPORTS } from '@/lib/data/reports'
+import { createAdminClient, isSupabaseConfigured } from '@/lib/supabase/server'
 import { collectEvidenceBundle } from '@/lib/services/evidence-collector'
+
+// PRODUCTION: citizen reports come from the real database only.
+// No hardcoded citizen reports are used as fallback data.
 
 export async function GET(
   request: NextRequest,
@@ -19,70 +21,47 @@ export async function GET(
       return NextResponse.json({ error: 'Report ID diperlukan.' }, { status: 400 })
     }
 
+    if (!isSupabaseConfigured()) {
+      return NextResponse.json(
+        { error: 'Database not configured.' },
+        { status: 503 }
+      )
+    }
+
     const searchParams = request.nextUrl.searchParams
     const radiusKm = parseFloat(searchParams.get('radius_km') || '1.5')
     const clampedRadius = Math.min(Math.max(radiusKm, 0.5), 5.0) // 0.5km – 5km
 
-    // 1. Cari report dari Supabase atau fallback
-    let report: {
-      id: string
-      report_code: string
-      latitude: number
-      longitude: number
-      created_at: string
-      category?: string
-      title?: string
-    } | null = null
+    // 1. Cari report dari Supabase
+    const supabase = await createAdminClient()
+    const { data, error } = await supabase
+      .from('reports')
+      .select('id, report_code, latitude, longitude, created_at, category, title')
+      .or(`id.eq.${reportId},report_code.eq.${reportId}`)
+      .single()
 
-    const isDummy =
-      !process.env.NEXT_PUBLIC_SUPABASE_URL ||
-      process.env.NEXT_PUBLIC_SUPABASE_URL.includes('dummy')
-
-    if (!isDummy) {
-      try {
-        const supabase = await createAdminClient()
-        // Try by UUID or report_code
-        const { data, error } = await supabase
-          .from('reports')
-          .select('id, report_code, latitude, longitude, created_at, category, title')
-          .or(`id.eq.${reportId},report_code.eq.${reportId}`)
-          .single()
-
-        if (!error && data) {
-          report = data
-        }
-      } catch {
-        // Supabase unavailable — fall through to fallback
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return NextResponse.json({ error: 'Laporan tidak ditemukan.' }, { status: 404 })
       }
+      console.error('GET /api/reports/[id]/evidence database error:', error.message)
+      return NextResponse.json(
+        { error: 'Database query failed.', detail: error.message },
+        { status: 503 }
+      )
     }
 
-    // 2. Fallback ke in-memory reports
-    if (!report) {
-      const found = FALLBACK_SEMARANG_REPORTS.find(
-        (r) => (r as any).id === reportId || (r as any).report_code === reportId
-      ) as any
-      if (found) {
-        report = {
-          id: found.id,
-          report_code: found.report_code,
-          latitude: found.latitude ?? found.lat,
-          longitude: found.longitude ?? found.lng,
-          created_at: found.created_at,
-          category: found.category,
-          title: found.title,
-        }
-      }
-    }
-
-    if (!report) {
+    if (!data) {
       return NextResponse.json({ error: 'Laporan tidak ditemukan.' }, { status: 404 })
     }
+
+    const report = data
 
     if (!report.latitude || !report.longitude) {
       return NextResponse.json({ error: 'Laporan tidak memiliki koordinat yang valid.' }, { status: 422 })
     }
 
-    // 3. Collect evidence bundle
+    // 2. Collect evidence bundle
     const bundle = await collectEvidenceBundle({
       report_id: report.id,
       report_code: report.report_code,

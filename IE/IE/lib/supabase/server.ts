@@ -1,6 +1,24 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
+/**
+ * isSupabaseConfigured — checks if Supabase env vars are present and non-placeholder.
+ * PRODUCTION: Returns true only when real credentials are configured.
+ * Use this to return explicit 503 errors instead of silent fake-data fallbacks.
+ */
+export function isSupabaseConfigured(): boolean {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  return (
+    !!url &&
+    url.startsWith('https://') &&
+    !url.includes('dummy') &&
+    !url.includes('placeholder') &&
+    !!key &&
+    key.length > 20
+  )
+}
+
 export async function createClient() {
   const cookieStore = await cookies()
 
@@ -50,3 +68,4 @@ export async function createAdminClient() {
     }
   )
 }
+

@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createAdminClient } from '@/lib/supabase/server'
-import { FALLBACK_SEMARANG_REPORTS } from '@/lib/data/reports'
+import { createAdminClient, isSupabaseConfigured } from '@/lib/supabase/server'
 import { checkRateLimit } from '@/lib/verification/rate-limiter'
 import { runVerificationPipeline } from '@/lib/verification/pipeline'
+
+// PRODUCTION: citizen reports come from the real database only.
+// No hardcoded citizen reports are used as fallback data.
 
 // Helper to safely extract IP
 function getClientIp(request: NextRequest): string {
@@ -19,6 +21,13 @@ function getClientIp(request: NextRequest): string {
 
 // GET /api/reports — fetch reports with filters
 export async function GET(request: NextRequest) {
+  if (!isSupabaseConfigured()) {
+    return NextResponse.json(
+      { error: 'Database not configured. Set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.' },
+      { status: 503 }
+    )
+  }
+
   try {
     const searchParams = request.nextUrl.searchParams
     const category = searchParams.get('category')
@@ -27,50 +36,44 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '100')
     const page = parseInt(searchParams.get('page') || '0')
 
-    const isDummySupabase = !process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL.includes('dummy')
+    const supabase = await createAdminClient()
+    let query = supabase
+      .from('reports')
+      .select('*, ai_analysis(*)')
+      .order('created_at', { ascending: false })
+      .range(page * limit, (page + 1) * limit - 1)
 
-    if (!isDummySupabase) {
-      try {
-        const supabase = await createAdminClient()
-        let query = supabase
-          .from('reports')
-          .select('*, ai_analysis(*)')
-          .order('created_at', { ascending: false })
-          .range(page * limit, (page + 1) * limit - 1)
+    if (category && category !== 'all') query = query.eq('category', category)
+    if (urgency && urgency !== 'all') query = query.eq('urgency', urgency)
+    if (status && status !== 'all') query = query.eq('status', status)
 
-        if (category && category !== 'all') query = query.eq('category', category)
-        if (urgency && urgency !== 'all') query = query.eq('urgency', urgency)
-        if (status && status !== 'all') query = query.eq('status', status)
+    const { data, error, count } = await query
 
-        const { data, error, count } = await query
-        if (!error && data) {
-          return NextResponse.json({ success: true, data, count })
-        }
-      } catch (dbErr) {
-        console.warn('Supabase remote query failed, falling back to baseline verified data:', dbErr)
-      }
+    if (error) {
+      console.error('GET /api/reports database error:', error.message)
+      return NextResponse.json(
+        { error: 'Database query failed.', detail: error.message },
+        { status: 503 }
+      )
     }
 
-    // Return verified baseline reports for Semarang
-    let filtered = [...FALLBACK_SEMARANG_REPORTS]
-    if (category && category !== 'all') filtered = filtered.filter(r => r.category === category)
-    if (urgency && urgency !== 'all') filtered = filtered.filter(r => r.urgency === urgency)
-    if (status && status !== 'all') filtered = filtered.filter(r => r.status === status)
-
-    return NextResponse.json({
-      success: true,
-      data: filtered,
-      count: filtered.length,
-      is_fallback: true
-    })
+    // Successful query — return real data (may be empty array if no reports yet)
+    return NextResponse.json({ success: true, data: data ?? [], count: count ?? 0 })
   } catch (error) {
     console.error('GET /api/reports error:', error)
-    return NextResponse.json({ success: true, data: FALLBACK_SEMARANG_REPORTS, count: FALLBACK_SEMARANG_REPORTS.length, is_fallback: true })
+    return NextResponse.json({ error: 'Gagal mengambil laporan.' }, { status: 500 })
   }
 }
 
 // POST /api/reports — create new citizen report with multi-layered verification
 export async function POST(request: NextRequest) {
+  if (!isSupabaseConfigured()) {
+    return NextResponse.json(
+      { error: 'Database not configured. Reports cannot be saved without a configured database.' },
+      { status: 503 }
+    )
+  }
+
   try {
     const clientIp = getClientIp(request)
 
@@ -129,6 +132,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 3. Multi-Layered Verification Pipeline
+    // PRODUCTION: Pass empty array — citizen corroboration uses only real DB reports via flood-event-manager
     const verification = await runVerificationPipeline(
       {
         category,
@@ -148,98 +152,51 @@ export async function POST(request: NextRequest) {
         districtName: district_name,
         address,
       },
-      FALLBACK_SEMARANG_REPORTS
+      [] // PRODUCTION: No hardcoded reports used for verification context
     )
 
     const reportCode = verification.reportCode
     const determinedStatus = verification.status
 
-    const isDummySupabase = !process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL.includes('dummy')
+    const supabase = await createAdminClient()
+    const { data, error } = await supabase
+      .from('reports')
+      .insert({
+        report_code: reportCode,
+        category,
+        description,
+        latitude,
+        longitude,
+        location_accuracy: verification.metadata.location_accuracy,
+        urgency,
+        status: determinedStatus,
+        credibility_score: verification.credibilityScore,
+        verification_metadata: verification.metadata,
+        photo_url: photo_url || null,
+        photo_hash: photo_sha256 || null,
+        photo_taken_at: photo_taken_at || null,
+        reporter_name: reporter_name || null,
+        reporter_contact: reporter_contact || null,
+        is_demo: false,
+        district_name: district_name || verification.metadata.nearest_district || null,
+        address: address || null,
+        title: title || description.slice(0, 40),
+      })
+      .select()
+      .single()
 
-    if (!isDummySupabase) {
-      try {
-        const supabase = await createAdminClient()
-        const { data, error } = await supabase
-          .from('reports')
-          .insert({
-            report_code: reportCode,
-            category,
-            description,
-            latitude,
-            longitude,
-            location_accuracy: verification.metadata.location_accuracy,
-            urgency,
-            status: determinedStatus,
-            credibility_score: verification.credibilityScore,
-            verification_metadata: verification.metadata,
-            photo_url: photo_url || null,
-            photo_hash: photo_sha256 || null,
-            photo_taken_at: photo_taken_at || null,
-            reporter_name: reporter_name || null,
-            reporter_contact: reporter_contact || null,
-            is_demo: false,
-            district_name: district_name || verification.metadata.nearest_district || null,
-            address: address || null,
-            title: title || description.slice(0, 40),
-          })
-          .select()
-          .single()
-
-        if (!error && data) {
-          return NextResponse.json(
-            {
-              success: true,
-              data,
-              report_code: reportCode,
-              credibility_score: verification.credibilityScore,
-              status: determinedStatus,
-              verification_summary: {
-                score: verification.credibilityScore,
-                confidence_level: verification.metadata.confidence_level,
-                positive_evidence: verification.metadata.positive_evidence,
-                warnings: verification.metadata.warnings,
-              },
-            },
-            { status: 201 }
-          )
-        }
-      } catch (dbErr) {
-        console.warn('Supabase insert failed, storing to local ground-truth repository:', dbErr)
-      }
+    if (error) {
+      console.error('POST /api/reports database insert error:', error.message)
+      return NextResponse.json(
+        { error: 'Gagal menyimpan laporan ke database.', detail: error.message },
+        { status: 503 }
+      )
     }
-
-    // 4. Local Ground-Truth Storage for Citizen Reports
-    const verifiedReport = {
-      id: `rep-smg-${Date.now()}`,
-      report_code: reportCode,
-      category,
-      description,
-      latitude,
-      longitude,
-      lat: latitude,
-      lng: longitude,
-      location_accuracy: verification.metadata.location_accuracy,
-      urgency,
-      status: determinedStatus,
-      credibility_score: verification.credibilityScore,
-      verification_metadata: verification.metadata,
-      photo_url: photo_url || null,
-      reporter_name: reporter_name || 'Warga Semarang',
-      reporter_contact: reporter_contact || null,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      is_demo: false,
-      title: title || description.slice(0, 40),
-      district_name: district_name || verification.metadata.nearest_district || 'Kota Semarang',
-      address: address || `Kecamatan ${district_name || verification.metadata.nearest_district || 'Kota Semarang'}`,
-    }
-
-    FALLBACK_SEMARANG_REPORTS.unshift(verifiedReport as any)
 
     return NextResponse.json(
       {
         success: true,
-        data: verifiedReport,
+        data,
         report_code: reportCode,
         credibility_score: verification.credibilityScore,
         status: determinedStatus,
@@ -249,7 +206,6 @@ export async function POST(request: NextRequest) {
           positive_evidence: verification.metadata.positive_evidence,
           warnings: verification.metadata.warnings,
         },
-        source: 'Citizen Ground-Truth Reporting Engine',
       },
       { status: 201 }
     )
