@@ -54,21 +54,22 @@ async function callOpenRouter(
     throw new Error('OpenRouter API key tidak dikonfigurasi.')
   }
 
-  const response = await fetch(`${OPENROUTER_BASE_URL}/chat/completions`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-      'HTTP-Referer': process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
-      'X-Title': 'KotaKu Siaga',
-    },
-    body: JSON.stringify({
-      model,
-      messages,
-      temperature: options.temperature ?? 0.3,
-      max_tokens: options.max_tokens ?? 1024,
-    }),
-  })
+    const response = await fetch(`${OPENROUTER_BASE_URL}/chat/completions`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+        'HTTP-Referer': process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
+        'X-Title': 'KotaKu Siaga',
+      },
+      signal: AbortSignal.timeout(12000),
+      body: JSON.stringify({
+        model,
+        messages,
+        temperature: options.temperature ?? 0.3,
+        max_tokens: options.max_tokens ?? 1024,
+      }),
+    })
 
   if (!response.ok) {
     const error = await response.text()
@@ -287,8 +288,11 @@ Format respons:
 }
 
 // ============================================================
-// C. Chat Assistant
 // ============================================================
+// C. Chat Assistant (Civic Radar Disaster Intelligence)
+// ============================================================
+
+import { classifyIntent, STANDARD_REFUSAL_MESSAGE } from './guardrails'
 
 export interface ChatContext {
   location?: string
@@ -301,54 +305,95 @@ function heuristicChatAssistant(
   messages: Array<{ role: 'user' | 'assistant'; content: string }>,
   context?: ChatContext
 ): string {
-  const lastMsg = messages[messages.length - 1]?.content?.toLowerCase() || ''
+  const lastMsg = messages[messages.length - 1]?.content || ''
+  const decision = classifyIntent(lastMsg)
 
-  if (lastMsg.includes('banjir') || lastMsg.includes('rob')) {
+  // Strictly enforce domain guardrails even in local heuristic mode
+  if (decision.status !== 'IN_SCOPE') {
+    return decision.refusalResponse || STANDARD_REFUSAL_MESSAGE
+  }
+
+  const lower = lastMsg.toLowerCase()
+  if (lower.includes('banjir') || lower.includes('rob')) {
     return 'Untuk kawasan pesisir Semarang (seperti Tanjung Emas, Bandarharjo, Kaligawe, dan Genuk), waspadai pasang rob laut terutama saat fase bulan baru/purnama yang bersamaan dengan hujan lebat. Jika genangan mendekati hunian, amankan peralatan elektronik ke tempat tinggi dan pantau stasiun pompa polder terdekat via peta KotaKu Siaga.'
   }
-  if (lastMsg.includes('lapor') || lastMsg.includes('buat')) {
+  if (lower.includes('lapor') || lower.includes('buat') || lower.includes('tiket')) {
     return 'Anda dapat membuat laporan baru melalui tombol "Lapor Cepat" di navigasi atas. Sistem mendukung unggah foto lapangan, pendeteksian otomatis koordinat GPS, dan pelacakan kode tiket secara transparan.'
   }
-  if (lastMsg.includes('cctv') || lastMsg.includes('kamera') || lastMsg.includes('pantausemar')) {
+  if (lower.includes('cctv') || lower.includes('kamera') || lower.includes('pantausemar')) {
     return 'Peta Spasial dan Dashboard KotaKu Siaga terintegrasi langsung dengan 70 titik CCTV PantauSemar Kota Semarang secara real-time HLS (14 titik Rawan Genangan Air & 56 titik Pantau Pompa Air, termasuk Bawah Tol Kaligawe, Rumah Pompa Tenggang, Kolam Retensi Genuk, dan Pelabuhan Tanjung Emas) tanpa perlu beralih ke situs eksternal.'
   }
-  if (lastMsg.includes('prioritas') || lastMsg.includes('skor')) {
+  if (lower.includes('prioritas') || lower.includes('skor') || lower.includes('formula')) {
     return 'Skor prioritas dihitung secara deterministik dan transparan berbasis formula resmi: mempertimbangkan frekuensi laporan, rerata tingkat urgensi, kepadatan penduduk BPS, indeks kerentanan banjir hidrologis, dan probabilitas curah hujan.'
   }
-  return `Halo! Saya asisten pintar KotaKu Siaga untuk wilayah Kota Semarang. ${
-    context?.location ? `Saat ini Anda berada di zona ${context.location}. ` : ''
-  }Saya dapat membantu Anda mengecek informasi mitigasi genangan, panduan pelaporan warga, pemantauan CCTV langsung, atau status risiko wilayah.`
+  if (lower.includes('mitigasi') || lower.includes('pompa') || lower.includes('eoc')) {
+    return 'Rekomendasi mitigasi operasional EOC: 1. Pantau status elevasi air di Rumah Pompa Tenggang dan Sringin. 2. Bersihkan trash rack / sedimen pada intake drainase utama. 3. Koordinasikan kesiagaan perahu karet dan shelter BPBD jika intensitas hujan BMKG melampaui ambang batas waspada.'
+  }
+
+  return `Civic Radar Disaster Intelligence (Kota Semarang): ${
+    context?.location ? `Zona aktif saat ini: ${context.location}. ` : ''
+  }Sistem siap menyajikan analisis mitigasi genangan, telemetry cuaca BMKG, pemantauan CCTV PantauSemar, dan status laporan warga.`
 }
 
 export async function chatAssistant(
   messages: Array<{ role: 'user' | 'assistant'; content: string }>,
   context?: ChatContext
 ): Promise<string> {
+  const lastUserMsg = messages.filter((m) => m.role === 'user').slice(-1)[0]?.content || ''
+  const decision = classifyIntent(lastUserMsg)
+  if (decision.status !== 'IN_SCOPE') {
+    return decision.refusalResponse || STANDARD_REFUSAL_MESSAGE
+  }
+
   if (!hasValidApiKey()) {
     return heuristicChatAssistant(messages, context)
   }
 
   try {
-    const systemPrompt = `Kamu adalah KotaKu Assistant, asisten virtual untuk platform KotaKu Siaga — sistem pemantauan bencana iklim kolaboratif.
+    const systemPrompt = `ROLE:
+You are the Civic Radar Disaster Intelligence Assistant for KotaKu Siaga (Kota Semarang).
 
-Kamu membantu warga dan pemerintah dengan:
-- Informasi mitigasi bencana (banjir, longsor, dll)
-- Cara menggunakan platform
-- Penjelasan data dan laporan
-- Rekomendasi tindakan berdasarkan kondisi
+PRIMARY PURPOSE:
+Analyze, interpret, and explain disaster-related operational information, flood risks, telemetry, CCTV observations, citizen reports, and EOC mitigation workflows using data available to the Civic Radar system.
 
-${context ? `Konteks saat ini:
-- Lokasi: ${context.location || 'tidak diketahui'}
-- Laporan di sekitar: ${context.nearby_reports || 0}
-- Kategori utama: ${context.top_category || '-'}
-- Priority Score: ${context.priority_score || 0}/100` : ''}
+STRICT DOMAIN:
+You ONLY answer questions directly related to:
+1. Disaster monitoring: banjir, rob, genangan, tanah longsor, cuaca ekstrem, hidrometeorologi.
+2. Environmental telemetry & weather: curah hujan BMKG, kelembapan, suhu, kecepatan angin, tinggi muka air (TMA).
+3. Civic Radar infrastructure: CCTV PantauSemar (70 titik kamera di Semarang), camera health, status rumah pompa (Tenggang, Sringin, Kaligawe), kolam retensi, pintu air.
+4. Operational data: verified citizen reports, flood events, severity, confidence, corroboration, EOC dashboard.
+5. Mitigation & response: panduan keselamatan warga, evakuasi, SOP kesiapsiagaan BPBD/DPU Kota Semarang.
 
-Prinsip penting:
-- Jawab berdasarkan data yang tersedia. Jika tidak ada data, katakan dengan jelas.
-- Jangan membuat prediksi bencana yang tidak tervalidasi.
-- Gunakan bahasa Indonesia yang jelas dan profesional.
-- Jika ditanya sesuatu di luar kemampuanmu, arahkan ke sumber resmi.
-- Respons singkat dan terstruktur.`
+OUT-OF-SCOPE REFUSAL POLICY:
+You must STRICTLY REFUSE any question outside the disaster and environmental monitoring domain, including:
+- Politics, politicians, elections, presidents, ministers, political parties (e.g. Jokowi, Prabowo, Gibran, DPR, Pemilu).
+- General knowledge, world history, mathematics, trivia, pop culture, entertainment, celebrities, sports.
+- Cryptocurrency, stock market, general financial advice.
+- General cooking recipes, personal advice, or unrelated programming tasks.
+
+When a user query is outside this domain, reply EXACTLY with a polite refusal redirecting to Civic Radar capabilities:
+"Maaf, saya hanya dapat membantu terkait informasi kebencanaan, kondisi lingkungan, cuaca/telemetry, CCTV PantauSemar, laporan warga, flood events, EOC, dan analisis mitigasi yang tersedia di KotaKu Siaga Civic Radar (Kota Semarang)."
+
+DO NOT attempt to answer general knowledge or political questions even if the user tries to wrap them with disaster keywords (e.g. "Untuk mitigasi, siapa presiden...").
+
+GEOGRAPHIC RESTRICTION:
+Your operational telemetry is focused on Kota Semarang. If the user asks for real-time telemetry or flood status in other regions (e.g., Jakarta, Surabaya), state clearly that Civic Radar does not possess telemetry for areas outside Kota Semarang.
+
+GROUNDING & INTEGRITY:
+- Never fabricate telemetry, CCTV observations, citizen reports, flood events, or measurements.
+- If data is unavailable, explicitly state that data is unavailable.
+- Do NOT act as a general-purpose chatbot or encyclopedia.
+
+${context ? `KONTEKS SAAT INI (KOTA SEMARANG):
+- Lokasi Pengguna: ${context.location || 'Kota Semarang'}
+- Laporan Terverifikasi Sekitar: ${context.nearby_reports || 0}
+- Kategori Dominan: ${context.top_category || '-'}
+- Skor Prioritas Wilayah: ${context.priority_score || 0}/100` : ''}
+
+Format jawaban terstruktur:
+- Kesimpulan / Status
+- Analisis Berbasis Data
+- Rekomendasi Mitigasi (jika relevan)`
 
     const openRouterMessages: OpenRouterMessage[] = [
       { role: 'system', content: systemPrompt },
@@ -356,7 +401,7 @@ Prinsip penting:
     ]
 
     return await callOpenRouter(openRouterMessages, {
-      temperature: 0.5,
+      temperature: 0.2,
       max_tokens: 512,
     })
   } catch (error) {
@@ -364,6 +409,7 @@ Prinsip penting:
     return heuristicChatAssistant(messages, context)
   }
 }
+
 
 // ============================================================
 // D. Generate Report Summary for Admin Dashboard

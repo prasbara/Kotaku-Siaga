@@ -21,7 +21,7 @@ export function ChatAssistant() {
     {
       role: 'assistant',
       content:
-        'SISTEM CIVIC COPILOT AKTIF (OpenRouter Free Models Router).\n\nSaya memproses telemetri spasial cuaca BMKG, titik CCTV PantauSemar, serta laporan warga untuk memberikan panduan mitigasi dan interpretasi risiko iklim Kota Semarang.',
+        'SISTEM CIVIC COPILOT AKTIF (Civic Radar Disaster Intelligence).\n\nSaya memproses telemetri hidrometeorologi BMKG, status CCTV PantauSemar, serta laporan kebencanaan warga khusus wilayah Kota Semarang.',
     },
   ])
   const [input, setInput] = useState('')
@@ -94,7 +94,7 @@ export function ChatAssistant() {
                   <span className="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
                 </span>
                 <span className="text-[10px] text-secondary font-mono block">
-                  Model: OpenRouter (Free Models Router)
+                  Civic Radar Disaster Intelligence • Kota Semarang
                 </span>
               </div>
             </div>

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { chatAssistant } from '@/lib/ai/openrouter'
+import { classifyIntent, validateOutput, STANDARD_REFUSAL_MESSAGE } from '@/lib/ai/guardrails'
 
 // Rate limiting
 const requestCounts = new Map<string, { count: number; resetAt: number }>()
@@ -11,7 +12,7 @@ function isRateLimited(ip: string): boolean {
     requestCounts.set(ip, { count: 1, resetAt: now + 60_000 })
     return false
   }
-  if (limit.count >= 20) return true // 20 chat messages per minute
+  if (limit.count >= 60) return true // 60 chat messages per minute
   limit.count++
   return false
 }
@@ -39,9 +40,32 @@ export async function POST(request: NextRequest) {
       content: String(m.content).slice(0, 1000), // Limit per message
     }))
 
-    const response = await chatAssistant(limitedMessages, context)
+    // Find the latest user query to inspect
+    const userMessages = limitedMessages.filter((m: { role: string }) => m.role === 'user')
+    const latestUserMsg = userMessages[userMessages.length - 1]?.content || ''
 
-    return NextResponse.json({ success: true, message: response })
+    // 1. APPLICATION-LEVEL GUARD: Domain / Intent Classification
+    const decision = classifyIntent(latestUserMsg)
+
+    if (decision.status !== 'IN_SCOPE') {
+      return NextResponse.json({
+        success: true,
+        message: decision.refusalResponse || STANDARD_REFUSAL_MESSAGE,
+        guardrail_status: decision.status,
+      })
+    }
+
+    // 2. LLM EXECUTION (Constrained to Disaster Domain)
+    const rawResponse = await chatAssistant(limitedMessages, context)
+
+    // 3. POST-GENERATION VALIDATION
+    const { isValid, sanitizedText } = validateOutput(rawResponse)
+
+    return NextResponse.json({
+      success: true,
+      message: isValid ? sanitizedText : STANDARD_REFUSAL_MESSAGE,
+      guardrail_status: 'IN_SCOPE',
+    })
   } catch (error) {
     console.error('AI chat error:', error)
 
