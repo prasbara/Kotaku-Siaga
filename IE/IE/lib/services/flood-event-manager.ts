@@ -84,7 +84,7 @@ class FloodEventManager {
     // 2. Load cached files if available
     if (fs.existsSync(EVENTS_FILE)) {
       try {
-        const raw = fs.readFileSync(EVENTS_FILE, 'utf-8')
+        const raw = fs.readFileSync(EVENTS_FILE, 'utf-8').trim().replace(/^\uFEFF/, '')
         const list: FloodEvent[] = JSON.parse(raw)
         list.forEach((ev) => this.events.set(ev.event_id, ev))
       } catch (e) {
@@ -94,7 +94,7 @@ class FloodEventManager {
 
     if (fs.existsSync(HEALTH_FILE)) {
       try {
-        const raw = fs.readFileSync(HEALTH_FILE, 'utf-8')
+        const raw = fs.readFileSync(HEALTH_FILE, 'utf-8').trim().replace(/^\uFEFF/, '')
         const list: CCTVHealthInfo[] = JSON.parse(raw)
         list.forEach((h) => {
           if (this.cctvHealth.has(h.camera_id)) {
@@ -108,7 +108,7 @@ class FloodEventManager {
 
     if (fs.existsSync(OBSERVATIONS_FILE)) {
       try {
-        const raw = fs.readFileSync(OBSERVATIONS_FILE, 'utf-8')
+        const raw = fs.readFileSync(OBSERVATIONS_FILE, 'utf-8').trim().replace(/^\uFEFF/, '')
         this.observations = JSON.parse(raw)
       } catch (e) {
         console.warn('Gagal memuat cctv_observations.json:', e)
