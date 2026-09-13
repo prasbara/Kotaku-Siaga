@@ -122,6 +122,14 @@ export default function LaporCepatPage() {
   // Public Audit Trail reports feed
   const [publicReports, setPublicReports] = useState<Report[]>([])
 
+  const isFloodCategory = category === 'banjir'
+
+  useEffect(() => {
+    if (!isFloodCategory) {
+      setWaterDepth('Tidak berlaku')
+    }
+  }, [isFloodCategory])
+
   useEffect(() => {
     fetch('/api/reports?limit=10')
       .then((res) => res.json())
@@ -196,10 +204,11 @@ export default function LaporCepatPage() {
       }
 
       const generatedCode = `SMG-${new Date().getFullYear()}-${Date.now().toString().slice(-6)}`
+      const resolvedWaterDepth = isFloodCategory ? waterDepth : 'Tidak berlaku'
 
       const payload = {
         category,
-        description: `[${waterDepth}] ${description}`,
+        description: `[${resolvedWaterDepth}] ${description}`,
         latitude: lat,
         longitude: lng,
         location_accuracy: accuracy,
@@ -487,50 +496,64 @@ export default function LaporCepatPage() {
               {/* STEP 2: TINGKAT BAHAYA */}
               {currentStep === 2 && (
                 <div className="flex flex-col gap-6 animate-in fade-in duration-150">
-                  <div className="flex flex-col gap-1">
-                    <div className="flex items-center gap-2">
-                      <span className="material-symbols-outlined text-tertiary">water</span>
-                      <h2 className="font-headline text-lg sm:text-xl font-bold text-on-surface">
-                        Perkiraan Ketinggian Air & Tingkat Bahaya
-                      </h2>
-                    </div>
-                    <p className="font-body text-xs text-on-surface-variant">
-                      Pilih ketinggian air saat ini untuk menentukan prioritas unit pompa dan armada evakuasi perahu.
-                    </p>
-                  </div>
-
-                  {/* Water Levels */}
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
-                    {WATER_LEVELS.map((w) => {
-                      const isSelected = waterDepth === w.label
-                      return (
-                        <div
-                          key={w.label}
-                          onClick={() => setWaterDepth(w.label)}
-                          className={`cursor-pointer p-4 rounded-xl border transition-all flex flex-col justify-between ${
-                            isSelected
-                              ? 'bg-surface-container-high border-tertiary shadow-[0_0_14px_rgba(245,158,11,0.2)]'
-                              : 'bg-surface-container border-outline-variant/30 hover:bg-surface-container-high'
-                          }`}
-                        >
-                          <div className="flex flex-col gap-2">
-                            <div className="w-10 h-10 rounded-lg bg-tertiary/10 text-tertiary flex items-center justify-center">
-                              <span className="material-symbols-outlined text-[22px]">{w.icon}</span>
-                            </div>
-                            <h4 className="font-headline text-sm font-bold text-on-surface">{w.label}</h4>
-                            <p className="font-body text-xs text-on-surface-variant leading-relaxed">{w.desc}</p>
-                          </div>
-                          {isSelected && (
-                            <div className="mt-3 text-right">
-                              <span className="font-mono text-[10px] text-tertiary font-bold uppercase">Dipilih</span>
-                            </div>
-                          )}
+                  {isFloodCategory ? (
+                    <>
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-center gap-2">
+                          <span className="material-symbols-outlined text-tertiary">water</span>
+                          <h2 className="font-headline text-lg sm:text-xl font-bold text-on-surface">
+                            Perkiraan Ketinggian Air & Tingkat Bahaya
+                          </h2>
                         </div>
-                      )
-                    })}
-                  </div>
+                        <p className="font-body text-xs text-on-surface-variant">
+                          Pilih ketinggian air saat ini untuk menentukan prioritas unit pompa dan armada evakuasi perahu.
+                        </p>
+                      </div>
 
-                  {/* Urgency Pickers */}
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                        {WATER_LEVELS.map((w) => {
+                          const isSelected = waterDepth === w.label
+                          return (
+                            <div
+                              key={w.label}
+                              onClick={() => setWaterDepth(w.label)}
+                              className={`cursor-pointer p-4 rounded-xl border transition-all flex flex-col justify-between ${
+                                isSelected
+                                  ? 'bg-surface-container-high border-tertiary shadow-[0_0_14px_rgba(245,158,11,0.2)]'
+                                  : 'bg-surface-container border-outline-variant/30 hover:bg-surface-container-high'
+                              }`}
+                            >
+                              <div className="flex flex-col gap-2">
+                                <div className="w-10 h-10 rounded-lg bg-tertiary/10 text-tertiary flex items-center justify-center">
+                                  <span className="material-symbols-outlined text-[22px]">{w.icon}</span>
+                                </div>
+                                <h4 className="font-headline text-sm font-bold text-on-surface">{w.label}</h4>
+                                <p className="font-body text-xs text-on-surface-variant leading-relaxed">{w.desc}</p>
+                              </div>
+                              {isSelected && (
+                                <div className="mt-3 text-right">
+                                  <span className="font-mono text-[10px] text-tertiary font-bold uppercase">Dipilih</span>
+                                </div>
+                              )}
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </>
+                  ) : (
+                    <div className="flex flex-col gap-1 rounded-xl border border-outline-variant/30 bg-surface-container p-4">
+                      <div className="flex items-center gap-2">
+                        <span className="material-symbols-outlined text-tertiary">priority_high</span>
+                        <h2 className="font-headline text-lg sm:text-xl font-bold text-on-surface">
+                          Tingkat Bahaya Warga
+                        </h2>
+                      </div>
+                      <p className="font-body text-xs text-on-surface-variant">
+                        Pilihan ini tidak memerlukan ketinggian air, cukup sesuaikan urgensi warga untuk prioritas respons.
+                      </p>
+                    </div>
+                  )}
+
                   <div className="flex flex-col gap-2 pt-2">
                     <span className="font-mono text-[11px] text-on-surface-variant uppercase font-semibold">
                       Tingkat Urgensi Warga:
