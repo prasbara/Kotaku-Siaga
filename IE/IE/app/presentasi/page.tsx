@@ -23,8 +23,8 @@ import {
   Share2
 } from 'lucide-react'
 
-// Total presentation length in seconds (45-60s requirement: 56.0s)
-const TOTAL_DURATION = 56.0
+// Total presentation length in seconds (45-60s requirement: 60.0s)
+const TOTAL_DURATION = 60.0
 
 interface SceneMeta {
   id: number
@@ -36,13 +36,14 @@ interface SceneMeta {
 }
 
 const SCENES: SceneMeta[] = [
-  { id: 1, name: 'SCENE 1', title: 'Opening & Identity', start: 0.0, end: 6.0, description: 'Brand Identity & Introduction' },
-  { id: 2, name: 'SCENE 2', title: 'The Problem', start: 6.0, end: 14.0, description: 'Fragmented Data to Centralized View' },
-  { id: 3, name: 'SCENE 3', title: 'Data Ingestion', start: 14.0, end: 22.0, description: 'Multi-Source Government & Civic Streams' },
-  { id: 4, name: 'SCENE 4', title: 'Intelligent Analysis', start: 22.0, end: 32.0, description: '5-Stage Classical CV & Sensor Pipeline' },
-  { id: 5, name: 'SCENE 5', title: 'Map + CCTV Correlation', start: 32.0, end: 42.0, description: 'Spatial-Temporal Triangulation' },
-  { id: 6, name: 'SCENE 6', title: 'Decision Support', start: 42.0, end: 52.0, description: 'Incident Lifecycle & Actionable Intelligence' },
-  { id: 7, name: 'SCENE 7', title: 'Closing', start: 52.0, end: 56.0, description: 'Platform Mission: Monitor. Verify. Respond.' },
+  { id: 1, name: 'SCENE 1', title: 'Product Reveal', start: 0.0, end: 6.0, description: 'Brand Identity & Introduction' },
+  { id: 2, name: 'SCENE 2', title: 'The Problem', start: 6.0, end: 13.0, description: 'Fragmented Data to Centralized View' },
+  { id: 3, name: 'SCENE 3', title: 'Data Ingestion', start: 13.0, end: 21.0, description: 'Multi-Source Civic & Sensor Architecture' },
+  { id: 4, name: 'SCENE 4', title: 'Intelligent Verification', start: 21.0, end: 31.0, description: 'Multi-Signal Verification & Confidence' },
+  { id: 5, name: 'SCENE 5', title: 'Map + CCTV Correlation', start: 31.0, end: 41.0, description: 'Spatial-Temporal Contextual Triangulation' },
+  { id: 6, name: 'SCENE 6', title: 'Operational Dashboard', start: 41.0, end: 50.0, description: 'Semarang Disaster Operations Center (EOC)' },
+  { id: 7, name: 'SCENE 7', title: 'Decision Support', start: 50.0, end: 55.0, description: 'Incident Lifecycle & Multi-Agency Action' },
+  { id: 8, name: 'SCENE 8', title: 'Final Product Shot', start: 55.0, end: 60.0, description: 'Platform Mission: Monitor. Verify. Respond.' },
 ]
 
 export default function PresentationPage() {
@@ -1500,27 +1501,38 @@ export default function PresentationPage() {
             {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4 text-[#007a5a]" />}
           </button>
 
-          {/* Download Video Button */}
+          {/* Direct Download Master MP4 (1080p, 60s) */}
+          <a
+            href="/videos/kotaku_siaga_presentation.mp4"
+            download="kotaku_siaga_presentation.mp4"
+            className="flex items-center gap-2 text-xs font-bold bg-[#007a5a] hover:bg-[#008f6b] text-white px-3.5 py-2 rounded-lg shadow-sm transition-colors"
+            title="Unduh Master MP4 Video 1080p (60.0 Detik)"
+          >
+            <Download className="w-4 h-4" />
+            <span>Master MP4 (1080p)</span>
+          </a>
+
+          {/* Canvas WebM Recorder */}
           {downloadUrl ? (
             <a
               href={downloadUrl}
               download="kotaku-siaga-presentation.webm"
-              className="flex items-center gap-2 text-xs font-bold bg-[#007a5a] hover:bg-[#008f6b] text-white px-4 py-2 rounded-lg shadow-sm transition-colors"
+              className="flex items-center gap-2 text-xs font-bold bg-[#4a154b] hover:bg-[#611f69] text-white px-3.5 py-2 rounded-lg shadow-sm transition-colors border border-[#eddcf7]/30"
             >
               <Download className="w-4 h-4" />
-              Unduh Video (1080p WebM)
+              <span>Unduh WebM</span>
             </a>
           ) : (
             <button
               onClick={isRecording ? stopRecording : startRecording}
-              className={`flex items-center gap-2 text-xs font-bold px-4 py-2 rounded-lg transition-colors ${
+              className={`flex items-center gap-2 text-xs font-bold px-3.5 py-2 rounded-lg transition-colors ${
                 isRecording
                   ? 'bg-[#cc4117] text-white animate-pulse'
                   : 'bg-[#4a154b] hover:bg-[#611f69] text-white border border-[#eddcf7]/30'
               }`}
             >
               <Camera className="w-4 h-4" />
-              {isRecording ? 'Hentikan Perekaman' : 'Rekam Video 1080p'}
+              <span>{isRecording ? 'Hentikan Rekam' : 'Rekam Canvas'}</span>
             </button>
           )}
         </div>
