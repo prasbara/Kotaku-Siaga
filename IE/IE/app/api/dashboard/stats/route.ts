@@ -1,13 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient, isSupabaseConfigured } from '@/lib/supabase/server'
+import { localReportStore } from '@/lib/services/local-report-store'
 
 // GET /api/dashboard/stats — dashboard statistics
 export async function GET(request: NextRequest) {
   if (!isSupabaseConfigured()) {
-    return NextResponse.json(
-      { error: 'Database not configured. Set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.' },
-      { status: 503 }
-    )
+    const localStats = localReportStore.getStats()
+    return NextResponse.json({
+      success: true,
+      ...localStats,
+      is_local_store: true,
+    })
   }
 
   try {

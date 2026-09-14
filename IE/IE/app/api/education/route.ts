@@ -6,10 +6,7 @@ import { createAdminClient, isSupabaseConfigured } from '@/lib/supabase/server'
 
 export async function GET(request: NextRequest) {
   if (!isSupabaseConfigured()) {
-    return NextResponse.json(
-      { error: 'Database not configured.' },
-      { status: 503 }
-    )
+    return NextResponse.json({ success: true, data: [], is_local_store: true })
   }
 
   try {

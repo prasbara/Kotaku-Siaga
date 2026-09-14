@@ -1,19 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient, isSupabaseConfigured } from '@/lib/supabase/server'
 import { isRequestAuthorizedAdmin } from '@/lib/auth/session'
-
-// PRODUCTION: citizen reports come from the real database only.
-// No hardcoded citizen reports are used as fallback data.
+import { localReportStore } from '@/lib/services/local-report-store'
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params
+
   if (!isSupabaseConfigured()) {
-    return NextResponse.json(
-      { error: 'Database not configured.' },
-      { status: 503 }
-    )
+    const report = localReportStore.getById(id)
+    if (!report) {
+      return NextResponse.json({ error: 'Laporan tidak ditemukan.' }, { status: 404 })
+    }
+    return NextResponse.json({ success: true, data: report, is_local_store: true })
   }
 
   try {
@@ -59,18 +60,11 @@ export async function PATCH(
     )
   }
 
-  if (!isSupabaseConfigured()) {
-    return NextResponse.json(
-      { error: 'Database not configured.' },
-      { status: 503 }
-    )
-  }
-
   try {
     const { id } = await params
     const body = await request.json()
 
-    const allowedFields = ['status', 'urgency', 'credibility_score', 'verification_status']
+    const allowedFields = ['status', 'urgency', 'credibility_score', 'verification_status', 'title', 'description']
     const updateData: Record<string, unknown> = {}
     
     for (const field of allowedFields) {
@@ -81,6 +75,15 @@ export async function PATCH(
 
     if (Object.keys(updateData).length === 0) {
       return NextResponse.json({ error: 'Tidak ada field yang diperbarui.' }, { status: 400 })
+    }
+
+    // Local Testing: If Supabase is not configured, update local file store
+    if (!isSupabaseConfigured()) {
+      const updated = localReportStore.update(id, updateData)
+      if (!updated) {
+        return NextResponse.json({ error: 'Laporan tidak ditemukan.' }, { status: 404 })
+      }
+      return NextResponse.json({ success: true, data: updated, is_local_store: true })
     }
 
     const supabase = await createAdminClient()

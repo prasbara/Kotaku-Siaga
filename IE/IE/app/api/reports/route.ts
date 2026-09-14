@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient, isSupabaseConfigured } from '@/lib/supabase/server'
 import { checkRateLimit } from '@/lib/verification/rate-limiter'
 import { runVerificationPipeline } from '@/lib/verification/pipeline'
+import { localReportStore } from '@/lib/services/local-report-store'
 
 // Helper to safely extract IP
 function getClientIp(request: NextRequest): string {
@@ -18,22 +19,37 @@ function getClientIp(request: NextRequest): string {
 
 // GET /api/reports — fetch reports with search, district, category, urgency, status filters
 export async function GET(request: NextRequest) {
+  const searchParams = request.nextUrl.searchParams
+  const search = searchParams.get('q') || searchParams.get('search') || undefined
+  const category = searchParams.get('category') || undefined
+  const urgency = searchParams.get('urgency') || undefined
+  const status = searchParams.get('status') || undefined
+  const district = searchParams.get('district') || undefined
+  const limit = parseInt(searchParams.get('limit') || '100')
+  const page = parseInt(searchParams.get('page') || '0')
+
+  // Local Testing Fallback: If Supabase is not configured, serve from local file store
   if (!isSupabaseConfigured()) {
-    return NextResponse.json(
-      { error: 'Database not configured. Set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.' },
-      { status: 503 }
-    )
+    const { data, count } = localReportStore.getAll({
+      search,
+      category,
+      urgency,
+      status,
+      district,
+      limit,
+      page,
+    })
+    return NextResponse.json({
+      success: true,
+      data,
+      count,
+      page,
+      limit,
+      is_local_store: true,
+    })
   }
 
   try {
-    const searchParams = request.nextUrl.searchParams
-    const search = searchParams.get('q') || searchParams.get('search')
-    const category = searchParams.get('category')
-    const urgency = searchParams.get('urgency')
-    const status = searchParams.get('status')
-    const district = searchParams.get('district')
-    const limit = parseInt(searchParams.get('limit') || '100')
-    const page = parseInt(searchParams.get('page') || '0')
 
     const supabase = await createAdminClient()
     let query = supabase
@@ -76,13 +92,6 @@ export async function GET(request: NextRequest) {
 
 // POST /api/reports — create new citizen report with multi-layered verification and real DB corroboration
 export async function POST(request: NextRequest) {
-  if (!isSupabaseConfigured()) {
-    return NextResponse.json(
-      { error: 'Database not configured. Reports cannot be saved without a configured database.' },
-      { status: 503 }
-    )
-  }
-
   try {
     const clientIp = getClientIp(request)
 
@@ -140,8 +149,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Koordinat tidak valid.' }, { status: 400 })
     }
 
-    // 3. Multi-Layered Verification Pipeline with Real Database Corroboration
-    const supabase = await createAdminClient()
+    // 3. Multi-Layered Verification Pipeline with Database or Local Store Corroboration
     let recentReports: Array<{
       id: string
       report_code: string
@@ -152,19 +160,32 @@ export async function POST(request: NextRequest) {
       category?: string
     }> = []
 
-    try {
-      const past24Hours = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
-      const { data: dbRecent } = await supabase
-        .from('reports')
-        .select('id, report_code, latitude, longitude, created_at, photo_url, category')
-        .gte('created_at', past24Hours)
-        .limit(100)
+    if (isSupabaseConfigured()) {
+      try {
+        const supabase = await createAdminClient()
+        const past24Hours = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+        const { data: dbRecent } = await supabase
+          .from('reports')
+          .select('id, report_code, latitude, longitude, created_at, photo_url, category')
+          .gte('created_at', past24Hours)
+          .limit(100)
 
-      if (dbRecent && Array.isArray(dbRecent)) {
-        recentReports = dbRecent
+        if (dbRecent && Array.isArray(dbRecent)) {
+          recentReports = dbRecent
+        }
+      } catch (fetchErr) {
+        console.warn('Could not fetch recent reports for corroboration:', fetchErr)
       }
-    } catch (fetchErr) {
-      console.warn('Could not fetch recent reports for corroboration:', fetchErr)
+    } else {
+      recentReports = localReportStore.getAll().data.map((r) => ({
+        id: r.id,
+        report_code: r.report_code,
+        latitude: r.latitude,
+        longitude: r.longitude,
+        created_at: r.created_at,
+        photo_url: r.photo_url,
+        category: r.category,
+      }))
     }
 
     const verification = await runVerificationPipeline(
@@ -192,6 +213,49 @@ export async function POST(request: NextRequest) {
     const reportCode = verification.reportCode
     const determinedStatus = verification.status
 
+    // If Supabase is not configured (Local testing), persist in local JSON store
+    if (!isSupabaseConfigured()) {
+      const createdLocal = localReportStore.create({
+        report_code: reportCode,
+        category,
+        description,
+        latitude,
+        longitude,
+        location_accuracy: verification.metadata.location_accuracy,
+        urgency,
+        status: determinedStatus,
+        credibility_score: verification.credibilityScore,
+        verification_metadata: verification.metadata,
+        photo_url: photo_url || null,
+        reporter_name: reporter_name || null,
+        reporter_contact: reporter_contact || null,
+        is_demo: false,
+        district_name: district_name || verification.metadata.nearest_district || 'Kota Semarang',
+        address: address || null,
+        title: title || description.slice(0, 40),
+      })
+
+      return NextResponse.json(
+        {
+          success: true,
+          data: createdLocal,
+          report_code: reportCode,
+          credibility_score: verification.credibilityScore,
+          status: determinedStatus,
+          verification_summary: {
+            score: verification.credibilityScore,
+            confidence_level: verification.metadata.confidence_level,
+            positive_evidence: verification.metadata.positive_evidence,
+            warnings: verification.metadata.warnings,
+          },
+          is_local_store: true,
+        },
+        { status: 201 }
+      )
+    }
+
+    // Production Supabase flow
+    const supabase = await createAdminClient()
     const { data, error } = await supabase
       .from('reports')
       .insert({

@@ -42,6 +42,7 @@ export default function DashboardPage() {
   const [latestReports, setLatestReports] = useState<Report[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [dashboardError, setDashboardError] = useState<string | null>(null)
+  const [isLocalStore, setIsLocalStore] = useState(false)
 
   const fetchData = useCallback(async () => {
     setIsLoading(true)
@@ -55,6 +56,10 @@ export default function DashboardPage() {
 
       const statsData = await statsRes.json()
       const reportsData = await reportsRes.json()
+
+      if (statsData.is_local_store || reportsData.is_local_store) {
+        setIsLocalStore(true)
+      }
 
       if (!statsRes.ok || !statsData.success) {
         setDashboardError(statsData.error || 'Gagal memuat statistik sistem dari database.')
@@ -123,11 +128,16 @@ export default function DashboardPage() {
               {/* Header Title & Refresh Bar with Pastel-Mesh Atmospheric Backdrop */}
               <div className="p-6 sm:p-8 rounded-2xl bg-gradient-to-br from-[#f4ede4] via-[#f9f0ff] to-[#f4ede4] border border-[#e6e6e6] shadow-subtle flex flex-wrap items-center justify-between gap-4">
                 <div className="flex flex-col gap-1 max-w-2xl">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <span className="w-2.5 h-2.5 rounded-full bg-[#007a5a] animate-pulse"></span>
                     <span className="text-[12px] font-mono font-bold text-[#4a154b] uppercase tracking-[0.96px]">
                       STATUS OPERASIONAL WAKTU NYATA
                     </span>
+                    {isLocalStore && (
+                      <span className="text-[11px] font-mono font-bold text-[#007a5a] bg-[#007a5a]/10 px-2.5 py-0.5 rounded-full border border-[#007a5a]/30">
+                        • Basis Data Pengujian Lokal (.data/reports.json)
+                      </span>
+                    )}
                   </div>
                   <h1 className="text-[28px] sm:text-[32px] font-bold text-[#4a154b] tracking-[-0.256px] leading-[1.2]">
                     Pusat Kendali Pemantauan Banjir Semarang

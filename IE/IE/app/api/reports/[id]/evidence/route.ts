@@ -7,9 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient, isSupabaseConfigured } from '@/lib/supabase/server'
 import { collectEvidenceBundle } from '@/lib/services/evidence-collector'
-
-// PRODUCTION: citizen reports come from the real database only.
-// No hardcoded citizen reports are used as fallback data.
+import { localReportStore } from '@/lib/services/local-report-store'
 
 export async function GET(
   request: NextRequest,
@@ -21,41 +19,50 @@ export async function GET(
       return NextResponse.json({ error: 'Report ID diperlukan.' }, { status: 400 })
     }
 
-    if (!isSupabaseConfigured()) {
-      return NextResponse.json(
-        { error: 'Database not configured.' },
-        { status: 503 }
-      )
-    }
-
     const searchParams = request.nextUrl.searchParams
     const radiusKm = parseFloat(searchParams.get('radius_km') || '1.5')
     const clampedRadius = Math.min(Math.max(radiusKm, 0.5), 5.0) // 0.5km – 5km
 
-    // 1. Cari report dari Supabase
-    const supabase = await createAdminClient()
-    const { data, error } = await supabase
-      .from('reports')
-      .select('id, report_code, latitude, longitude, created_at, category, title')
-      .or(`id.eq.${reportId},report_code.eq.${reportId}`)
-      .single()
+    let report: { id: string; report_code: string; latitude: number; longitude: number; created_at: string; category: string; title: string | null } | null = null
 
-    if (error) {
-      if (error.code === 'PGRST116') {
+    if (!isSupabaseConfigured()) {
+      const local = localReportStore.getById(reportId)
+      if (!local) {
         return NextResponse.json({ error: 'Laporan tidak ditemukan.' }, { status: 404 })
       }
-      console.error('GET /api/reports/[id]/evidence database error:', error.message)
-      return NextResponse.json(
-        { error: 'Database query failed.', detail: error.message },
-        { status: 503 }
-      )
-    }
+      report = {
+        id: local.id,
+        report_code: local.report_code,
+        latitude: local.latitude,
+        longitude: local.longitude,
+        created_at: local.created_at,
+        category: local.category,
+        title: local.title || null,
+      }
+    } else {
+      const supabase = await createAdminClient()
+      const { data, error } = await supabase
+        .from('reports')
+        .select('id, report_code, latitude, longitude, created_at, category, title')
+        .or(`id.eq.${reportId},report_code.eq.${reportId}`)
+        .single()
 
-    if (!data) {
-      return NextResponse.json({ error: 'Laporan tidak ditemukan.' }, { status: 404 })
-    }
+      if (error) {
+        if (error.code === 'PGRST116') {
+          return NextResponse.json({ error: 'Laporan tidak ditemukan.' }, { status: 404 })
+        }
+        console.error('GET /api/reports/[id]/evidence database error:', error.message)
+        return NextResponse.json(
+          { error: 'Database query failed.', detail: error.message },
+          { status: 503 }
+        )
+      }
 
-    const report = data
+      if (!data) {
+        return NextResponse.json({ error: 'Laporan tidak ditemukan.' }, { status: 404 })
+      }
+      report = data
+    }
 
     if (!report.latitude || !report.longitude) {
       return NextResponse.json({ error: 'Laporan tidak memiliki koordinat yang valid.' }, { status: 422 })
