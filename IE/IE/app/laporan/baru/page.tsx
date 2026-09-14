@@ -293,23 +293,23 @@ export default function LaporCepatPage() {
   return (
     <div className="flex flex-col w-full bg-[#fdfbf9] text-[#1d1d1d] min-h-screen">
       <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col gap-8">
-        {/* BANNER CIVIC RESILIENCE */}
-        <div className="relative overflow-hidden rounded-[20px] bg-[#f4ede4] border border-[#e8ded2] p-6 sm:p-8 shadow-subtle">
+        {/* BANNER CIVIC RESILIENCE with Pastel-Mesh Atmospheric Backdrop */}
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#f4ede4] via-[#f9f0ff] to-[#f4ede4] border border-[#e6e6e6] p-6 sm:p-8 shadow-subtle">
           <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
             <div className="lg:col-span-7 flex flex-col gap-4">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-[11px] uppercase tracking-wider px-3 py-1 rounded-full bg-white text-[#4a154b] border border-[#e6e6e6] font-bold">
+                <span className="text-[12px] uppercase tracking-[0.96px] px-3.5 py-1 rounded-[90px] bg-white text-[#4a154b] border border-[#e6e6e6] font-bold shadow-2xs">
                   Gotong Royong Warga
                 </span>
-                <span className="text-xs text-[#696969] font-medium">
+                <span className="text-xs text-[#696969] font-medium ml-1">
                   • Tanpa Perlu Login • Perlindungan Privasi
                 </span>
               </div>
               <div className="flex flex-col gap-1.5">
-                <h1 className="font-display text-2xl sm:text-3xl font-bold text-[#1d1d1d] tracking-tight">
+                <h1 className="text-[28px] sm:text-[34px] font-bold text-[#4a154b] tracking-[-0.6px] leading-[1.2]">
                   Pelaporan Cepat Tanggap Iklim & Rob Semarang
                 </h1>
-                <p className="text-sm text-[#696969] leading-relaxed">
+                <p className="text-[15px] sm:text-[16px] text-[#1d1d1d] leading-[1.55]">
                   Laporan Anda memandu pompa air polder dan relawan evakuasi BPBD bergerak dalam hitungan menit secara deterministik.
                 </p>
               </div>

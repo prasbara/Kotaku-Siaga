@@ -120,20 +120,20 @@ export default function DashboardPage() {
         <div className="p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-8">
           {activeTab === 'overview' && (
             <div className="space-y-8 animate-in fade-in duration-200">
-              {/* Header Title & Refresh Bar */}
-              <div className="p-6 rounded-[16px] bg-white border border-[#e6e6e6] shadow-subtle flex flex-wrap items-center justify-between gap-4">
-                <div className="flex flex-col gap-1">
+              {/* Header Title & Refresh Bar with Pastel-Mesh Atmospheric Backdrop */}
+              <div className="p-6 sm:p-8 rounded-2xl bg-gradient-to-br from-[#f4ede4] via-[#f9f0ff] to-[#f4ede4] border border-[#e6e6e6] shadow-subtle flex flex-wrap items-center justify-between gap-4">
+                <div className="flex flex-col gap-1 max-w-2xl">
                   <div className="flex items-center gap-2">
                     <span className="w-2.5 h-2.5 rounded-full bg-[#007a5a] animate-pulse"></span>
-                    <span className="text-xs font-bold text-[#4a154b] uppercase tracking-wider">
+                    <span className="text-[12px] font-mono font-bold text-[#4a154b] uppercase tracking-[0.96px]">
                       SITUASI OPERASIONAL REALTIME
                     </span>
                   </div>
-                  <h1 className="font-display text-2xl sm:text-3xl font-bold text-[#1d1d1d]">
+                  <h1 className="text-[28px] sm:text-[32px] font-bold text-[#4a154b] tracking-[-0.256px] leading-[1.2]">
                     Command Center Kesiapsiagaan Iklim Semarang
                   </h1>
-                  <p className="text-xs sm:text-sm text-[#696969]">
-                    Monitoring terpadu laporan warga, ketinggian rob, pompa polder, dan kesiapsiagaan 16 kecamatan.
+                  <p className="text-[15px] sm:text-[16px] text-[#1d1d1d] leading-[1.55]">
+                    Monitoring terpadu laporan warga terverifikasi, elevasi pasang rob, status 5 polder pompa, dan kesiapsiagaan 16 kecamatan.
                   </p>
                 </div>
 
@@ -142,7 +142,7 @@ export default function DashboardPage() {
                     type="button"
                     onClick={fetchData}
                     disabled={isLoading}
-                    className="min-h-[44px] px-4 py-2 rounded-[90px] bg-[#f4ede4] hover:bg-[#e8ded2] text-[#4a154b] font-bold text-xs flex items-center gap-2 transition-colors"
+                    className="min-h-[44px] px-6 py-3 rounded-[90px] bg-white hover:bg-[#f9f0ff] text-[#4a154b] font-bold text-xs flex items-center gap-2 transition-colors border border-[#4a154b]/30 shadow-2xs cursor-pointer"
                   >
                     <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
                     <span>Perbarui Data</span>
@@ -165,69 +165,69 @@ export default function DashboardPage() {
                   <button
                     type="button"
                     onClick={fetchData}
-                    className="min-h-[40px] px-5 py-2 rounded-[90px] bg-[#cc4117] text-white font-bold text-xs hover:bg-[#b03713] transition-colors shrink-0"
+                    className="min-h-[40px] px-5 py-2 rounded-[90px] bg-[#cc4117] text-white font-bold text-xs hover:bg-[#b03713] transition-colors shrink-0 cursor-pointer"
                   >
                     Coba Lagi
                   </button>
                 </div>
               )}
 
-              {/* 4 Primary Metric Cards */}
+              {/* 4 Primary Metric Cards (Slacc card-stat pattern) */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
                 {/* Total Reports */}
-                <div className="p-6 rounded-[16px] bg-white border border-[#e6e6e6] shadow-subtle flex flex-col justify-between">
-                  <div className="flex items-center justify-between text-xs text-[#696969] font-semibold uppercase tracking-wider">
-                    <span>TOTAL INSIDEN</span>
-                    <Waves className="w-4 h-4 text-[#4a154b]" />
-                  </div>
-                  <div className="my-4">
-                    <span className="font-display text-3xl sm:text-4xl font-bold text-[#1d1d1d]">
+                <div className="p-6 sm:p-7 rounded-2xl bg-white border border-[#e6e6e6] shadow-subtle flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between text-xs text-[#696969] font-bold uppercase tracking-wider mb-2">
+                      <span>TOTAL INSIDEN</span>
+                      <Waves className="w-4 h-4 text-[#4a154b]" />
+                    </div>
+                    <div className="text-[46px] sm:text-[50px] font-bold text-[#4a154b] tracking-[-0.6px] leading-[1.12] mb-1">
                       {isLoading ? '...' : dashboardError ? 'N/A' : stats.total}
-                    </span>
+                    </div>
                   </div>
-                  <span className="text-xs text-[#696969]">Laporan terdaftar resmi</span>
+                  <span className="text-xs text-[#696969] pt-2 border-t border-[#e6e6e6]">Laporan terdaftar resmi</span>
                 </div>
 
                 {/* Active Incidents */}
-                <div className="p-6 rounded-[16px] bg-white border border-[#e6e6e6] shadow-subtle flex flex-col justify-between">
-                  <div className="flex items-center justify-between text-xs text-[#696969] font-semibold uppercase tracking-wider">
-                    <span>INSIDEN AKTIF</span>
-                    <span className="w-2.5 h-2.5 rounded-full bg-[#d97706] animate-pulse"></span>
-                  </div>
-                  <div className="my-4">
-                    <span className="font-display text-3xl sm:text-4xl font-bold text-[#d97706]">
+                <div className="p-6 sm:p-7 rounded-2xl bg-white border border-[#e6e6e6] shadow-subtle flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between text-xs text-[#696969] font-bold uppercase tracking-wider mb-2">
+                      <span>INSIDEN AKTIF</span>
+                      <span className="w-2.5 h-2.5 rounded-full bg-[#d97706] animate-pulse"></span>
+                    </div>
+                    <div className="text-[46px] sm:text-[50px] font-bold text-[#d97706] tracking-[-0.6px] leading-[1.12] mb-1">
                       {isLoading ? '...' : dashboardError ? 'N/A' : stats.active}
-                    </span>
+                    </div>
                   </div>
-                  <span className="text-xs text-[#696969]">Sedang dalam penanganan</span>
+                  <span className="text-xs text-[#696969] pt-2 border-t border-[#e6e6e6]">Sedang dalam penanganan</span>
                 </div>
 
                 {/* Critical Reports */}
-                <div className="p-6 rounded-[16px] bg-white border border-[#e6e6e6] shadow-subtle flex flex-col justify-between">
-                  <div className="flex items-center justify-between text-xs text-[#cc4117] font-semibold uppercase tracking-wider">
-                    <span>KRITIS / DARURAT</span>
-                    <ShieldAlert className="w-4 h-4 text-[#cc4117]" />
-                  </div>
-                  <div className="my-4">
-                    <span className="font-display text-3xl sm:text-4xl font-bold text-[#cc4117]">
+                <div className="p-6 sm:p-7 rounded-2xl bg-white border border-[#e6e6e6] shadow-subtle flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between text-xs text-[#cc4117] font-bold uppercase tracking-wider mb-2">
+                      <span>KRITIS / DARURAT</span>
+                      <ShieldAlert className="w-4 h-4 text-[#cc4117]" />
+                    </div>
+                    <div className="text-[46px] sm:text-[50px] font-bold text-[#cc4117] tracking-[-0.6px] leading-[1.12] mb-1">
                       {isLoading ? '...' : dashboardError ? 'N/A' : stats.critical}
-                    </span>
+                    </div>
                   </div>
-                  <span className="text-xs text-[#696969]">Butuh evakuasi / pompa darurat</span>
+                  <span className="text-xs text-[#696969] pt-2 border-t border-[#e6e6e6]">Butuh evakuasi / pompa darurat</span>
                 </div>
 
                 {/* Resolved Percent */}
-                <div className="p-6 rounded-[16px] bg-white border border-[#e6e6e6] shadow-subtle flex flex-col justify-between">
-                  <div className="flex items-center justify-between text-xs text-[#007a5a] font-semibold uppercase tracking-wider">
-                    <span>TERTANGANI (RESOLVED)</span>
-                    <CheckCircle2 className="w-4 h-4 text-[#007a5a]" />
-                  </div>
-                  <div className="my-4">
-                    <span className="font-display text-3xl sm:text-4xl font-bold text-[#007a5a]">
+                <div className="p-6 sm:p-7 rounded-2xl bg-white border border-[#e6e6e6] shadow-subtle flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between text-xs text-[#007a5a] font-bold uppercase tracking-wider mb-2">
+                      <span>TERTANGANI (RESOLVED)</span>
+                      <CheckCircle2 className="w-4 h-4 text-[#007a5a]" />
+                    </div>
+                    <div className="text-[46px] sm:text-[50px] font-bold text-[#007a5a] tracking-[-0.6px] leading-[1.12] mb-1">
                       {isLoading ? '...' : dashboardError ? 'N/A' : `${resolvedPercent}%`}
-                    </span>
+                    </div>
                   </div>
-                  <span className="text-xs text-[#696969]">
+                  <span className="text-xs text-[#696969] pt-2 border-t border-[#e6e6e6]">
                     {stats.resolved} dari {stats.total} terselesaikan
                   </span>
                 </div>
@@ -310,7 +310,7 @@ export default function DashboardPage() {
                   <div className="pt-4 mt-4 border-t border-[#e8ded2]">
                     <Link
                       href="/peta"
-                      className="text-xs font-bold text-[#4a154b] hover:underline flex items-center gap-1"
+                      className="text-xs font-bold text-[#1264a3] hover:text-[#3860be] hover:underline flex items-center gap-1"
                     >
                       Pantau Sebaran Pompa di Peta →
                     </Link>

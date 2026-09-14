@@ -82,20 +82,20 @@ export default function LaporanListPage() {
 
   return (
     <div className="min-h-screen bg-[#fdfbf9] text-[#1d1d1d] pb-24">
-      {/* Top Header Section */}
-      <section className="bg-white border-b border-[#e6e6e6] py-10 px-4 sm:px-6 lg:px-8">
+      {/* Top Header Section with Pastel-Mesh Atmospheric Backdrop */}
+      <section className="bg-gradient-to-br from-[#f4ede4] via-[#f9f0ff] to-[#f4ede4] border-b border-[#e6e6e6] py-10 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
-            <div className="flex items-center gap-2 mb-1.5">
-              <span className="text-xs font-bold uppercase tracking-wider text-[#4a154b] px-3 py-1 rounded-full bg-[#f9f0ff] border border-[#eddcf7]">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-xs font-bold uppercase tracking-[0.96px] text-[#4a154b] px-3.5 py-1 rounded-[90px] bg-white border border-[#eddcf7] shadow-2xs">
                 Civic Ground-Truth
               </span>
-              <span className="text-xs text-[#696969]">• Terbuka untuk Publik</span>
+              <span className="text-xs text-[#696969] ml-1">• Terbuka untuk Publik</span>
             </div>
-            <h1 className="font-display text-3xl sm:text-4xl font-bold text-[#1d1d1d] tracking-tight">
+            <h1 className="text-[32px] sm:text-[40px] font-bold text-[#4a154b] tracking-[-0.6px] leading-[1.15]">
               Daftar Laporan & Kejadian Warga
             </h1>
-            <p className="text-sm text-[#696969] mt-1 max-w-2xl leading-relaxed">
+            <p className="text-[15px] sm:text-[16px] text-[#1d1d1d] mt-2 max-w-2xl leading-[1.55]">
               Pantau seluruh kejadian hidrometeorologis yang dilaporkan oleh warga Semarang dengan transparansi status penanganan dan verifikasi bukti lapangan.
             </p>
           </div>
@@ -103,10 +103,10 @@ export default function LaporanListPage() {
           <div className="flex items-center gap-3">
             <Link
               href="/laporan/baru"
-              className="min-h-[48px] px-6 py-3 rounded-[90px] bg-[#4a154b] hover:bg-[#481a54] text-white font-bold text-sm tracking-wide shadow-sm flex items-center gap-2 transition-all active:scale-[0.98]"
+              className="min-h-[48px] px-8 py-3.5 rounded-[90px] bg-[#4a154b] hover:bg-[#611f69] active:bg-[#481a54] text-white font-bold text-sm tracking-wide shadow-sm flex items-center gap-2 transition-all cursor-pointer"
             >
               <Plus className="w-4 h-4" />
-              Kirim Laporan Baru
+              <span>Kirim Laporan Baru</span>
             </Link>
           </div>
         </div>

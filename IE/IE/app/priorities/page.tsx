@@ -312,41 +312,41 @@ export default function PrioritiesPage() {
 
   return (
     <div className="flex flex-col w-full bg-[#fdfbf9] text-[#1d1d1d] min-h-screen pb-24">
-      {/* Header Banner */}
-      <section className="w-full px-4 sm:px-6 lg:px-8 py-10 bg-white border-b border-[#e6e6e6]">
+      {/* Header Banner with Pastel-Mesh Atmospheric Backdrop */}
+      <section className="w-full px-4 sm:px-6 lg:px-8 py-10 bg-gradient-to-br from-[#f4ede4] via-[#f9f0ff] to-[#f4ede4] border-b border-[#e6e6e6]">
         <div className="max-w-7xl mx-auto flex flex-col gap-6">
           <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6">
             <div className="flex flex-col gap-2 max-w-3xl">
               <div className="flex items-center gap-2">
-                <span className="px-3 py-1 rounded-full bg-[#f9f0ff] text-[#4a154b] text-xs font-bold border border-[#eddcf7] uppercase tracking-wider">
+                <span className="px-3.5 py-1 rounded-[90px] bg-white text-[#4a154b] text-xs font-bold border border-[#eddcf7] uppercase tracking-[0.96px] shadow-2xs">
                   ALGORITMA TERBUKA ISO 37120
                 </span>
-                <span className="text-xs text-[#007a5a] font-semibold flex items-center gap-1">
+                <span className="text-xs text-[#007a5a] font-semibold flex items-center gap-1.5 ml-1">
                   <span className="w-2 h-2 rounded-full bg-[#007a5a] animate-pulse"></span>
                   Deterministik Tanpa AI Monopoli
                 </span>
               </div>
-              <h1 className="font-display text-3xl sm:text-4xl font-bold text-[#1d1d1d]">
+              <h1 className="text-[32px] sm:text-[40px] font-bold text-[#4a154b] tracking-[-0.6px] leading-[1.15]">
                 Matriks Risiko Spasial 16 Kecamatan
               </h1>
-              <p className="text-sm text-[#696969] leading-relaxed">
+              <p className="text-[15px] sm:text-[16px] text-[#1d1d1d] leading-[1.55]">
                 Sistem pembobotan kerentanan kumulatif Kota Semarang. Menghitung peringkat intervensi pompa dan bantuan secara terbuka dan dapat direproduksi oleh seluruh warga.
               </p>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
               <button
                 type="button"
                 onClick={exportCSV}
-                className="min-h-[48px] px-6 py-3 rounded-[90px] bg-[#f4ede4] hover:bg-[#e8ded2] text-[#4a154b] font-bold text-xs flex items-center gap-2 transition-colors"
+                className="min-h-[48px] px-6 py-3 rounded-[90px] bg-white hover:bg-[#f9f0ff] text-[#4a154b] font-bold text-xs flex items-center gap-2 transition-colors border border-[#4a154b]/30 shadow-2xs cursor-pointer"
               >
-                <Download className="w-4 h-4" />
+                <Download className="w-4 h-4 text-[#4a154b]" />
                 <span>Unduh CSV Matriks</span>
               </button>
               <button
                 type="button"
                 onClick={() => setShowSimulator(!showSimulator)}
-                className="min-h-[48px] px-6 py-3 rounded-[90px] bg-[#4a154b] text-white hover:bg-[#481a54] font-bold text-xs flex items-center gap-2 shadow-sm transition-colors"
+                className="min-h-[48px] px-8 py-3.5 rounded-[90px] bg-[#4a154b] text-white hover:bg-[#611f69] active:bg-[#481a54] font-bold text-xs flex items-center gap-2 shadow-sm transition-all cursor-pointer"
               >
                 <Sliders className="w-4 h-4" />
                 <span>{showSimulator ? 'Tutup Simulator' : 'Simulator Bobot'}</span>
@@ -355,14 +355,14 @@ export default function PrioritiesPage() {
           </div>
 
           {/* Formula Display Box */}
-          <div className="rounded-[16px] bg-[#f4ede4] p-6 border border-[#e8ded2] flex flex-col gap-3">
+          <div className="rounded-2xl bg-white p-6 border border-[#e6e6e6] shadow-subtle flex flex-col gap-3">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-[#4a154b] uppercase tracking-wider">
                 Persamaan Linear Deterministik (Open Math)
               </span>
               <span className="text-xs text-[#696969]">Total Bobot Σ = 1.00 (100%)</span>
             </div>
-            <div className="p-3 bg-white rounded-xl border border-[#e8ded2] overflow-x-auto">
+            <div className="p-3 bg-[#fdfbf9] rounded-xl border border-[#e6e6e6] overflow-x-auto">
               <code className="text-sm font-mono text-[#4a154b] font-bold whitespace-nowrap block">
                 Skor = ({weights.L.toFixed(2)}·Laporan) + ({weights.U.toFixed(2)}·Urgensi) + ({weights.P.toFixed(2)}·Kepadatan) + ({weights.H.toFixed(2)}·Historis) + ({weights.K.toFixed(2)}·ElevasiRob) + ({weights.C.toFixed(2)}·CurahHujan)
               </code>
@@ -374,7 +374,7 @@ export default function PrioritiesPage() {
       {/* Simulator Drawer (if enabled) */}
       {showSimulator && (
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
-          <div className="p-6 rounded-[16px] bg-white border border-[#4a154b]/30 shadow-card flex flex-col gap-4 animate-in fade-in">
+          <div className="p-6 rounded-2xl bg-white border border-[#4a154b]/30 shadow-card flex flex-col gap-4 animate-in fade-in">
             <div className="flex items-center justify-between border-b border-[#e6e6e6] pb-3">
               <span className="font-bold text-sm text-[#4a154b]">
                 Simulator Interaktif Pembobotan Parameter
@@ -383,7 +383,7 @@ export default function PrioritiesPage() {
                 onClick={() =>
                   setWeights({ L: 0.25, U: 0.20, P: 0.15, H: 0.15, K: 0.15, C: 0.10 })
                 }
-                className="text-xs text-[#696969] hover:underline"
+                className="text-xs text-[#1264a3] hover:text-[#3860be] hover:underline font-semibold cursor-pointer"
               >
                 Reset ke Standar ISO
               </button>
