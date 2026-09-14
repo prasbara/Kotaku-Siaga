@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import type { Metadata } from 'next'
 import {
   Map,
@@ -169,25 +170,62 @@ export default async function LandingPage() {
               </div>
 
               {/* Right Live Visual Simulation */}
-              <div className="md:col-span-8 rounded-[12px] overflow-hidden bg-[#1d1d1d] text-white p-4 flex flex-col justify-between min-h-[220px] relative">
+              <div className="md:col-span-8 rounded-[12px] overflow-hidden bg-[#1d1d1d] text-white p-4 flex flex-col justify-between min-h-[280px] sm:min-h-[320px] relative group border border-[#e6e6e6]/20">
+                {/* Background CCTV Live Feed Image */}
+                <Image
+                  src="/images/cctv-kaligawe-preview.jpg"
+                  alt="Siaran Langsung Kamera CCTV Underpass Kaligawe"
+                  fill
+                  className="object-cover object-center group-hover:scale-[1.02] transition-transform duration-500"
+                  priority
+                />
+
+                {/* Subtle CCTV dark gradient & vignette overlay for text legibility */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-black/60 pointer-events-none" />
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_55%,rgba(0,0,0,0.5)_100%)] pointer-events-none" />
+
+                {/* Top Overlay Badge & Time */}
                 <div className="flex items-center justify-between z-10">
-                  <div className="flex items-center gap-2 bg-black/60 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-mono">
-                    <span className="w-2 h-2 rounded-full bg-[#007a5a] animate-ping"></span>
-                    Kamera Kaligawe 01 • Siaran Langsung
+                  <div className="flex items-center gap-2 bg-black/75 backdrop-blur-md px-3 py-1.5 rounded-full text-xs font-mono border border-white/10 shadow-sm">
+                    <span className="relative flex h-2.5 w-2.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#007a5a] opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#007a5a]"></span>
+                    </span>
+                    <span className="font-bold text-white">Kamera Kaligawe 01</span>
+                    <span className="text-white/40">•</span>
+                    <span className="text-[#007a5a] font-bold">Siaran Langsung</span>
                   </div>
-                  <span className="bg-[#4a154b] px-2.5 py-0.5 rounded-full text-[11px] font-bold text-white">
-                    STATUS: AMAN
-                  </span>
+
+                  <div className="flex items-center gap-2">
+                    <span className="bg-[#007a5a] px-3 py-1 rounded-full text-[11px] font-mono font-bold text-white shadow-sm border border-white/20 flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
+                      STATUS: AMAN
+                    </span>
+                    <Link
+                      href="/peta"
+                      className="hidden sm:inline-flex items-center gap-1 text-[11px] font-mono font-bold text-white/90 bg-black/60 hover:bg-[#4a154b] px-2.5 py-1 rounded-full border border-white/15 transition-colors"
+                      title="Buka 70 CCTV di Peta"
+                    >
+                      <span>70 CCTV</span>
+                      <ChevronRight className="w-3 h-3" />
+                    </Link>
+                  </div>
                 </div>
 
-                {/* Simulated Non-YOLO Waterline Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-[#4a154b]/40 via-transparent to-black/30 pointer-events-none"></div>
-                <div className="absolute bottom-6 left-6 right-6 border border-[#007a5a]/70 rounded-[8px] p-2.5 bg-black/50 backdrop-blur-sm flex items-center justify-between text-xs z-10">
-                  <div className="flex items-center gap-2">
-                    <span className="material-symbols-outlined text-[#f4ede4] text-[18px]">verified</span>
-                    <span>Verifikasi Multi-Frame: Kondisi Normal</span>
+                {/* Bottom Overlay Info Banner */}
+                <div className="z-10 mt-auto pt-16">
+                  <div className="border border-[#007a5a]/70 rounded-[10px] p-3 bg-black/75 backdrop-blur-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs shadow-lg">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-[#007a5a] shrink-0"></span>
+                      <span className="font-medium text-white">Verifikasi Visual Multi-Bingkai: Kondisi Normal</span>
+                    </div>
+                    <div className="flex items-center gap-3 font-mono text-[11px] shrink-0">
+                      <span className="text-white/70">Elevasi Muka Air: <b className="text-white">+14 cm</b></span>
+                      <span className="px-2 py-0.5 rounded bg-[#007a5a]/25 text-[#007a5a] border border-[#007a5a]/40 font-bold">
+                        Akurasi: 94%
+                      </span>
+                    </div>
                   </div>
-                  <span className="font-mono text-[#f4ede4] font-bold">Tingkat Keyakinan: 94%</span>
                 </div>
               </div>
             </div>
