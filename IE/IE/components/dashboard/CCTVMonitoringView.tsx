@@ -20,6 +20,12 @@ import {
   Clock,
   Activity,
   Layers,
+  BarChart3,
+  Sliders,
+  CheckCircle,
+  XCircle,
+  HelpCircle,
+  FileSearch,
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -30,11 +36,19 @@ export function CCTVMonitoringView() {
   const [selectedCategory, setSelectedCategory] = useState<'all' | 'rob_banjir' | 'polder_sungai'>('all')
   const [selectedDistrict, setSelectedDistrict] = useState<string>('all')
 
-  // AI Flood Events & Health State
+  // AI / Non-YOLO Flood Events & Health State
   const [floodEvents, setFloodEvents] = useState<FloodEvent[]>([])
   const [isScanning, setIsScanning] = useState(false)
   const [scanMessage, setScanMessage] = useState<string | null>(null)
   const [isLoadingEvents, setIsLoadingEvents] = useState(true)
+
+  // Explainability Diagnostic Drawer State
+  const [diagnosticsCCTV, setDiagnosticsCCTV] = useState<{
+    cam: CCTVPoint
+    signals?: any
+    explainability?: any
+    debug_url?: string | null
+  } | null>(null)
 
   // Fetch flood events
   const fetchFloodEvents = useCallback(async () => {
@@ -57,10 +71,10 @@ export function CCTVMonitoringView() {
     return () => clearInterval(timer)
   }, [fetchFloodEvents])
 
-  // Trigger live AI YOLO Scan
+  // Trigger live Non-YOLO CV Scan
   const handleTriggerScan = async (targetCamId?: string) => {
     setIsScanning(true)
-    setScanMessage('Menghubungi CV Daemon & mengambil stream aktual...')
+    setScanMessage('Menghubungi Non-YOLO CV Service & memproses analisis multi-signal...')
     try {
       const res = await fetch('/api/cctv/scan', {
         method: 'POST',
@@ -69,8 +83,20 @@ export function CCTVMonitoringView() {
       })
       const data = await res.json()
       if (data.success) {
-        setScanMessage(`Pemindaian selesai: ${data.scanned_count} kamera diproses.`)
+        setScanMessage(`Pemindaian Non-YOLO selesai: ${data.scanned_count} kamera diproses (${data.engine}).`)
         await fetchFloodEvents()
+        if (data.results && data.results.length > 0) {
+          const first = data.results[0]
+          const cam = PANTAUSEMAR_CCTV_POINTS.find((c) => c.id === first.camera_id)
+          if (cam) {
+            setDiagnosticsCCTV({
+              cam,
+              signals: first.signals,
+              explainability: first.explainability,
+              debug_url: first.debug_visual_url || first.evidence_url,
+            })
+          }
+        }
       } else {
         setScanMessage(`Gagal: ${data.error || 'Terjadi kesalahan'}`)
       }
@@ -78,7 +104,7 @@ export function CCTVMonitoringView() {
       setScanMessage(`Koneksi CV Service: ${err.message}`)
     } finally {
       setIsScanning(false)
-      setTimeout(() => setScanMessage(null), 6000)
+      setTimeout(() => setScanMessage(null), 7000)
     }
   }
 
@@ -89,15 +115,15 @@ export function CCTVMonitoringView() {
       if (data.success) {
         fetchFloodEvents()
         if (selectedFloodEvent?.event_id === eventId) {
-          setSelectedFloodEvent(data.data)
+          setSelectedFloodEvent(null)
         }
       }
     } catch (err) {
-      console.error('Gagal meresolusi event:', err)
+      console.error('Gagal menyelesaikan event:', err)
     }
   }
 
-  // Event Categories
+  // Active / Suspected / Resolved categorization
   const activeEvents = useMemo(
     () => floodEvents.filter((e) => e.status === 'confirmed'),
     [floodEvents]
@@ -150,7 +176,6 @@ export function CCTVMonitoringView() {
     []
   )
 
-  // Format Duration since started_at
   const formatDuration = (startedAt: string) => {
     const diffMs = Math.max(0, Date.now() - new Date(startedAt).getTime())
     const mins = Math.floor(diffMs / 60000)
@@ -159,48 +184,45 @@ export function CCTVMonitoringView() {
   }
 
   return (
-    <div className="space-y-6 font-body text-on-surface">
+    <div className="space-y-6 font-body text-[#1d1d1d]">
       {/* Header Bar */}
-      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 pb-4 border-b border-outline-variant/30">
+      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 pb-4 border-b border-[#e6e6e6]">
         <div>
-          <div className="flex items-center gap-2 mb-1 flex-wrap">
-            <span className="text-[10px] font-mono uppercase tracking-wider text-secondary font-bold px-2 py-0.5 rounded bg-secondary/10 border border-secondary/30">
-              CIVIC VISION RADAR v1.1
+          <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+            <span className="text-[10px] font-mono uppercase tracking-wider text-[#4a154b] font-bold px-3 py-0.5 rounded-[90px] bg-[#f9f0ff] border border-[#d9bdde]/50">
+              NON-YOLO CLASSICAL CV v2.0
             </span>
-            <span className="text-[10px] font-mono text-cyan-400 font-bold px-2 py-0.5 rounded bg-cyan-950/60 border border-cyan-800/40">
-              LIGHTWEIGHT CV &bull; VERCEL CPU-ONLY
+            <span className="text-[10px] font-mono text-[#007a5a] font-bold px-3 py-0.5 rounded-[90px] bg-[#007a5a]/10 border border-[#007a5a]/30">
+              MULTI-SIGNAL • TEMPORAL SLIDING WINDOW
             </span>
-            <span className="text-[10px] font-mono text-emerald-400 font-bold px-2 py-0.5 rounded bg-emerald-950/60 border border-emerald-800/40">
-              VERCEL CRON READY
-            </span>
-            <span className="text-[10px] font-mono text-on-surface-variant flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
+            <span className="text-[11px] font-mono text-[#696969] flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-[#007a5a] animate-pulse"></span>
               Sumber: PantauSemar Pemkot Semarang (70 Titik)
             </span>
           </div>
-          <h2 className="font-headline text-xl sm:text-2xl font-bold text-on-surface">
-            Monitoring CCTV & Deteksi Banjir Visual
+          <h2 className="text-xl sm:text-2xl font-bold text-[#4a154b]">
+            Monitoring CCTV & Deteksi Genangan Non-YOLO
           </h2>
-          <p className="text-xs text-on-surface-variant mt-0.5">
-            Observasi visual otomatis berbasis Computer Vision CPU-only untuk mendeteksi genangan/banjir dari stream CCTV PantauSemar secara serverless.
+          <p className="text-xs sm:text-sm text-[#696969] mt-0.5">
+            Observasi visual presisi tinggi berbasis segmentasi warna (HSV+LAB), tekstur homogenitas aspal, reduksi tepi, profil garis air, dan verifikasi temporal.
           </p>
         </div>
 
         {/* Action Buttons */}
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-2.5 flex-wrap self-start sm:self-auto">
           <button
             type="button"
             onClick={() => handleTriggerScan()}
             disabled={isScanning}
-            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-red-600 hover:bg-red-500 disabled:opacity-50 text-white font-mono text-xs font-bold uppercase tracking-wider transition-all shadow-sm"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-[90px] bg-[#4a154b] hover:bg-[#611f69] disabled:opacity-50 text-white font-bold text-xs uppercase tracking-wider transition-all shadow-sm cursor-pointer"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isScanning ? 'animate-spin' : ''}`} />
-            <span>{isScanning ? 'Memindai...' : 'Scan AI Sekarang'}</span>
+            <span>{isScanning ? 'Memproses CV...' : 'Scan Non-YOLO AI'}</span>
           </button>
 
           <Link
             href="/peta"
-            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-primary text-on-primary font-mono text-xs font-bold uppercase tracking-wider hover:brightness-110 transition-all shadow-sm"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-[90px] bg-white border border-[#4a154b]/40 text-[#4a154b] font-bold text-xs uppercase tracking-wider hover:bg-[#f9f0ff] transition-all shadow-2xs"
           >
             <MapPin className="w-3.5 h-3.5" />
             <span>Buka di Peta</span>
@@ -210,74 +232,74 @@ export function CCTVMonitoringView() {
 
       {/* Scan notification banner if active */}
       {scanMessage && (
-        <div className="p-3 rounded-lg bg-cyan-950/60 border border-cyan-800/60 text-xs font-mono text-cyan-300 flex items-center justify-between animate-fade-in">
-          <span>{scanMessage}</span>
-          <button onClick={() => setScanMessage(null)} className="text-cyan-400 hover:text-white text-xs">
+        <div className="p-4 rounded-[16px] bg-[#f9f0ff] border border-[#d9bdde] text-xs font-mono text-[#4a154b] flex items-center justify-between shadow-2xs">
+          <span className="font-semibold">{scanMessage}</span>
+          <button onClick={() => setScanMessage(null)} className="text-[#4a154b] hover:underline text-xs font-bold">
             Tutup
           </button>
         </div>
       )}
 
       {/* ========================================================================= */}
-      {/* SECTION 20: ACTIVE FLOOD EVENTS PANEL & MONITORING METRICS */}
+      {/* ACTIVE FLOOD EVENTS PANEL & MONITORING METRICS */}
       {/* ========================================================================= */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-full bg-red-500 animate-pulse" />
-            <h3 className="font-mono text-xs font-bold uppercase tracking-wider text-red-400">
+            <span className="w-3 h-3 rounded-full bg-[#cc4117] animate-pulse" />
+            <h3 className="font-mono text-xs font-bold uppercase tracking-wider text-[#cc4117]">
               ACTIVE FLOOD EVENTS ({activeEvents.length})
             </h3>
           </div>
-          <div className="flex items-center gap-3 text-[11px] font-mono text-on-surface-variant">
-            <span>Suspected: <b className="text-amber-400">{suspectedEvents.length}</b></span>
-            <span>Resolved: <b className="text-emerald-400">{resolvedEvents.length}</b></span>
-            <span>CCTV Online: <b className="text-secondary">70</b></span>
+          <div className="flex items-center gap-3 text-xs font-mono text-[#696969]">
+            <span>Suspected: <b className="text-[#b45309]">{suspectedEvents.length}</b></span>
+            <span>Resolved: <b className="text-[#007a5a]">{resolvedEvents.length}</b></span>
+            <span>CCTV Online: <b className="text-[#4a154b]">70</b></span>
           </div>
         </div>
 
         {/* Active Flood Events Cards Grid */}
         {activeEvents.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {activeEvents.map((ev) => (
               <div
                 key={ev.event_id}
-                className="p-4 rounded-xl bg-gradient-to-b from-red-950/40 via-surface-container-low to-surface-container-low border border-red-700/50 shadow-md flex flex-col justify-between group hover:border-red-500 transition-all"
+                className="p-6 rounded-[16px] bg-white border-2 border-[#cc4117]/60 shadow-sm flex flex-col justify-between group hover:border-[#cc4117] transition-all"
               >
                 <div>
-                  <div className="flex items-center justify-between gap-2 mb-2">
-                    <span className="font-mono text-xs font-bold text-red-300">
+                  <div className="flex items-center justify-between gap-2 mb-3">
+                    <span className="font-mono text-xs font-bold text-[#cc4117] px-2.5 py-0.5 rounded-[90px] bg-[#cc4117]/10 border border-[#cc4117]/30">
                       {ev.district_name}
                     </span>
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full font-bold bg-red-600/30 text-red-300 border border-red-500/40">
+                    <span className="text-[10px] font-mono px-3 py-1 rounded-[90px] font-bold bg-[#cc4117] text-white">
                       FLOOD CONFIRMED
                     </span>
                   </div>
 
-                  <div className="space-y-1 text-xs font-mono text-on-surface-variant mb-3">
+                  <div className="space-y-1.5 text-xs font-mono text-[#696969] mb-4">
                     <div className="flex justify-between">
                       <span>CCTV:</span>
-                      <span className="text-on-surface font-semibold">{ev.camera_code} ({ev.camera_name})</span>
+                      <span className="text-[#1d1d1d] font-bold">{ev.camera_code} ({ev.camera_name})</span>
                     </div>
                     <div className="flex justify-between">
                       <span>Confidence:</span>
-                      <span className="text-emerald-400 font-bold">{(ev.model_confidence * 100).toFixed(0)}%</span>
+                      <span className="text-[#007a5a] font-bold">{(ev.model_confidence * 100).toFixed(0)}%</span>
                     </div>
                     <div className="flex justify-between">
                       <span>Severity:</span>
-                      <span className="text-amber-400 font-bold capitalize">{ev.estimated_visual_severity}</span>
+                      <span className="text-[#cc4117] font-bold capitalize">{ev.estimated_visual_severity}</span>
                     </div>
                     <div className="flex justify-between">
                       <span>Durasi:</span>
-                      <span className="text-cyan-400 font-bold">{formatDuration(ev.started_at)}</span>
+                      <span className="text-[#4a154b] font-bold">{formatDuration(ev.started_at)}</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 pt-2 border-t border-outline-variant/20">
+                <div className="flex items-center gap-2 pt-3 border-t border-[#e6e6e6]">
                   <button
                     onClick={() => setSelectedFloodEvent(ev)}
-                    className="flex-1 py-1.5 px-2 rounded-lg bg-red-600/20 text-red-300 border border-red-500/30 hover:bg-red-600/30 font-mono text-xs font-bold flex items-center justify-center gap-1 transition-colors"
+                    className="flex-1 py-2 px-3 rounded-[90px] bg-[#f9f0ff] text-[#4a154b] border border-[#d9bdde]/60 hover:bg-[#ebdccb] font-bold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                   >
                     <Eye className="w-3.5 h-3.5" />
                     <span>Evidence</span>
@@ -285,15 +307,15 @@ export function CCTVMonitoringView() {
 
                   <Link
                     href="/peta"
-                    className="flex-1 py-1.5 px-2 rounded-lg bg-surface-container-high hover:bg-surface-container-highest text-on-surface font-mono text-xs font-bold flex items-center justify-center gap-1 transition-colors"
+                    className="flex-1 py-2 px-3 rounded-[90px] bg-[#f4ede4] hover:bg-[#e8ded2] text-[#1d1d1d] font-bold text-xs flex items-center justify-center gap-1.5 transition-colors"
                   >
-                    <MapPin className="w-3.5 h-3.5 text-primary" />
-                    <span>View on Map</span>
+                    <MapPin className="w-3.5 h-3.5 text-[#4a154b]" />
+                    <span>Lihat di Peta</span>
                   </Link>
 
                   <button
                     onClick={() => handleResolveEvent(ev.event_id)}
-                    className="p-1.5 rounded-lg bg-emerald-950/40 hover:bg-emerald-900/60 text-emerald-400 border border-emerald-800/40 transition-colors"
+                    className="p-2 rounded-full bg-[#007a5a]/10 hover:bg-[#007a5a]/20 text-[#007a5a] border border-[#007a5a]/30 transition-colors cursor-pointer"
                     title="Resolusi Event"
                   >
                     <CheckCircle2 className="w-4 h-4" />
@@ -303,21 +325,23 @@ export function CCTVMonitoringView() {
             ))}
           </div>
         ) : (
-          <div className="p-4 rounded-xl bg-surface-container-low border border-outline-variant/30 flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
+          <div className="p-6 rounded-[16px] bg-white border border-[#e6e6e6] flex items-center justify-between gap-4 shadow-2xs">
+            <div className="flex items-center gap-3.5">
+              <div className="w-9 h-9 rounded-full bg-[#007a5a]/10 border border-[#007a5a]/30 flex items-center justify-center text-[#007a5a]">
+                <CheckCircle2 className="w-5 h-5" />
+              </div>
               <div>
-                <p className="text-xs font-mono font-bold text-on-surface">
+                <p className="text-sm font-bold text-[#1d1d1d]">
                   Tidak Ada Flood Event Aktif Terkonfirmasi
                 </p>
-                <p className="text-[11px] text-on-surface-variant">
-                  Kamera pemantauan genangan air PantauSemar berada dalam batas normal / belum memenuhi ambang persistensi konfirmasi.
+                <p className="text-xs text-[#696969] mt-0.5">
+                  Seluruh kamera pemantauan genangan air PantauSemar berada dalam batas normal / belum memenuhi ambang persistensi konfirmasi.
                 </p>
               </div>
             </div>
             <button
               onClick={() => handleTriggerScan()}
-              className="px-3 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-xs font-mono text-primary font-bold border border-outline-variant/30 shrink-0"
+              className="px-4 py-2 rounded-[90px] bg-[#f4ede4] hover:bg-[#e8ded2] text-xs font-bold text-[#4a154b] border border-[#e6e6e6] shrink-0 cursor-pointer"
             >
               Uji Scan Sekarang
             </button>
@@ -326,32 +350,32 @@ export function CCTVMonitoringView() {
 
         {/* Suspected Events Row if any */}
         {suspectedEvents.length > 0 && (
-          <div className="p-3.5 rounded-xl bg-amber-950/20 border border-amber-800/40">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-mono font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
-                <AlertTriangle className="w-3.5 h-3.5" />
+          <div className="p-4 rounded-[16px] bg-[#fffbeb] border border-[#fef3c7]">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-mono font-bold text-[#b45309] uppercase tracking-wider flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 text-[#b45309]" />
                 Indikasi Terdeteksi (Water/Flood Suspected — Menunggu Verifikasi Temporal)
               </span>
-              <span className="text-[10px] font-mono text-amber-300/80">
-                {suspectedEvents.length} Kamera
+              <span className="text-xs font-mono text-[#b45309] font-bold">
+                {suspectedEvents.length} Titik Kamera
               </span>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
               {suspectedEvents.map((ev) => (
                 <div
                   key={ev.event_id}
                   onClick={() => setSelectedFloodEvent(ev)}
-                  className="p-2.5 rounded-lg bg-surface-container/60 border border-outline-variant/20 hover:border-amber-500/50 cursor-pointer flex items-center justify-between"
+                  className="p-3 rounded-[12px] bg-white border border-[#e6e6e6] hover:border-[#b45309] cursor-pointer flex items-center justify-between shadow-2xs"
                 >
                   <div>
-                    <span className="text-xs font-bold text-on-surface font-headline block">
+                    <span className="text-xs font-bold text-[#1d1d1d] block">
                       {ev.district_name} &bull; {ev.camera_name}
                     </span>
-                    <span className="text-[10px] font-mono text-on-surface-variant">
+                    <span className="text-[11px] font-mono text-[#696969]">
                       Conf: {(ev.model_confidence * 100).toFixed(0)}% &bull; {ev.estimated_visual_severity}
                     </span>
                   </div>
-                  <Eye className="w-3.5 h-3.5 text-amber-400" />
+                  <Eye className="w-4 h-4 text-[#b45309]" />
                 </div>
               ))}
             </div>
@@ -359,52 +383,52 @@ export function CCTVMonitoringView() {
         )}
 
         {/* CCTV Monitoring Health Status Cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-1">
-          <div className="p-3 rounded-xl bg-surface-container-low border border-outline-variant/30">
-            <span className="text-[10px] font-mono text-on-surface-variant block mb-1">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
+          <div className="p-4 rounded-[16px] bg-white border border-[#e6e6e6] shadow-2xs">
+            <span className="text-[10px] font-mono text-[#696969] uppercase block mb-1">
               Status Monitoring CCTV
             </span>
-            <span className="text-sm font-bold text-secondary font-mono flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-secondary"></span>
+            <span className="text-sm font-bold text-[#007a5a] font-mono flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-[#007a5a]"></span>
               70 Titik Terhubung
             </span>
-            <span className="text-[9px] text-on-surface-variant block mt-0.5">
+            <span className="text-[10px] text-[#696969] block mt-1">
               HLS Live Stream Aktif
             </span>
           </div>
 
-          <div className="p-3 rounded-xl bg-surface-container-low border border-outline-variant/30">
-            <span className="text-[10px] font-mono text-on-surface-variant block mb-1">
+          <div className="p-4 rounded-[16px] bg-white border border-[#e6e6e6] shadow-2xs">
+            <span className="text-[10px] font-mono text-[#696969] uppercase block mb-1">
               Sampling Rate Adaptif
             </span>
-            <span className="text-sm font-bold text-cyan-400 font-mono">
+            <span className="text-sm font-bold text-[#4a154b] font-mono">
               10s Normal / 2s Suspect
             </span>
-            <span className="text-[9px] text-on-surface-variant block mt-0.5">
-              Configurable di CV Daemon
+            <span className="text-[10px] text-[#696969] block mt-1">
+              Non-YOLO CV Daemon
             </span>
           </div>
 
-          <div className="p-3 rounded-xl bg-surface-container-low border border-outline-variant/30">
-            <span className="text-[10px] font-mono text-on-surface-variant block mb-1">
+          <div className="p-4 rounded-[16px] bg-white border border-[#e6e6e6] shadow-2xs">
+            <span className="text-[10px] font-mono text-[#696969] uppercase block mb-1">
               Aturan Metodologis
             </span>
-            <span className="text-sm font-bold text-on-surface font-mono">
+            <span className="text-sm font-bold text-[#1d1d1d] font-mono">
               Offline = UNKNOWN
             </span>
-            <span className="text-[9px] text-on-surface-variant block mt-0.5">
+            <span className="text-[10px] text-[#696969] block mt-1">
               Bukan diasumsikan NO_FLOOD
             </span>
           </div>
 
-          <div className="p-3 rounded-xl bg-surface-container-low border border-outline-variant/30">
-            <span className="text-[10px] font-mono text-on-surface-variant block mb-1">
-              In-App Notification
+          <div className="p-4 rounded-[16px] bg-white border border-[#e6e6e6] shadow-2xs">
+            <span className="text-[10px] font-mono text-[#696969] uppercase block mb-1">
+              In-App Alert
             </span>
-            <span className="text-sm font-bold text-emerald-400 font-mono">
-              Aktif (No Telegram)
+            <span className="text-sm font-bold text-[#007a5a] font-mono">
+              Debounced & Deduplicated
             </span>
-            <span className="text-[9px] text-on-surface-variant block mt-0.5">
+            <span className="text-[10px] text-[#696969] block mt-1">
               Output database & EOC saja
             </span>
           </div>
@@ -414,16 +438,16 @@ export function CCTVMonitoringView() {
       {/* ========================================================================= */}
       {/* CCTV FILTER CONTROLS BAR */}
       {/* ========================================================================= */}
-      <div className="flex flex-col lg:flex-row gap-3 items-stretch lg:items-center justify-between bg-surface-container-low p-3 sm:p-4 rounded-xl border border-outline-variant/30 shadow-sm mt-4">
+      <div className="flex flex-col lg:flex-row gap-3 items-stretch lg:items-center justify-between bg-white p-4 rounded-[16px] border border-[#e6e6e6] shadow-2xs mt-4">
         {/* Category Tabs */}
         <div className="flex items-center gap-2 flex-wrap">
           <button
             type="button"
             onClick={() => setSelectedCategory('all')}
-            className={`text-xs px-3 py-2 min-h-[38px] rounded-lg border font-mono transition-all flex items-center justify-center ${
+            className={`text-xs px-4 py-2 min-h-[40px] rounded-[90px] border font-mono transition-all flex items-center justify-center cursor-pointer ${
               selectedCategory === 'all'
-                ? 'bg-primary text-on-primary border-primary font-bold shadow-sm'
-                : 'bg-surface-container text-on-surface-variant border-outline-variant/30 hover:text-on-surface'
+                ? 'bg-[#4a154b] text-white border-[#4a154b] font-bold shadow-sm'
+                : 'bg-[#fcfaf7] text-[#696969] border-[#e6e6e6] hover:text-[#1d1d1d]'
             }`}
           >
             Semua CCTV ({PANTAUSEMAR_CCTV_POINTS.length})
@@ -431,10 +455,10 @@ export function CCTVMonitoringView() {
           <button
             type="button"
             onClick={() => setSelectedCategory('rob_banjir')}
-            className={`text-xs px-3 py-2 min-h-[38px] rounded-lg border font-mono transition-all flex items-center justify-center ${
+            className={`text-xs px-4 py-2 min-h-[40px] rounded-[90px] border font-mono transition-all flex items-center justify-center cursor-pointer ${
               selectedCategory === 'rob_banjir'
-                ? 'bg-cyan-500 text-black border-cyan-400 font-bold shadow-sm'
-                : 'bg-surface-container text-on-surface-variant border-outline-variant/30 hover:text-on-surface'
+                ? 'bg-[#4a154b] text-white border-[#4a154b] font-bold shadow-sm'
+                : 'bg-[#fcfaf7] text-[#696969] border-[#e6e6e6] hover:text-[#1d1d1d]'
             }`}
           >
             🌊 Rawan Genangan ({genanganCount})
@@ -442,10 +466,10 @@ export function CCTVMonitoringView() {
           <button
             type="button"
             onClick={() => setSelectedCategory('polder_sungai')}
-            className={`text-xs px-3 py-2 min-h-[38px] rounded-lg border font-mono transition-all flex items-center justify-center ${
+            className={`text-xs px-4 py-2 min-h-[40px] rounded-[90px] border font-mono transition-all flex items-center justify-center cursor-pointer ${
               selectedCategory === 'polder_sungai'
-                ? 'bg-secondary text-on-secondary border-secondary font-bold shadow-sm'
-                : 'bg-surface-container text-on-surface-variant border-outline-variant/30 hover:text-on-surface'
+                ? 'bg-[#4a154b] text-white border-[#4a154b] font-bold shadow-sm'
+                : 'bg-[#fcfaf7] text-[#696969] border-[#e6e6e6] hover:text-[#1d1d1d]'
             }`}
           >
             ⚙️ Pantau Pompa Air ({pompaCount})
@@ -453,11 +477,11 @@ export function CCTVMonitoringView() {
         </div>
 
         {/* District Filter & Search */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 flex-1 w-full lg:max-w-md min-w-0">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 flex-1 w-full lg:max-w-md min-w-0">
           <select
             value={selectedDistrict}
             onChange={(e) => setSelectedDistrict(e.target.value)}
-            className="h-10 px-2.5 rounded-lg bg-surface-container border border-outline-variant/40 text-xs font-mono text-on-surface focus:outline-none focus:border-primary min-w-[130px]"
+            className="h-10 px-3 rounded-[90px] bg-[#fcfaf7] border border-[#e6e6e6] text-xs font-mono text-[#1d1d1d] focus:outline-none focus:border-[#4a154b] min-w-[140px]"
             aria-label="Pilih Kecamatan"
           >
             <option value="all">Semua Wilayah</option>
@@ -471,146 +495,215 @@ export function CCTVMonitoringView() {
           </select>
 
           <div className="relative flex-1 min-w-0">
-            <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant" />
+            <Search className="w-3.5 h-3.5 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#696969]" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Cari kamera, lokasi, atau OPD..."
-              className="w-full h-10 pl-9 pr-3 rounded-lg bg-surface-container border border-outline-variant/40 text-xs text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:border-primary font-body"
+              className="w-full h-10 pl-9 pr-4 rounded-[90px] bg-[#fcfaf7] border border-[#e6e6e6] text-xs text-[#1d1d1d] placeholder:text-[#696969] focus:outline-none focus:border-[#4a154b] font-body"
             />
           </div>
         </div>
       </div>
 
-      {/* CCTV Grid Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {filteredCCTVs.map((cctv) => {
-          const activeForCam = floodEvents.find(
-            (e) => e.camera_id === cctv.id && e.status !== 'resolved'
-          )
-
-          return (
-            <div
-              key={cctv.id}
-              className={`rounded-xl border bg-surface-container-low transition-all shadow-sm hover:shadow-md flex flex-col justify-between overflow-hidden group ${
-                activeForCam
-                  ? 'border-red-600/70 shadow-red-950/30'
-                  : 'border-outline-variant/30 hover:border-primary/50'
-              }`}
-            >
-              {/* Top Info */}
-              <div className="p-4 space-y-2.5">
-                <div className="flex items-start justify-between gap-2">
-                  <span
-                    className={`text-[9px] font-mono uppercase font-bold px-2 py-0.5 rounded border ${
-                      cctv.category === 'rob_banjir'
-                        ? 'bg-cyan-500/10 text-cyan-400 border-cyan-400/30'
-                        : 'bg-secondary/10 text-secondary border-secondary/30'
-                    }`}
-                  >
-                    {cctv.categoryLabel}
-                  </span>
-                  {activeForCam ? (
-                    <span className="text-[10px] font-mono text-red-400 flex items-center gap-1 font-bold">
-                      <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping"></span>
-                      BANJIR TERDETEKSI
-                    </span>
-                  ) : (
-                    <span className="text-[10px] font-mono text-secondary flex items-center gap-1 font-bold">
-                      <span className="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse"></span>
-                      LIVE HLS
-                    </span>
-                  )}
-                </div>
-
+      {/* ========================================================================= */}
+      {/* CCTV CARDS GRID */}
+      {/* ========================================================================= */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        {filteredCCTVs.map((cctv) => (
+          <div
+            key={cctv.id}
+            className="rounded-[16px] bg-white border border-[#e6e6e6] shadow-2xs hover:shadow-subtle hover:border-[#4a154b]/30 transition-all p-5 flex flex-col justify-between"
+          >
+            <div>
+              <div className="flex items-start justify-between gap-2 mb-2">
                 <div>
-                  <h3 className="font-headline font-bold text-sm text-on-surface group-hover:text-primary transition-colors line-clamp-1">
+                  <span className="text-[10px] font-mono uppercase font-bold text-[#4a154b] block mb-0.5">
+                    {cctv.code} &bull; {cctv.district}
+                  </span>
+                  <h3 className="font-bold text-base text-[#1d1d1d] line-clamp-1">
                     {cctv.name}
                   </h3>
-                  <p className="text-[11px] text-on-surface-variant line-clamp-1 mt-0.5">
-                    Kec. {cctv.district} &bull; <span className="font-mono">{cctv.code}</span>
-                  </p>
                 </div>
-
-                <div className="space-y-1 text-[10px] font-mono text-on-surface-variant/90 border-t border-outline-variant/20 pt-2">
-                  <div className="flex items-center justify-between">
-                    <span>OPD:</span>
-                    <span className="text-on-surface font-semibold truncate max-w-[150px]">
-                      {cctv.opd}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span>Koordinat:</span>
-                    <span className="text-on-surface">
-                      {cctv.latitude.toFixed(4)}, {cctv.longitude.toFixed(4)}
-                    </span>
-                  </div>
-                </div>
+                <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-[90px] font-bold bg-[#007a5a]/10 text-[#007a5a] border border-[#007a5a]/30">
+                  ONLINE
+                </span>
               </div>
 
-              {/* Bottom Actions */}
-              <div className="px-4 py-3 bg-surface-container border-t border-outline-variant/20 flex items-center justify-between gap-2">
-                <button
-                  type="button"
-                  onClick={() => setSelectedCCTV(cctv)}
-                  className="flex-1 flex items-center justify-center gap-1.5 min-h-[40px] py-2 px-3 rounded-lg bg-primary text-on-primary font-mono text-xs font-bold uppercase hover:brightness-110 transition-all shadow-sm"
-                >
-                  <Video className="w-3.5 h-3.5" />
-                  <span>Lihat Stream</span>
-                </button>
+              <p className="text-xs text-[#696969] line-clamp-2 mb-3 leading-relaxed">
+                {cctv.address}
+              </p>
 
-                <button
-                  type="button"
-                  onClick={() => handleTriggerScan(cctv.id)}
-                  disabled={isScanning}
-                  className="min-h-[40px] px-2.5 rounded-lg bg-surface-container-high text-xs font-mono font-bold text-cyan-400 hover:text-white hover:bg-surface-container-highest transition-colors"
-                  title="Jalankan YOLO Inference pada kamera ini"
-                >
-                  Scan AI
-                </button>
-
-                <Link
-                  href={`/peta`}
-                  className="min-w-[40px] min-h-[40px] flex items-center justify-center rounded-lg bg-surface-container-high text-on-surface-variant hover:text-primary hover:bg-surface-container-highest transition-colors"
-                  title="Lihat titik di peta spasial"
-                >
-                  <ExternalLink className="w-4 h-4" />
-                </Link>
+              <div className="pt-2 border-t border-[#e6e6e6] grid grid-cols-2 gap-2 text-xs font-mono mb-4 text-[#696969]">
+                <div>
+                  <span className="text-[9px] uppercase block">Kategori:</span>
+                  <span className="font-bold text-[#1d1d1d] text-[11px] truncate block">
+                    {cctv.category === 'rob_banjir' ? 'Rawan Genangan' : 'Pompa Polder'}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[9px] uppercase block">Resolusi:</span>
+                  <span className="font-bold text-[#4a154b] text-[11px] block">
+                    1080p (25 FPS)
+                  </span>
+                </div>
               </div>
             </div>
-          )
-        })}
+
+            <div className="flex items-center gap-2 pt-3 border-t border-[#e6e6e6]">
+              <button
+                onClick={() => setSelectedCCTV(cctv)}
+                className="flex-1 py-2 px-3 rounded-[90px] bg-[#4a154b] hover:bg-[#611f69] text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+              >
+                <Video className="w-3.5 h-3.5" />
+                <span>Lihat Stream</span>
+              </button>
+
+              <button
+                onClick={() => handleTriggerScan(cctv.id)}
+                disabled={isScanning}
+                className="py-2 px-3 rounded-[90px] bg-[#f4ede4] hover:bg-[#e8ded2] text-[#4a154b] font-bold text-xs border border-[#e6e6e6] transition-colors cursor-pointer flex items-center gap-1"
+                title="Jalankan Non-YOLO CV Analysis"
+              >
+                <Sliders className="w-3.5 h-3.5" />
+                <span>Uji Non-YOLO</span>
+              </button>
+            </div>
+          </div>
+        ))}
       </div>
 
-      {filteredCCTVs.length === 0 && (
-        <div className="py-16 text-center text-on-surface-variant font-mono text-xs bg-surface-container-low rounded-xl border border-outline-variant/30">
-          Tidak ada kamera CCTV yang cocok dengan filter atau kueri pencarian.
-        </div>
-      )}
-
-      {/* Live HLS Video Stream Modal */}
+      {/* Stream Viewer Modal */}
       {selectedCCTV && (
-        <CCTVDetailPanel
-          cctv={selectedCCTV}
-          onClose={() => setSelectedCCTV(null)}
-        />
+        <CCTVDetailPanel cctv={selectedCCTV} onClose={() => setSelectedCCTV(null)} />
       )}
 
-      {/* Flood Event Detail & Evidence Modal */}
+      {/* Flood Event Modal */}
       {selectedFloodEvent && (
         <FloodEventDetailModal
           event={selectedFloodEvent}
           onClose={() => setSelectedFloodEvent(null)}
-          onOpenCCTV={(camId) => {
-            const found = PANTAUSEMAR_CCTV_POINTS.find((c) => c.id === camId)
-            if (found) {
-              setSelectedCCTV(found)
-              setSelectedFloodEvent(null)
-            }
-          }}
           onResolve={handleResolveEvent}
         />
+      )}
+
+      {/* Non-YOLO Explainability Diagnostics Drawer Modal */}
+      {diagnosticsCCTV && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-[20px] border border-[#e6e6e6] shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 sm:p-8 space-y-5 animate-in fade-in zoom-in-95">
+            <div className="flex items-start justify-between pb-4 border-b border-[#e6e6e6]">
+              <div>
+                <span className="text-[10px] font-mono uppercase font-bold text-[#4a154b] px-3 py-1 rounded-[90px] bg-[#f9f0ff] border border-[#d9bdde]/50 mb-2 inline-block">
+                  NON-YOLO CV DIAGNOSTIK
+                </span>
+                <h3 className="text-xl font-bold text-[#1d1d1d]">
+                  {diagnosticsCCTV.cam.name} ({diagnosticsCCTV.cam.code})
+                </h3>
+                <p className="text-xs text-[#696969] mt-0.5">
+                  Kec. {diagnosticsCCTV.cam.district} &bull; {diagnosticsCCTV.cam.address}
+                </p>
+              </div>
+              <button
+                onClick={() => setDiagnosticsCCTV(null)}
+                className="w-8 h-8 rounded-full bg-[#f4ede4] hover:bg-[#e8ded2] flex items-center justify-center text-[#1d1d1d] cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Diagnostic Signals Gauges */}
+            {diagnosticsCCTV.signals && (
+              <div className="space-y-3 p-4 rounded-[16px] bg-[#fdfbf9] border border-[#e6e6e6]">
+                <div className="flex items-center justify-between">
+                  <span className="font-mono text-xs font-bold uppercase tracking-wider text-[#4a154b]">
+                    Multi-Signal Score Breakdown
+                  </span>
+                  <span className="font-mono text-xs font-bold text-[#007a5a]">
+                    Composite: {diagnosticsCCTV.signals.composite_detection_score}
+                  </span>
+                </div>
+
+                <div className="space-y-2 pt-1 font-mono text-xs">
+                  {[
+                    { label: 'Water Area Coverage', val: diagnosticsCCTV.signals.water_area_score },
+                    { label: 'Waterline Elevation', val: diagnosticsCCTV.signals.waterline_score },
+                    { label: 'Texture Homogeneity (Smoothness)', val: diagnosticsCCTV.signals.texture_score },
+                    { label: 'Spatial Blob Continuity', val: diagnosticsCCTV.signals.spatial_score },
+                    { label: 'Temporal Sliding Window Persistence', val: diagnosticsCCTV.signals.temporal_score },
+                  ].map((sig, idx) => (
+                    <div key={idx} className="space-y-1">
+                      <div className="flex justify-between text-[11px]">
+                        <span className="text-[#696969]">{sig.label}</span>
+                        <span className="font-bold text-[#1d1d1d]">{(sig.val * 100).toFixed(1)}%</span>
+                      </div>
+                      <div className="w-full h-2 rounded-[90px] bg-[#f4ede4] overflow-hidden">
+                        <div
+                          className={`h-full rounded-[90px] ${
+                            sig.val < 0.40 ? 'bg-[#007a5a]' : sig.val < 0.70 ? 'bg-[#d97706]' : 'bg-[#cc4117]'
+                          }`}
+                          style={{ width: `${Math.min(100, sig.val * 100)}%` }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Explainability factors */}
+            {diagnosticsCCTV.explainability && (
+              <div className="space-y-2 p-4 rounded-[16px] bg-[#f4ede4] border border-[#e6e6e6] text-xs">
+                <span className="font-bold text-[#4a154b] block uppercase font-mono text-[11px]">
+                  Rasionalitas Klasifikasi (Explainability):
+                </span>
+                <p className="font-semibold text-[#1d1d1d]">
+                  {diagnosticsCCTV.explainability.verdict}
+                </p>
+                <div className="space-y-1 pt-1 text-[#696969]">
+                  {diagnosticsCCTV.explainability.primary_factors?.map((f: string, i: number) => (
+                    <div key={i} className="flex items-start gap-1.5">
+                      <span className="text-[#007a5a] font-bold">•</span>
+                      <span>{f}</span>
+                    </div>
+                  ))}
+                  {diagnosticsCCTV.explainability.suppression_factors?.map((f: string, i: number) => (
+                    <div key={i} className="flex items-start gap-1.5">
+                      <span className="text-[#696969] font-bold">•</span>
+                      <span>{f}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Debug visualization image */}
+            {diagnosticsCCTV.debug_url && (
+              <div className="space-y-2">
+                <span className="font-mono text-[11px] font-bold uppercase text-[#4a154b] block">
+                  Debug Visualization Composite (4-Panel):
+                </span>
+                <div className="rounded-[16px] overflow-hidden border border-[#e6e6e6] shadow-sm">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={diagnosticsCCTV.debug_url}
+                    alt="Non-YOLO Debug Visualization"
+                    className="w-full h-auto"
+                  />
+                </div>
+              </div>
+            )}
+
+            <div className="pt-2">
+              <button
+                onClick={() => setDiagnosticsCCTV(null)}
+                className="w-full h-11 rounded-[90px] bg-[#4a154b] hover:bg-[#611f69] text-white font-bold text-xs uppercase cursor-pointer"
+              >
+                Tutup Panel Diagnostik
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

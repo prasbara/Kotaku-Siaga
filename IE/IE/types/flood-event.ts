@@ -8,9 +8,12 @@ export type CCTVHealthState = 'ONLINE' | 'OFFLINE' | 'ERROR' | 'STALE' | 'UNKNOW
 
 export type FloodStateMachineState =
   | 'NORMAL'
+  | 'WATCH'
   | 'WATER_SUSPECTED'
   | 'FLOOD_SUSPECTED'
+  | 'VERIFYING'
   | 'FLOOD_CONFIRMED'
+  | 'RECOVERING'
   | 'FLOOD_RESOLVED'
 
 export interface BoundingBox {

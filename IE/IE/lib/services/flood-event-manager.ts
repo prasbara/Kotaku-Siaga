@@ -301,6 +301,9 @@ class FloodEventManager {
       temporal_score: result.temporal_score,
       status: result.state,
       estimated_visual_severity: result.estimated_visual_severity,
+      signals: result.signals,
+      camera_health: result.camera_health,
+      explainability: result.explainability,
       evidence_url: result.evidence_url,
       created_at: nowIso,
     }
@@ -398,7 +401,7 @@ class FloodEventManager {
         {
           timestamp: nowIso,
           time_wib: timeWib,
-          message: `Deteksi awal: indikasi visual ${raw.estimated_visual_severity.toUpperCase()} oleh YOLO (${(raw.flood_confidence * 100).toFixed(0)}%).`,
+          message: `Deteksi awal: indikasi visual ${raw.estimated_visual_severity.toUpperCase()} oleh Non-YOLO CV (${(raw.flood_confidence * 100).toFixed(0)}%).`,
           state: raw.state,
           confidence: raw.flood_confidence,
           severity: raw.estimated_visual_severity,
