@@ -57,11 +57,11 @@ export default async function LandingPage() {
             KotaKu Siaga menghubungkan laporan warga, pemetaan spasial rob pesisir, telemetri cuaca BMKG, dan 70 titik CCTV PantauSemar untuk resiliensi iklim Kota Semarang.
           </p>
 
-          {/* Action CTAs (Pill System) */}
+          {/* Action CTAs (Pill System: Over-padded 90px radius) */}
           <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
             <Link
               href="/laporan/baru"
-              className="min-h-[48px] px-8 py-3.5 rounded-[90px] bg-[#4a154b] hover:bg-[#481a54] active:bg-[#611f69] text-white font-bold text-sm tracking-wide shadow-cta flex items-center gap-2 transition-all active:scale-[0.98]"
+              className="min-h-[48px] px-8 py-3.5 rounded-[90px] bg-[#4a154b] hover:bg-[#481a54] active:bg-[#611f69] text-white font-bold text-sm tracking-wide shadow-[0_5px_20px_rgba(0,0,0,0.1)] flex items-center gap-2 transition-all active:scale-[0.98]"
             >
               <span className="material-symbols-outlined text-[20px]">campaign</span>
               Laporkan Kejadian Lapangan
@@ -69,15 +69,15 @@ export default async function LandingPage() {
 
             <Link
               href="/peta"
-              className="min-h-[48px] px-8 py-3.5 rounded-[90px] bg-white hover:bg-[#f9f0ff] active:bg-[#eddcf7] text-[#4a154b] border-2 border-[#4a154b] font-bold text-sm tracking-wide flex items-center gap-2 transition-all active:scale-[0.98]"
+              className="min-h-[48px] px-8 py-3.5 rounded-[90px] bg-[#f9f0ff] hover:bg-[#eddcf7] text-[#1d1d1d] font-bold text-sm tracking-wide flex items-center gap-2 transition-all active:scale-[0.98]"
             >
-              <Map className="w-4 h-4" />
+              <Map className="w-4 h-4 text-[#4a154b]" />
               Buka Peta Spasial
             </Link>
 
             <Link
               href="/dashboard"
-              className="min-h-[48px] px-7 py-3 rounded-[90px] bg-[#f9f0ff] hover:bg-[#eddcf7] text-[#1d1d1d] font-semibold text-sm flex items-center gap-2 transition-all"
+              className="min-h-[48px] px-8 py-3.5 rounded-[90px] bg-white hover:bg-[#f9f0ff] text-[#4a154b] border-2 border-[#4a154b] font-bold text-sm tracking-wide flex items-center gap-2 transition-all"
             >
               Command Center
               <ArrowRight className="w-4 h-4 text-[#4a154b]" />
@@ -85,7 +85,7 @@ export default async function LandingPage() {
           </div>
 
           {/* Telemetry Strip */}
-          <div className="mt-12 w-full max-w-4xl p-3.5 rounded-[16px] bg-white/90 backdrop-blur-sm border border-[#e6e6e6] shadow-subtle flex flex-wrap items-center justify-between gap-3 text-xs">
+          <div className="mt-10 w-full max-w-4xl p-3.5 rounded-[16px] bg-white/90 backdrop-blur-sm border border-[#e6e6e6] shadow-subtle flex flex-wrap items-center justify-between gap-3 text-xs">
             <div className="flex items-center gap-2.5 px-3 py-1.5 rounded-full bg-[#f4ede4]">
               <span className="w-2 h-2 rounded-full bg-[#007a5a] animate-pulse"></span>
               <span className="text-[11px] font-bold text-[#4a154b] uppercase tracking-wider">Telemetri BMKG:</span>
@@ -94,8 +94,8 @@ export default async function LandingPage() {
 
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#f9f0ff]">
               <Video className="w-3.5 h-3.5 text-[#4a154b]" />
-              <span className="text-[11px] font-bold text-[#4a154b] uppercase tracking-wider">PantauSemar CCTV:</span>
-              <span className="text-[11px] text-[#1d1d1d] font-semibold">{cctvCount} Titik Terkoneksi</span>
+              <span className="text-[11px] font-bold text-[#4a154b] uppercase tracking-wider">CCTV Non-YOLO:</span>
+              <span className="text-[11px] text-[#1d1d1d] font-semibold">{cctvCount} Titik Terpantau</span>
             </div>
 
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#f4ede4] hidden sm:flex">
@@ -103,86 +103,175 @@ export default async function LandingPage() {
               <span className="text-[11px] font-bold text-[#007a5a]">100% Deterministic & Open</span>
             </div>
           </div>
+
+          {/* Floating Product UI Mockup (Slacc Signature 3:2 Aspect on Pastel Mesh) */}
+          <div className="mt-14 w-full max-w-5xl rounded-[12px] overflow-hidden bg-white border border-[#e6e6e6] shadow-[0_0_32px_rgba(0,0,0,0.08)] text-left">
+            {/* Chrome Top Bar */}
+            <div className="bg-[#f4ede4] px-4 py-3 border-b border-[#e6e6e6] flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-[#cc4117]/80"></span>
+                <span className="w-3 h-3 rounded-full bg-[#d97706]/80"></span>
+                <span className="w-3 h-3 rounded-full bg-[#007a5a]/80"></span>
+                <span className="ml-2 font-mono text-[11px] text-[#696969]">kotakusiaga.semarangkota.go.id/radar</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-[#4a154b] text-white">
+                  NON-YOLO CV ONLINE
+                </span>
+                <span className="text-[11px] font-mono text-[#007a5a] font-semibold">40.3 FPS</span>
+              </div>
+            </div>
+
+            {/* Inner Dashboard Preview Grid */}
+            <div className="p-6 bg-[#fdfbf9] grid grid-cols-1 md:grid-cols-12 gap-6">
+              {/* Left Telemetry Panel */}
+              <div className="md:col-span-4 flex flex-col gap-4">
+                <div className="rounded-[12px] p-4 bg-white border border-[#e6e6e6]">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#4a154b]">FOKUS CCTV AKTIF</span>
+                  <h3 className="font-bold text-sm text-[#1d1d1d] mt-1">Underpass Kaligawe (KM 4)</h3>
+                  <div className="mt-3 flex items-center justify-between text-xs">
+                    <span className="text-[#696969]">Kesehatan Kamera:</span>
+                    <span className="font-bold text-[#007a5a]">ONLINE (Sharpness 34.2)</span>
+                  </div>
+                  <div className="mt-2 flex items-center justify-between text-xs">
+                    <span className="text-[#696969]">Waterline Elevation:</span>
+                    <span className="font-bold text-[#1d1d1d]">+14 cm MSL</span>
+                  </div>
+                  <div className="mt-2 flex items-center justify-between text-xs">
+                    <span className="text-[#696969]">Tekstur Aspal:</span>
+                    <span className="font-bold text-[#007a5a]">Aggregated (Non-Water)</span>
+                  </div>
+                </div>
+
+                <div className="rounded-[12px] p-4 bg-[#f9f0ff] border border-[#eddcf7]">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#4a154b]">MULTI-SIGNAL GAUGES</span>
+                  <div className="mt-3 space-y-2">
+                    <div>
+                      <div className="flex justify-between text-[11px] mb-1">
+                        <span className="text-[#1d1d1d]">Water Area Ratio</span>
+                        <span className="font-bold text-[#4a154b]">0.02 / 0.35</span>
+                      </div>
+                      <div className="h-1.5 w-full bg-white rounded-full overflow-hidden">
+                        <div className="h-full bg-[#4a154b] rounded-full" style={{ width: '6%' }}></div>
+                      </div>
+                    </div>
+                    <div>
+                      <div className="flex justify-between text-[11px] mb-1">
+                        <span className="text-[#1d1d1d]">Temporal Persistence</span>
+                        <span className="font-bold text-[#007a5a]">100% Stabil</span>
+                      </div>
+                      <div className="h-1.5 w-full bg-white rounded-full overflow-hidden">
+                        <div className="h-full bg-[#007a5a] rounded-full" style={{ width: '100%' }}></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Live Visual Simulation */}
+              <div className="md:col-span-8 rounded-[12px] overflow-hidden bg-[#1d1d1d] text-white p-4 flex flex-col justify-between min-h-[220px] relative">
+                <div className="flex items-center justify-between z-10">
+                  <div className="flex items-center gap-2 bg-black/60 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-mono">
+                    <span className="w-2 h-2 rounded-full bg-[#007a5a] animate-ping"></span>
+                    CAM-KLG-01 • RTMP/HLS STREAM
+                  </div>
+                  <span className="bg-[#4a154b] px-2.5 py-0.5 rounded-full text-[11px] font-bold text-white">
+                    STATE: NORMAL
+                  </span>
+                </div>
+
+                {/* Simulated Non-YOLO Waterline Overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-[#4a154b]/40 via-transparent to-black/30 pointer-events-none"></div>
+                <div className="absolute bottom-6 left-6 right-6 border border-[#007a5a]/70 rounded-[8px] p-2.5 bg-black/50 backdrop-blur-sm flex items-center justify-between text-xs z-10">
+                  <div className="flex items-center gap-2">
+                    <span className="material-symbols-outlined text-[#f4ede4] text-[18px]">verified</span>
+                    <span>Zero False Alarm Verification: 15/15 frames normal</span>
+                  </div>
+                  <span className="font-mono text-[#f4ede4] font-bold">Confidence: 94.2%</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* 2. STATS & SITUATIONAL OVERVIEW */}
-      <section className="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-        <div className="flex flex-col gap-2 mb-10 text-center sm:text-left">
+      {/* 2. STATS & SITUATIONAL OVERVIEW (Slacc card-stat Pattern with 50px Aubergine Numerals) */}
+      <section className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+        <div className="flex flex-col gap-2 mb-12 text-center sm:text-left">
           <span className="text-xs uppercase text-[#4a154b] font-bold tracking-wider">
-            Situational Awareness
+            Situational Awareness & Statistics
           </span>
-          <h2 className="font-display text-2xl sm:text-3xl font-bold text-[#1d1d1d] tracking-tight">
+          <h2 className="font-display text-3xl sm:text-4xl font-bold text-[#1d1d1d] tracking-[-0.256px]">
             Pemantauan Risiko Terkini Kota Semarang
           </h2>
-          <p className="text-sm text-[#696969] max-w-2xl">
-            Integrasi langsung antara laporan warga yang diverifikasi berlapis dan infrastruktur pengendali banjir pesisir.
+          <p className="text-base text-[#696969] leading-[1.55] max-w-2xl">
+            Integrasi langsung antara laporan warga deterministik, telemetri hidrometeorologi BMKG, dan infrastruktur pengendali banjir pesisir.
           </p>
         </div>
 
-        {/* 4 Cards Grid */}
+        {/* 4-Up Grid of Slacc card-stat Components */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {/* Card 1: Featured Aubergine */}
-          <div className="rounded-[16px] p-8 bg-[#4a154b] text-white border border-[#481a54] shadow-card flex flex-col justify-between relative overflow-hidden">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-[#d9bdde] uppercase tracking-wider">STATUS PESISIR</span>
-              <Waves className="w-5 h-5 text-[#f4ede4]" />
-            </div>
-            <div className="my-6">
-              <div className="text-3xl font-display font-bold text-white tracking-tight">Waspada Rob</div>
-              <div className="text-xs text-[#d9bdde] mt-1 font-medium">Kawasan Kaligawe & Pelabuhan</div>
-            </div>
-            <div className="pt-3 border-t border-[#592466] flex items-center justify-between text-xs text-[#f4ede4]">
-              <span>Elevasi Pasang Air Laut</span>
-              <span className="font-bold">+85 cm MSL</span>
-            </div>
-          </div>
-
-          {/* Card 2: Cream Feature */}
-          <div className="rounded-[16px] p-8 bg-[#f4ede4] text-[#1d1d1d] border border-[#e8ded2] shadow-subtle flex flex-col justify-between">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-[#4a154b] uppercase tracking-wider">CCTV OPERASIONAL</span>
-              <Video className="w-5 h-5 text-[#4a154b]" />
-            </div>
-            <div className="my-6">
-              <div className="text-3xl font-display font-bold text-[#1d1d1d] tracking-tight">{cctvCount} Titik</div>
-              <div className="text-xs text-[#696969] mt-1">PantauSemar CCTV Diskominfo</div>
-            </div>
-            <div className="pt-3 border-t border-[#e8ded2] flex items-center justify-between text-xs text-[#696969]">
-              <span>Kamera Genangan & Pompa</span>
-              <span className="font-bold text-[#007a5a]">Online 24/7</span>
-            </div>
-          </div>
-
-          {/* Card 3: Lavender Feature */}
-          <div className="rounded-[16px] p-8 bg-[#f9f0ff] text-[#1d1d1d] border border-[#eddcf7] shadow-subtle flex flex-col justify-between">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-[#4a154b] uppercase tracking-wider">RUMAH POMPA</span>
-              <Droplets className="w-5 h-5 text-[#4a154b]" />
-            </div>
-            <div className="my-6">
-              <div className="text-3xl font-display font-bold text-[#1d1d1d] tracking-tight">5 Polder Utama</div>
-              <div className="text-xs text-[#696969] mt-1">Sringin, Tenggang, BKB, BKT, Kalibaru</div>
-            </div>
-            <div className="pt-3 border-t border-[#eddcf7] flex items-center justify-between text-xs text-[#696969]">
-              <span>Kapasitas Pembuangan</span>
-              <span className="font-bold text-[#4a154b]">&gt; 35.000 L/dtk</span>
-            </div>
-          </div>
-
-          {/* Card 4: White Subtle */}
-          <div className="rounded-[16px] p-8 bg-white text-[#1d1d1d] border border-[#e6e6e6] shadow-subtle flex flex-col justify-between">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-[#4a154b] uppercase tracking-wider">RESPONS DARURAT</span>
-              <PhoneCall className="w-5 h-5 text-[#cc4117]" />
-            </div>
-            <div className="my-6">
-              <div className="text-3xl font-display font-bold text-[#1d1d1d] tracking-tight">Call 112</div>
-              <div className="text-xs text-[#696969] mt-1">EOC BPBD Kota Semarang</div>
+          {/* Stat 1 */}
+          <div className="rounded-[16px] p-8 bg-white text-[#1d1d1d] border border-[#e6e6e6] shadow-[0_5px_20px_rgba(0,0,0,0.03)] flex flex-col justify-between">
+            <span className="text-xs font-bold text-[#696969] uppercase tracking-wider">CCTV NON-YOLO</span>
+            <div className="my-4">
+              <div className="font-display text-[50px] font-bold text-[#4a154b] leading-[1.12] tracking-[-0.6px]">
+                {cctvCount}
+              </div>
+              <p className="text-sm text-[#1d1d1d] font-semibold mt-2">Titik Kamera Terkalibrasi</p>
+              <p className="text-xs text-[#696969] mt-1">PantauSemar Diskominfo Kota Semarang</p>
             </div>
             <div className="pt-3 border-t border-[#e6e6e6] flex items-center justify-between text-xs text-[#696969]">
-              <span>Layanan Publik Darurat</span>
-              <span className="font-bold text-[#cc4117]">Bebas Pulsa</span>
+              <span>Throughput Realtime</span>
+              <span className="font-bold text-[#007a5a]">40.3 FPS CPU</span>
+            </div>
+          </div>
+
+          {/* Stat 2 */}
+          <div className="rounded-[16px] p-8 bg-white text-[#1d1d1d] border border-[#e6e6e6] shadow-[0_5px_20px_rgba(0,0,0,0.03)] flex flex-col justify-between">
+            <span className="text-xs font-bold text-[#696969] uppercase tracking-wider">VERIFIKASI LAPIS TIGA</span>
+            <div className="my-4">
+              <div className="font-display text-[50px] font-bold text-[#4a154b] leading-[1.12] tracking-[-0.6px]">
+                100%
+              </div>
+              <p className="text-sm text-[#1d1d1d] font-semibold mt-2">Deterministik & Terbuka</p>
+              <p className="text-xs text-[#696969] mt-1">Cross-check GPS, BMKG, & Anti-Bot Trap</p>
+            </div>
+            <div className="pt-3 border-t border-[#e6e6e6] flex items-center justify-between text-xs text-[#696969]">
+              <span>Integritas Skor</span>
+              <span className="font-bold text-[#007a5a]">Zero Black Box</span>
+            </div>
+          </div>
+
+          {/* Stat 3: Featured Aubergine Card (Slacc card-pricing-featured equivalent) */}
+          <div className="rounded-[16px] p-8 bg-[#4a154b] text-white border border-[#481a54] shadow-[0_5px_20px_rgba(74,21,75,0.15)] flex flex-col justify-between relative overflow-hidden">
+            <span className="text-xs font-bold text-[#d9bdde] uppercase tracking-wider">STATUS ELEVASI ROB</span>
+            <div className="my-4">
+              <div className="font-display text-[50px] font-bold text-white leading-[1.12] tracking-[-0.6px]">
+                +85<span className="text-2xl font-normal text-[#d9bdde]">cm</span>
+              </div>
+              <p className="text-sm text-white font-semibold mt-2">Tanjung Emas & Kaligawe</p>
+              <p className="text-xs text-[#d9bdde] mt-1">Stasiun Pasut BMKG Maritim</p>
+            </div>
+            <div className="pt-3 border-t border-[#592466] flex items-center justify-between text-xs text-[#f4ede4]">
+              <span>Kategori Status</span>
+              <span className="font-bold px-2 py-0.5 rounded-full bg-white/20">WASPADA ROB</span>
+            </div>
+          </div>
+
+          {/* Stat 4 */}
+          <div className="rounded-[16px] p-8 bg-white text-[#1d1d1d] border border-[#e6e6e6] shadow-[0_5px_20px_rgba(0,0,0,0.03)] flex flex-col justify-between">
+            <span className="text-xs font-bold text-[#696969] uppercase tracking-wider">POLDER & DRAINASE</span>
+            <div className="my-4">
+              <div className="font-display text-[50px] font-bold text-[#4a154b] leading-[1.12] tracking-[-0.6px]">
+                5
+              </div>
+              <p className="text-sm text-[#1d1d1d] font-semibold mt-2">Rumah Pompa Terkoneksi</p>
+              <p className="text-xs text-[#696969] mt-1">Sringin, Tenggang, BKB, BKT, Kalibaru</p>
+            </div>
+            <div className="pt-3 border-t border-[#e6e6e6] flex items-center justify-between text-xs text-[#696969]">
+              <span>Kapasitas Pembuangan</span>
+              <span className="font-bold text-[#4a154b]">&gt; 35.000 L/s</span>
             </div>
           </div>
         </div>
@@ -202,7 +291,7 @@ export default async function LandingPage() {
             </div>
             <Link
               href="/laporan"
-              className="text-sm font-bold text-[#4a154b] hover:text-[#611f69] flex items-center gap-1.5 transition-colors"
+              className="text-sm font-semibold text-[#1264a3] hover:text-[#3860be] hover:underline flex items-center gap-1.5 transition-colors"
             >
               Jelajahi Seluruh Laporan Warga →
             </Link>
@@ -221,7 +310,7 @@ export default async function LandingPage() {
                 </p>
               </div>
               <div className="mt-6 pt-4 border-t border-[#e6e6e6]">
-                <Link href="/peta" className="text-xs font-bold text-[#4a154b] hover:underline flex items-center gap-1">
+                <Link href="/peta" className="text-sm font-semibold text-[#1264a3] hover:text-[#3860be] hover:underline flex items-center gap-1 transition-colors">
                   Buka Peta Interaktif →
                 </Link>
               </div>
@@ -239,7 +328,7 @@ export default async function LandingPage() {
                 </p>
               </div>
               <div className="mt-6 pt-4 border-t border-[#e6e6e6]">
-                <Link href="/laporan/baru" className="text-xs font-bold text-[#4a154b] hover:underline flex items-center gap-1">
+                <Link href="/laporan/baru" className="text-sm font-semibold text-[#1264a3] hover:text-[#3860be] hover:underline flex items-center gap-1 transition-colors">
                   Kirim Laporan Baru →
                 </Link>
               </div>
@@ -257,7 +346,7 @@ export default async function LandingPage() {
                 </p>
               </div>
               <div className="mt-6 pt-4 border-t border-[#e6e6e6]">
-                <Link href="/priorities" className="text-xs font-bold text-[#4a154b] hover:underline flex items-center gap-1">
+                <Link href="/priorities" className="text-sm font-semibold text-[#1264a3] hover:text-[#3860be] hover:underline flex items-center gap-1 transition-colors">
                   Lihat Skor Matriks →
                 </Link>
               </div>
