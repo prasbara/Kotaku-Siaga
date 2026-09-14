@@ -8,13 +8,13 @@ import { cn } from '@/lib/utils'
 
 const navItems = [
   { label: 'Beranda', href: '/' },
-  { label: 'Peta Spasial', href: '/peta', badgeDot: true },
+  { label: 'Peta Pemantauan', href: '/peta', badgeDot: true },
   { label: 'Laporan Warga', href: '/laporan' },
-  { label: 'Lapor Cepat', href: '/laporan/baru', isHighlight: true },
+  { label: 'Lapor Genangan', href: '/laporan/baru', isHighlight: true },
   { label: 'Matriks Risiko', href: '/priorities' },
-  { label: 'Data & Audit', href: '/data' },
-  { label: 'Edukasi', href: '/edukasi' },
-  { label: 'Command Center', href: '/dashboard' },
+  { label: 'Integritas Data', href: '/data' },
+  { label: 'Edukasi Bencana', href: '/edukasi' },
+  { label: 'Pusat Kendali', href: '/dashboard' },
 ]
 
 export function Navbar() {
@@ -59,7 +59,7 @@ export function Navbar() {
                 </span>
               </div>
               <span className="text-[11px] text-[#696969] tracking-normal hidden md:inline truncate font-medium">
-                Civic Climate Intelligence & Resiliensi Pesisir
+                Pemantauan Risiko Banjir & Rob Kota Semarang
               </span>
             </div>
           </Link>
@@ -110,7 +110,7 @@ export function Navbar() {
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           {/* EOC Clock */}
           <div className="hidden 2xl:flex flex-col text-right pr-2">
-            <span className="text-[9px] font-mono text-[#696969] uppercase font-bold tracking-wider">EOC TIME</span>
+            <span className="text-[9px] font-mono text-[#696969] uppercase font-bold tracking-wider">WAKTU SISTEM</span>
             <span className="text-xs font-mono text-[#1d1d1d] font-semibold">{currentTime || 'WIB'}</span>
           </div>
 
@@ -118,17 +118,17 @@ export function Navbar() {
           <a
             href="tel:112"
             className="min-h-[48px] px-4 py-2.5 rounded-[90px] bg-[#cc4117] text-white hover:bg-[#b03713] active:bg-[#992e0e] text-xs font-bold tracking-wide flex items-center gap-2 shadow-sm transition-all active:scale-[0.98]"
-            title="Call BPBD EOC 112"
+            title="Hubungi Panggilan Darurat BPBD 112"
           >
             <PhoneCall className="w-4 h-4" />
-            <span className="hidden sm:inline">112 BPBD</span>
+            <span className="hidden sm:inline">Darurat 112</span>
           </a>
 
           {/* Operator / Profile Icon */}
           <Link
             href="/dashboard"
             className="w-12 h-12 shrink-0 rounded-[90px] bg-[#f9f0ff] border border-[#eddcf7] flex items-center justify-center text-[#4a154b] hover:bg-[#4a154b] hover:text-white transition-all shadow-subtle"
-            title="Command Center"
+            title="Masuk ke Pusat Kendali"
           >
             <ShieldCheck className="w-5 h-5" />
           </Link>
@@ -137,7 +137,7 @@ export function Navbar() {
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
             className="xl:hidden w-12 h-12 flex items-center justify-center rounded-[90px] bg-[#f4ede4] text-[#1d1d1d] hover:bg-[#f9f0ff] focus:outline-none"
-            aria-label="Toggle menu"
+            aria-label="Buka menu navigasi"
           >
             {mobileOpen ? <X className="h-5 w-5 text-[#4a154b]" /> : <Menu className="h-5 w-5" />}
           </button>

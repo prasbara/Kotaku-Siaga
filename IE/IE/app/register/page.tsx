@@ -62,14 +62,14 @@ export default function RegisterPage() {
           <div className="w-12 h-12 rounded-full bg-[#007a5a]/10 border border-[#007a5a]/30 flex items-center justify-center mx-auto text-[#007a5a]">
             <CheckCircle className="h-6 w-6" />
           </div>
-          <h2 className="text-2xl font-bold text-[#4a154b]">Akun Berhasil Dibuat</h2>
+          <h2 className="text-2xl font-bold text-[#4a154b]">Pendaftaran Akun Berhasil</h2>
           <p className="text-sm text-[#696969] leading-relaxed">
-            Silakan cek email Anda untuk tautan verifikasi akun sebelum masuk ke panel kontrol.
+            Tautan verifikasi telah dikirim ke email Anda. Silakan verifikasi sebelum masuk ke pusat kendali.
           </p>
           <div className="pt-4">
             <Link href="/login">
               <Button className="w-full h-12 rounded-[90px] bg-[#4a154b] hover:bg-[#611f69] text-white font-bold text-sm">
-                Masuk ke Halaman Login
+                Menuju Halaman Masuk
               </Button>
             </Link>
           </div>
@@ -98,7 +98,7 @@ export default function RegisterPage() {
           <div className="flex items-center justify-center gap-2 mb-2">
             <span className="w-2.5 h-2.5 rounded-full bg-[#4a154b]"></span>
             <span className="text-[11px] uppercase tracking-widest font-mono font-bold text-[#4a154b]">
-              KOTAKU SIAGA — PENDAFTARAN PERSONEL
+              KOTAKU SIAGA • PENDAFTARAN PETUGAS
             </span>
           </div>
 
@@ -106,7 +106,7 @@ export default function RegisterPage() {
             Registrasi Akun Petugas
           </h1>
           <p className="text-xs sm:text-sm text-[#696969] mt-2 leading-relaxed">
-            Daftarkan diri untuk verifikasi laporan lapangan, observasi posko, dan mitigasi risiko
+            Akses akun resmi petugas untuk memverifikasi laporan warga, memantau posko polder, dan koordinasi mitigasi.
           </p>
         </div>
 

@@ -73,15 +73,15 @@ export default function LoginPage() {
           <div className="flex items-center justify-center gap-2 mb-2">
             <span className="w-2.5 h-2.5 rounded-full bg-[#4a154b]"></span>
             <span className="text-[11px] uppercase tracking-widest font-mono font-bold text-[#4a154b]">
-              KOTAKU SIAGA — EOC CONTROL DESK
+              KOTAKU SIAGA • PUSAT KENDALI OPERASI
             </span>
           </div>
 
           <h1 className="text-3xl font-bold text-[#4a154b] tracking-tight">
-            Masuk ke Panel Kontrol
+            Masuk ke Pusat Kendali
           </h1>
           <p className="text-xs sm:text-sm text-[#696969] mt-2 leading-relaxed">
-            Akses EOC untuk verifikasi laporan warga, koordinasi pompa polder, dan disposisi armada
+            Akses khusus petugas untuk verifikasi laporan warga, pemantauan pompa polder, dan koordinasi penanganan lapangan.
           </p>
         </div>
 
@@ -143,7 +143,7 @@ export default function LoginPage() {
               className="w-full h-12 rounded-[90px] bg-[#4a154b] hover:bg-[#611f69] text-white font-bold text-sm tracking-wide transition-all shadow-sm cursor-pointer"
               disabled={loading}
             >
-              {loading ? 'Memverifikasi...' : 'Masuk ke Control Desk'}
+              {loading ? 'Memverifikasi...' : 'Masuk ke Pusat Kendali'}
             </Button>
           </form>
 
@@ -153,7 +153,7 @@ export default function LoginPage() {
               <div className="flex items-start gap-3">
                 <KeyRound className="h-4 w-4 text-[#4a154b] mt-0.5 shrink-0" />
                 <div className="text-xs space-y-1 text-[#696969]">
-                  <div className="font-bold text-[#1d1d1d]">Kredensial Pengujian EOC:</div>
+                  <div className="font-bold text-[#1d1d1d]">Kredensial Pengujian Petugas:</div>
                   <div className="font-mono text-[11px]">User: <code className="bg-white px-2 py-0.5 rounded border border-[#e6e6e6] text-[#4a154b] font-bold">admin</code></div>
                   <div className="font-mono text-[11px]">Pass: <code className="bg-white px-2 py-0.5 rounded border border-[#e6e6e6] text-[#4a154b] font-bold">superadmin.</code></div>
                   <button
@@ -161,7 +161,7 @@ export default function LoginPage() {
                     onClick={fillAdminCredentials}
                     className="inline-flex items-center gap-1 text-xs font-bold text-[#4a154b] hover:underline mt-1 cursor-pointer"
                   >
-                    Otomatis isi form login
+                    Gunakan akun simulasi pengujian
                   </button>
                 </div>
               </div>

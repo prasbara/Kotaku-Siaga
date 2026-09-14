@@ -88,7 +88,7 @@ export default function LaporanListPage() {
           <div>
             <div className="flex items-center gap-2 mb-2">
               <span className="text-xs font-bold uppercase tracking-[0.96px] text-[#4a154b] px-3.5 py-1 rounded-[90px] bg-white border border-[#eddcf7] shadow-2xs">
-                Civic Ground-Truth
+                DATA LAPANGAN WARGA
               </span>
               <span className="text-xs text-[#696969] ml-1">• Terbuka untuk Publik</span>
             </div>
@@ -123,7 +123,7 @@ export default function LaporanListPage() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Cari kode tiket (SMG-...), lokasi, atau kata kunci..."
+                placeholder="Cari kode laporan (SMG-...), lokasi, atau kata kunci..."
                 className="w-full h-12 pl-11 pr-4 rounded-xl border border-[#e6e6e6] bg-[#fdfbf9] text-sm text-[#1d1d1d] focus:outline-none focus:border-[#4a154b] focus:ring-2 focus:ring-[#4a154b]/20"
               />
             </div>
@@ -216,7 +216,7 @@ export default function LaporanListPage() {
             </div>
             <h3 className="font-display text-xl font-bold text-[#1d1d1d]">Belum Ada Laporan Terdaftar</h3>
             <p className="text-sm text-[#696969] max-w-md mt-1 leading-relaxed">
-              Tidak ada kejadian yang cocok dengan filter yang dipilih saat ini, atau belum ada laporan yang masuk ke database.
+              Tidak ada laporan yang sesuai dengan filter atau kata kunci saat ini. Anda dapat mengatur ulang filter atau mengirim laporan baru.
             </p>
             <div className="mt-6 flex gap-3">
               <button
@@ -318,7 +318,7 @@ export default function LaporanListPage() {
                       href={`/laporan/${report.id}`}
                       className="w-full min-h-[40px] px-4 py-2 rounded-[90px] bg-[#f9f0ff] hover:bg-[#4a154b] text-[#4a154b] hover:text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-colors"
                     >
-                      Detail Laporan & Audit
+                      Lihat Rincian Laporan
                       <ArrowRight className="w-3.5 h-3.5" />
                     </Link>
                   </div>

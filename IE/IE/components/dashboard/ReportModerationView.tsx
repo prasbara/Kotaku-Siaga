@@ -153,17 +153,17 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="text-[10px] font-mono uppercase tracking-wider text-primary font-bold px-2 py-0.5 rounded bg-primary/10 border border-primary/30">
-              MODERASI EOC & VERIFIKASI BERLAPIS
+              MODERASI LAPORAN & VERIFIKASI BERLAPIS
             </span>
             <span className="text-[10px] font-mono text-secondary flex items-center gap-1 font-semibold">
-              <ShieldCheck className="w-3 h-3" /> Zero Login / Human-in-the-Loop
+              <ShieldCheck className="w-3 h-3" /> Akses Warga Terbuka & Verifikasi Petugas
             </span>
           </div>
           <h2 className="font-headline text-xl sm:text-2xl font-bold text-on-surface">
-            Antrean Verifikasi Tindakan & Bukti Lapangan
+            Antrean Moderasi & Verifikasi Laporan Warga
           </h2>
           <p className="text-xs text-on-surface-variant mt-0.5">
-            Sistem verifikasi otomatis (Anti-Bot, GPS, Foto, Hash Duplikat, PantauSemar CCTV & Cuaca) dengan keputusan akhir administrator.
+            Setiap laporan diperiksa otomatis melalui koordinat GPS, validasi foto, pencegahan duplikasi, dan sinkronisasi CCTV serta cuaca sebelum ditindaklanjuti.
           </p>
         </div>
 
@@ -172,10 +172,10 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
           {[
             { id: 'all', label: `Semua (${localReports.length})` },
             { id: 'submitted', label: `Menunggu (${pendingCount})` },
-            { id: 'suspicious', label: `Mencurigakan (${suspiciousCount})` },
-            { id: 'under_review', label: 'Tinjauan Ulang' },
+            { id: 'suspicious', label: `Perlu Diperiksa (${suspiciousCount})` },
+            { id: 'under_review', label: 'Dalam Peninjauan' },
             { id: 'verified', label: 'Terverifikasi' },
-            { id: 'in_progress', label: 'Penanganan' },
+            { id: 'in_progress', label: 'Dalam Penanganan' },
             { id: 'resolved', label: 'Selesai' },
             { id: 'rejected', label: 'Ditolak' },
           ].map((filter) => (
@@ -201,17 +201,17 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
           <thead>
             <tr className="border-b border-outline-variant/30 bg-surface-container text-on-surface-variant font-mono text-[10px] uppercase tracking-wider">
               <th className="py-3 px-4 font-semibold">Kode Laporan / Waktu</th>
-              <th className="py-3 px-4 font-semibold">Kategori & Masalah</th>
-              <th className="py-3 px-4 font-semibold">Skor Kredibilitas</th>
-              <th className="py-3 px-4 font-semibold">Status Alur</th>
-              <th className="py-3 px-4 font-semibold text-right">Tindakan Keputusan</th>
+              <th className="py-3 px-4 font-semibold">Kategori & Deskripsi</th>
+              <th className="py-3 px-4 font-semibold">Skor Validitas</th>
+              <th className="py-3 px-4 font-semibold">Status & Disposisi</th>
+              <th className="py-3 px-4 font-semibold text-right">Tindakan Petugas</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-outline-variant/20">
             {filtered.length === 0 ? (
               <tr>
                 <td colSpan={5} className="py-12 text-center text-xs text-on-surface-variant font-mono">
-                  Tidak ada laporan pada antrean filter ini.
+                  Tidak ada laporan dengan status ini.
                 </td>
               </tr>
             ) : (
@@ -290,7 +290,7 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
                                   </>
                                 ) : (
                                   <>
-                                    <ChevronDown className="w-3 h-3" /> Buka Bukti Verifikasi
+                                    <ChevronDown className="w-3 h-3" /> Periksa Bukti Lengkap
                                   </>
                                 )}
                               </button>
@@ -302,7 +302,7 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
                                 className="inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded border border-primary/40 text-primary hover:bg-primary/10 transition-colors"
                               >
                                 <Bot className="w-3 h-3" />
-                                {loadingAiId === report.id ? 'Menganalisis...' : aiInsights[report.id] ? 'AI Siap' : 'Triase AI'}
+                                {loadingAiId === report.id ? 'Menganalisis...' : aiInsights[report.id] ? 'Ringkasan Siap' : 'Bantuan Ringkasan'}
                               </button>
                             </div>
                           </div>
@@ -313,7 +313,7 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
                           <div className="mt-2 p-2.5 rounded-lg bg-surface-container border border-primary/30 text-[11px] font-body space-y-1 animate-in fade-in duration-150">
                             <div className="flex items-center justify-between text-[10px] font-mono text-primary font-bold">
                               <span className="flex items-center gap-1">
-                                <Bot className="w-3.5 h-3.5" /> Analisis Triase AI
+                                <Bot className="w-3.5 h-3.5" /> Ringkasan Analisis
                               </span>
                               <span className="uppercase text-secondary font-semibold">
                                 {aiInsights[report.id].severity} ({Math.round(aiInsights[report.id].confidence * 100)}%)
@@ -323,7 +323,7 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
                               {aiInsights[report.id].summary}
                             </p>
                             <div className="text-[10px] font-mono text-secondary pt-1 border-t border-outline-variant/20">
-                              💡 {aiInsights[report.id].recommended_action}
+                              💡 Saran Penanganan: {aiInsights[report.id].recommended_action}
                             </div>
                           </div>
                         )}
@@ -348,28 +348,28 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
                               <span>{score} / 100</span>
                             </span>
                             <span className="text-[10px] font-mono text-on-surface-variant uppercase font-semibold">
-                              {score >= 70 ? 'High' : score >= 40 ? 'Review' : 'Suspicious'}
+                              {score >= 70 ? 'Valid' : score >= 40 ? 'Tinjau' : 'Mencurigakan'}
                             </span>
                           </div>
 
                           <div className="flex items-center gap-1.5 flex-wrap text-[10px] font-mono text-on-surface-variant">
                             {meta?.location_grade === 'normal' && (
-                              <span className="text-emerald-400 font-semibold" title="GPS Akurat">
-                                ✓ GPS
+                              <span className="text-emerald-400 font-semibold" title="Koordinat GPS Valid">
+                                ✓ GPS Valid
                               </span>
                             )}
                             {meta?.duplicate_photo && (
-                              <span className="text-red-400 font-bold" title="Foto Terdeteksi Duplikat">
-                                ⚠ Dup Foto
+                              <span className="text-red-400 font-bold" title="Foto Terindikasi Duplikat">
+                                ⚠ Foto Duplikat
                               </span>
                             )}
                             {meta?.corroboration_count ? (
-                              <span className="text-cyan-400 font-semibold" title="Laporan Sekitar Terkonfirmasi">
-                                ✓ Corrob ({meta.corroboration_count})
+                              <span className="text-cyan-400 font-semibold" title="Dikonfirmasi Laporan Sekitar">
+                                ✓ {meta.corroboration_count} Laporan Dekat
                               </span>
                             ) : null}
                             {meta?.cctv_evidence === 'corroborated' && (
-                              <span className="text-emerald-400 font-semibold" title="CCTV Terhubung">
+                              <span className="text-emerald-400 font-semibold" title="Terkonfirmasi CCTV Terdekat">
                                 ✓ CCTV
                               </span>
                             )}
@@ -411,7 +411,7 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
                                 type="button"
                                 disabled={isUpdating}
                                 onClick={() => handleUpdateStatus(report.id, 'verified')}
-                                className="min-h-[36px] px-2.5 py-1.5 rounded-lg text-[10px] font-mono font-bold uppercase bg-primary text-on-primary hover:brightness-110 transition-all shadow-sm flex items-center justify-center"
+                                className="min-h-[36px] px-2.5 py-1.5 rounded-lg text-[10px] font-mono font-bold uppercase bg-primary text-on-primary hover:brightness-110 transition-all shadow-sm flex items-center justify-center cursor-pointer"
                                 title="Verifikasi laporan ini untuk ditangani"
                               >
                                 Verifikasi
@@ -424,7 +424,7 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
                                 type="button"
                                 disabled={isUpdating}
                                 onClick={() => handleUpdateStatus(report.id, 'under_review')}
-                                className="min-h-[36px] px-2.5 py-1.5 rounded-lg text-[10px] font-mono font-semibold uppercase bg-surface-container-high text-on-surface border border-outline-variant/40 hover:bg-surface-container-highest transition-colors flex items-center justify-center"
+                                className="min-h-[36px] px-2.5 py-1.5 rounded-lg text-[10px] font-mono font-semibold uppercase bg-surface-container-high text-on-surface border border-outline-variant/40 hover:bg-surface-container-highest transition-colors flex items-center justify-center cursor-pointer"
                                 title="Minta peninjauan ulang tim lapangan"
                               >
                                 Tinjau
@@ -437,7 +437,7 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
                                 type="button"
                                 disabled={isUpdating}
                                 onClick={() => handleUpdateStatus(report.id, 'rejected')}
-                                className="min-h-[36px] px-2.5 py-1.5 rounded-lg text-[10px] font-mono font-semibold uppercase bg-error/10 text-error border border-error/30 hover:bg-error/20 transition-colors flex items-center justify-center"
+                                className="min-h-[36px] px-2.5 py-1.5 rounded-lg text-[10px] font-mono font-semibold uppercase bg-error/10 text-error border border-error/30 hover:bg-error/20 transition-colors flex items-center justify-center cursor-pointer"
                                 title="Tolak laporan karena tidak valid"
                               >
                                 Tolak
@@ -450,8 +450,8 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
                                 type="button"
                                 disabled={isUpdating}
                                 onClick={() => handleUpdateStatus(report.id, 'suspicious')}
-                                className="min-h-[36px] px-2 py-1.5 rounded-lg text-[10px] font-mono text-red-400 hover:bg-red-500/15 border border-red-500/20 transition-colors flex items-center justify-center"
-                                title="Tandai sebagai spam atau mencurigakan"
+                                className="min-h-[36px] px-2 py-1.5 rounded-lg text-[10px] font-mono text-red-400 hover:bg-red-500/15 border border-red-500/20 transition-colors flex items-center justify-center cursor-pointer"
+                                title="Tandai sebagai mencurigakan"
                               >
                                 <ShieldAlert className="w-3.5 h-3.5" />
                               </button>
@@ -464,9 +464,9 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
                               type="button"
                               disabled={isUpdating}
                               onClick={() => handleUpdateStatus(report.id, 'in_progress')}
-                              className="min-h-[34px] px-2.5 py-1 rounded text-[10px] font-mono font-bold uppercase bg-tertiary text-on-tertiary hover:brightness-110 transition-all flex items-center justify-center"
+                              className="min-h-[34px] px-2.5 py-1 rounded text-[10px] font-mono font-bold uppercase bg-tertiary text-on-tertiary hover:brightness-110 transition-all flex items-center justify-center cursor-pointer"
                             >
-                              Disposisi Lapangan
+                              Tugaskan ke Petugas
                             </button>
                           )}
                           {report.status === 'in_progress' && (
@@ -474,9 +474,9 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
                               type="button"
                               disabled={isUpdating}
                               onClick={() => handleUpdateStatus(report.id, 'resolved')}
-                              className="min-h-[34px] px-2.5 py-1 rounded text-[10px] font-mono font-bold uppercase bg-secondary text-on-secondary hover:brightness-110 transition-all flex items-center justify-center"
+                              className="min-h-[34px] px-2.5 py-1 rounded text-[10px] font-mono font-bold uppercase bg-secondary text-on-secondary hover:brightness-110 transition-all flex items-center justify-center cursor-pointer"
                             >
-                              Selesaikan
+                              Tandai Selesai
                             </button>
                           )}
                         </div>
@@ -493,7 +493,7 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
                               <div className="flex items-center gap-2">
                                 <ShieldCheck className="w-4 h-4 text-secondary" />
                                 <span className="font-headline font-bold text-sm text-on-surface">
-                                  Rincian Bukti Verifikasi Spasial & Telemetri
+                                  Rincian Bukti Lokasi, Sensor & Cuaca
                                 </span>
                                 <span className="font-mono text-xs px-2 py-0.5 rounded bg-surface-container-high border border-outline-variant/30">
                                   Skor: {score}/100
@@ -509,7 +509,7 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
                               {/* Positive Evidence List */}
                               <div className="space-y-2">
                                 <span className="font-mono text-[10px] uppercase tracking-wider text-emerald-400 font-bold flex items-center gap-1">
-                                  <CheckCircle2 className="w-3.5 h-3.5" /> Bukti Terkonfirmasi (Positive Evidence)
+                                  <CheckCircle2 className="w-3.5 h-3.5" /> Pemeriksaan Terpenuhi
                                 </span>
                                 <div className="space-y-1.5 bg-surface-container-low p-3 rounded-lg border border-outline-variant/20 text-xs">
                                   {meta?.positive_evidence && meta.positive_evidence.length > 0 ? (
@@ -521,7 +521,7 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
                                     ))
                                   ) : (
                                     <div className="text-on-surface-variant text-[11px] font-mono">
-                                      ✓ GPS valid di wilayah administrasi Kota Semarang
+                                      ✓ Lokasi GPS valid di wilayah Kota Semarang
                                     </div>
                                   )}
                                 </div>
@@ -530,7 +530,7 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
                               {/* Warnings & Anomalies List */}
                               <div className="space-y-2">
                                 <span className="font-mono text-[10px] uppercase tracking-wider text-amber-400 font-bold flex items-center gap-1">
-                                  <AlertTriangle className="w-3.5 h-3.5" /> Peringatan & Catatan Anomali
+                                  <AlertTriangle className="w-3.5 h-3.5" /> Catatan Peringatan
                                 </span>
                                 <div className="space-y-1.5 bg-surface-container-low p-3 rounded-lg border border-outline-variant/20 text-xs">
                                   {meta?.warnings && meta.warnings.length > 0 ? (
@@ -542,7 +542,7 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
                                     ))
                                   ) : (
                                     <div className="text-emerald-400 text-[11px] font-mono flex items-center gap-1">
-                                      ✓ Tidak ada anomali atau bendera kecurigaan terdeteksi
+                                      ✓ Tidak ada catatan anomali atau kecurigaan pada laporan ini
                                     </div>
                                   )}
                                 </div>
@@ -575,7 +575,7 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
                               {/* Weather Corroboration */}
                               <div className="p-2.5 rounded-lg bg-surface-container-low border border-outline-variant/20 space-y-1">
                                 <span className="font-mono text-[10px] text-on-surface-variant uppercase font-semibold flex items-center gap-1">
-                                  <CloudRain className="w-3 h-3 text-primary" /> Observasi Cuaca
+                                  <CloudRain className="w-3 h-3 text-primary" /> Data Cuaca Terkini
                                 </span>
                                 {meta?.weather_snapshot ? (
                                   <div className="text-xs">
@@ -588,7 +588,7 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
                                   </div>
                                 ) : (
                                   <div className="text-[11px] text-on-surface-variant font-mono">
-                                    Cuaca: BMKG Terkoneksi
+                                    Data BMKG Terhubung
                                   </div>
                                 )}
                               </div>
@@ -596,13 +596,13 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
                               {/* Crowd Corroboration */}
                               <div className="p-2.5 rounded-lg bg-surface-container-low border border-outline-variant/20 space-y-1">
                                 <span className="font-mono text-[10px] text-on-surface-variant uppercase font-semibold flex items-center gap-1">
-                                  <Users className="w-3 h-3 text-tertiary" /> Crowd Corroboration
+                                  <Users className="w-3 h-3 text-tertiary" /> Laporan Warga Sekitar
                                 </span>
                                 <div className="text-xs font-bold text-on-surface">
-                                  {meta?.corroboration_count ? `${meta.corroboration_count} Laporan Sekitar` : 'Laporan Tunggal'}
+                                  {meta?.corroboration_count ? `${meta.corroboration_count} Laporan Terkait di Sekitar` : 'Laporan Tunggal'}
                                 </div>
                                 <div className="text-[10px] font-mono text-on-surface-variant">
-                                  Radius ≤300m / Waktu ≤30 mnt
+                                  Radius ≤300m / Rentang 30 Menit
                                 </div>
                               </div>
                             </div>

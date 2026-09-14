@@ -319,18 +319,18 @@ export default function PrioritiesPage() {
             <div className="flex flex-col gap-2 max-w-3xl">
               <div className="flex items-center gap-2">
                 <span className="px-3.5 py-1 rounded-[90px] bg-white text-[#4a154b] text-xs font-bold border border-[#eddcf7] uppercase tracking-[0.96px] shadow-2xs">
-                  ALGORITMA TERBUKA ISO 37120
+                  STANDAR PENILAIAN TERBUKA
                 </span>
                 <span className="text-xs text-[#007a5a] font-semibold flex items-center gap-1.5 ml-1">
                   <span className="w-2 h-2 rounded-full bg-[#007a5a] animate-pulse"></span>
-                  Deterministik Tanpa AI Monopoli
+                  Kalkulasi Transparan & Terbuka
                 </span>
               </div>
               <h1 className="text-[32px] sm:text-[40px] font-bold text-[#4a154b] tracking-[-0.6px] leading-[1.15]">
-                Matriks Risiko Spasial 16 Kecamatan
+                Matriks Prioritas Penanganan 16 Kecamatan
               </h1>
               <p className="text-[15px] sm:text-[16px] text-[#1d1d1d] leading-[1.55]">
-                Sistem pembobotan kerentanan kumulatif Kota Semarang. Menghitung peringkat intervensi pompa dan bantuan secara terbuka dan dapat direproduksi oleh seluruh warga.
+                Perhitungan transparan tingkat kerentanan banjir di seluruh kecamatan Kota Semarang untuk memprioritaskan penyaluran bantuan dan pengerahan pompa darurat.
               </p>
             </div>
 
@@ -341,7 +341,7 @@ export default function PrioritiesPage() {
                 className="min-h-[48px] px-6 py-3 rounded-[90px] bg-white hover:bg-[#f9f0ff] text-[#4a154b] font-bold text-xs flex items-center gap-2 transition-colors border border-[#4a154b]/30 shadow-2xs cursor-pointer"
               >
                 <Download className="w-4 h-4 text-[#4a154b]" />
-                <span>Unduh CSV Matriks</span>
+                <span>Unduh Data CSV</span>
               </button>
               <button
                 type="button"
@@ -349,7 +349,7 @@ export default function PrioritiesPage() {
                 className="min-h-[48px] px-8 py-3.5 rounded-[90px] bg-[#4a154b] text-white hover:bg-[#611f69] active:bg-[#481a54] font-bold text-xs flex items-center gap-2 shadow-sm transition-all cursor-pointer"
               >
                 <Sliders className="w-4 h-4" />
-                <span>{showSimulator ? 'Tutup Simulator' : 'Simulator Bobot'}</span>
+                <span>{showSimulator ? 'Tutup Simulasi' : 'Simulasi Pembobotan'}</span>
               </button>
             </div>
           </div>
@@ -358,9 +358,9 @@ export default function PrioritiesPage() {
           <div className="rounded-2xl bg-white p-6 border border-[#e6e6e6] shadow-subtle flex flex-col gap-3">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-[#4a154b] uppercase tracking-wider">
-                Persamaan Linear Deterministik (Open Math)
+                Formula Perhitungan Terbuka
               </span>
-              <span className="text-xs text-[#696969]">Total Bobot Σ = 1.00 (100%)</span>
+              <span className="text-xs text-[#696969]">Total Bobot = 100%</span>
             </div>
             <div className="p-3 bg-[#fdfbf9] rounded-xl border border-[#e6e6e6] overflow-x-auto">
               <code className="text-sm font-mono text-[#4a154b] font-bold whitespace-nowrap block">
@@ -377,7 +377,7 @@ export default function PrioritiesPage() {
           <div className="p-6 rounded-2xl bg-white border border-[#4a154b]/30 shadow-card flex flex-col gap-4 animate-in fade-in">
             <div className="flex items-center justify-between border-b border-[#e6e6e6] pb-3">
               <span className="font-bold text-sm text-[#4a154b]">
-                Simulator Interaktif Pembobotan Parameter
+                Simulasi Penyesuaian Bobot Parameter
               </span>
               <button
                 onClick={() =>
@@ -385,7 +385,7 @@ export default function PrioritiesPage() {
                 }
                 className="text-xs text-[#1264a3] hover:text-[#3860be] hover:underline font-semibold cursor-pointer"
               >
-                Reset ke Standar ISO
+                Kembalikan ke Nilai Awal
               </button>
             </div>
 
@@ -455,23 +455,29 @@ export default function PrioritiesPage() {
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Cari kecamatan..."
+                  placeholder="Cari nama kecamatan..."
                   className="w-full h-10 pl-9 pr-3 rounded-xl border border-[#e6e6e6] text-xs focus:outline-none focus:border-[#4a154b]"
                 />
               </div>
 
               <div className="flex items-center gap-1.5 flex-wrap">
-                {(['ALL', 'CRITICAL', 'HIGH', 'MEDIUM', 'LOW'] as const).map((r) => (
+                {[
+                  { id: 'ALL', label: 'Semua Tingkat' },
+                  { id: 'CRITICAL', label: 'Sangat Tinggi' },
+                  { id: 'HIGH', label: 'Tinggi' },
+                  { id: 'MEDIUM', label: 'Sedang' },
+                  { id: 'LOW', label: 'Rendah' },
+                ].map((r) => (
                   <button
-                    key={r}
-                    onClick={() => setRiskFilter(r)}
+                    key={r.id}
+                    onClick={() => setRiskFilter(r.id as any)}
                     className={`px-3 py-1.5 rounded-[90px] text-xs font-bold transition-all ${
-                      riskFilter === r
+                      riskFilter === r.id
                         ? 'bg-[#4a154b] text-white'
                         : 'bg-[#f4ede4] text-[#1d1d1d] hover:bg-[#e8ded2]'
                     }`}
                   >
-                    {r}
+                    {r.label}
                   </button>
                 ))}
               </div>
@@ -483,10 +489,10 @@ export default function PrioritiesPage() {
                 <table className="w-full text-left text-xs">
                   <thead className="bg-[#f4ede4] border-b border-[#e8ded2] text-[#4a154b] font-bold text-[11px] uppercase">
                     <tr>
-                      <th className="py-3.5 px-4"># Rank</th>
+                      <th className="py-3.5 px-4">Peringkat</th>
                       <th className="py-3.5 px-4">Kecamatan</th>
-                      <th className="py-3.5 px-4">Skor Risiko</th>
-                      <th className="py-3.5 px-4">Tingkat Risiko</th>
+                      <th className="py-3.5 px-4">Skor Kerentanan</th>
+                      <th className="py-3.5 px-4">Tingkat Urgensi</th>
                       <th className="py-3.5 px-4">Laporan</th>
                       <th className="py-3.5 px-4 text-right">Aksi</th>
                     </tr>
@@ -521,7 +527,7 @@ export default function PrioritiesPage() {
                                   : 'bg-[#f4ede4] text-[#1d1d1d] border-[#e8ded2]'
                               }`}
                             >
-                              {d.level}
+                              {d.level === 'CRITICAL' ? 'Sangat Tinggi' : d.level === 'HIGH' ? 'Tinggi' : d.level === 'MEDIUM' ? 'Sedang' : 'Rendah'}
                             </span>
                           </td>
                           <td className="py-3 px-4 text-[#696969]">
@@ -529,7 +535,7 @@ export default function PrioritiesPage() {
                           </td>
                           <td className="py-3 px-4 text-right">
                             <span className="text-[#4a154b] font-bold hover:underline">
-                              Detail &rarr;
+                              Lihat Rincian &rarr;
                             </span>
                           </td>
                         </tr>
@@ -547,7 +553,7 @@ export default function PrioritiesPage() {
               <div className="flex items-center justify-between border-b border-[#e6e6e6] pb-3">
                 <div>
                   <span className="text-[10px] uppercase font-bold text-[#4a154b] tracking-wider">
-                    Variabel Wilayah
+                    Rincian Wilayah
                   </span>
                   <h3 className="font-display text-xl font-bold text-[#1d1d1d]">
                     Kecamatan {selectedDistrict.name}
@@ -559,7 +565,7 @@ export default function PrioritiesPage() {
               </div>
 
               <div className="p-3.5 rounded-xl bg-[#f4ede4] text-xs">
-                <span className="font-bold text-[#4a154b] block mb-1">Isu Lapangan Utama:</span>
+                <span className="font-bold text-[#4a154b] block mb-1">Kondisi Utama di Lapangan:</span>
                 <p className="text-[#1d1d1d] font-medium">{selectedDistrict.primaryIssue}</p>
                 <span className="text-[11px] text-[#696969] block mt-1">{selectedDistrict.trend}</span>
               </div>
@@ -567,7 +573,7 @@ export default function PrioritiesPage() {
               {/* Variable Bars */}
               <div className="space-y-3 pt-2 text-xs">
                 <span className="text-xs font-bold text-[#1d1d1d] uppercase tracking-wider block">
-                  Nilai 6 Parameter Normalisasi (0-100):
+                  Skor 6 Parameter Penilaian (0-100):
                 </span>
 
                 <div>
@@ -616,7 +622,7 @@ export default function PrioritiesPage() {
               href={`/peta?q=${selectedDistrict.name}`}
               className="w-full min-h-[48px] py-3 rounded-[90px] bg-[#4a154b] hover:bg-[#481a54] text-white font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-sm"
             >
-              <span>Lihat di Peta Spasial</span>
+              <span>Lihat Wilayah di Peta</span>
               <ArrowRight className="w-4 h-4" />
             </Link>
           </div>

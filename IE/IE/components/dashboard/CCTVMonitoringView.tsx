@@ -190,21 +190,21 @@ export function CCTVMonitoringView() {
         <div className="max-w-2xl">
           <div className="flex items-center gap-2 mb-2 flex-wrap">
             <span className="text-[12px] font-mono uppercase tracking-[0.96px] text-[#4a154b] font-bold px-3 py-1 rounded-[90px] bg-white border border-[#d9bdde]/60">
-              NON-YOLO CLASSICAL CV v2.0
+              ANALISIS VISUAL BERTAHAP
             </span>
             <span className="text-[12px] font-mono text-[#007a5a] font-bold px-3 py-1 rounded-[90px] bg-[#007a5a]/10 border border-[#007a5a]/30">
-              MULTI-SIGNAL • TEMPORAL SLIDING WINDOW
+              VERIFIKASI MULTI-SINYAL & WAKTU NYATA
             </span>
             <span className="text-[11px] font-mono text-[#696969] flex items-center gap-1.5 ml-1">
               <span className="w-2 h-2 rounded-full bg-[#007a5a] animate-pulse"></span>
-              Sumber: PantauSemar Pemkot Semarang (70 Titik)
+              Sumber Data: PantauSemar Diskominfo Kota Semarang (70 Titik)
             </span>
           </div>
           <h2 className="text-[28px] sm:text-[32px] font-bold text-[#4a154b] tracking-[-0.256px] leading-[1.2]">
-            Monitoring CCTV & Deteksi Genangan Non-YOLO
+            Pemantauan Kamera CCTV & Deteksi Genangan Air
           </h2>
           <p className="text-[15px] sm:text-[16px] text-[#1d1d1d] leading-[1.55] mt-2">
-            Observasi visual presisi tinggi berbasis segmentasi warna (HSV+LAB), tekstur homogenitas aspal, reduksi tepi, profil garis air, dan verifikasi temporal tanpa ketergantungan bounding-box YOLO.
+            Pengamatan visual otomatis berbasis segmentasi warna, tekstur permukaan jalan, elevasi garis air, dan konfirmasi kestabilan waktu nyata untuk mendeteksi genangan banjir di titik strategis Kota Semarang.
           </p>
         </div>
 
@@ -217,7 +217,7 @@ export function CCTVMonitoringView() {
             className="inline-flex items-center gap-2.5 px-8 py-3.5 rounded-[90px] bg-[#4a154b] hover:bg-[#611f69] active:bg-[#481a54] disabled:opacity-50 text-white font-bold text-sm tracking-wide transition-all shadow-sm cursor-pointer"
           >
             <RefreshCw className={`w-4 h-4 ${isScanning ? 'animate-spin' : ''}`} />
-            <span>{isScanning ? 'Memproses CV...' : 'Scan Non-YOLO AI'}</span>
+            <span>{isScanning ? 'Menganalisis Kamera...' : 'Pindai Analisis Visual'}</span>
           </button>
 
           <Link
@@ -248,13 +248,13 @@ export function CCTVMonitoringView() {
           <div className="flex items-center gap-2">
             <span className="w-3 h-3 rounded-full bg-[#cc4117] animate-pulse" />
             <h3 className="font-mono text-xs font-bold uppercase tracking-wider text-[#cc4117]">
-              ACTIVE FLOOD EVENTS ({activeEvents.length})
+              TITIK GENANGAN TERKONFIRMASI ({activeEvents.length})
             </h3>
           </div>
           <div className="flex items-center gap-3 text-xs font-mono text-[#696969]">
-            <span>Suspected: <b className="text-[#b45309]">{suspectedEvents.length}</b></span>
-            <span>Resolved: <b className="text-[#007a5a]">{resolvedEvents.length}</b></span>
-            <span>CCTV Online: <b className="text-[#4a154b]">70</b></span>
+            <span>Dalam Verifikasi: <b className="text-[#b45309]">{suspectedEvents.length}</b></span>
+            <span>Sudah Surut: <b className="text-[#007a5a]">{resolvedEvents.length}</b></span>
+            <span>Kamera Aktif: <b className="text-[#4a154b]">70</b></span>
           </div>
         </div>
 
@@ -272,25 +272,25 @@ export function CCTVMonitoringView() {
                       {ev.district_name}
                     </span>
                     <span className="text-[10px] font-mono px-3 py-1 rounded-[90px] font-bold bg-[#cc4117] text-white">
-                      FLOOD CONFIRMED
+                      GENANGAN TERKONFIRMASI
                     </span>
                   </div>
 
                   <div className="space-y-1.5 text-xs font-mono text-[#696969] mb-4">
                     <div className="flex justify-between">
-                      <span>CCTV:</span>
+                      <span>Kamera:</span>
                       <span className="text-[#1d1d1d] font-bold">{ev.camera_code} ({ev.camera_name})</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>Confidence:</span>
+                      <span>Tingkat Keyakinan:</span>
                       <span className="text-[#007a5a] font-bold">{(ev.model_confidence * 100).toFixed(0)}%</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>Severity:</span>
+                      <span>Tingkat Genangan:</span>
                       <span className="text-[#cc4117] font-bold capitalize">{ev.estimated_visual_severity}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>Durasi:</span>
+                      <span>Durasi Kejadian:</span>
                       <span className="text-[#4a154b] font-bold">{formatDuration(ev.started_at)}</span>
                     </div>
                   </div>
@@ -302,7 +302,7 @@ export function CCTVMonitoringView() {
                     className="flex-1 py-2 px-3 rounded-[90px] bg-[#f9f0ff] text-[#4a154b] border border-[#d9bdde]/60 hover:bg-[#ebdccb] font-bold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                   >
                     <Eye className="w-3.5 h-3.5" />
-                    <span>Evidence</span>
+                    <span>Lihat Bukti Foto</span>
                   </button>
 
                   <Link
@@ -316,7 +316,7 @@ export function CCTVMonitoringView() {
                   <button
                     onClick={() => handleResolveEvent(ev.event_id)}
                     className="p-2 rounded-full bg-[#007a5a]/10 hover:bg-[#007a5a]/20 text-[#007a5a] border border-[#007a5a]/30 transition-colors cursor-pointer"
-                    title="Resolusi Event"
+                    title="Tandai Genangan Surut"
                   >
                     <CheckCircle2 className="w-4 h-4" />
                   </button>
@@ -332,10 +332,10 @@ export function CCTVMonitoringView() {
               </div>
               <div>
                 <p className="text-sm font-bold text-[#1d1d1d]">
-                  Tidak Ada Flood Event Aktif Terkonfirmasi
+                  Tidak Ada Genangan Air Aktif Terdeteksi
                 </p>
                 <p className="text-xs text-[#696969] mt-0.5">
-                  Seluruh kamera pemantauan genangan air PantauSemar berada dalam batas normal / belum memenuhi ambang persistensi konfirmasi.
+                  Seluruh kamera pemantauan PantauSemar menunjukkan kondisi jalan normal atau bebas genangan air.
                 </p>
               </div>
             </div>
@@ -343,7 +343,7 @@ export function CCTVMonitoringView() {
               onClick={() => handleTriggerScan()}
               className="px-4 py-2 rounded-[90px] bg-[#f4ede4] hover:bg-[#e8ded2] text-xs font-bold text-[#4a154b] border border-[#e6e6e6] shrink-0 cursor-pointer"
             >
-              Uji Scan Sekarang
+              Pindai Ulang Kamera
             </button>
           </div>
         )}
@@ -354,7 +354,7 @@ export function CCTVMonitoringView() {
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs font-mono font-bold text-[#b45309] uppercase tracking-wider flex items-center gap-2">
                 <AlertTriangle className="w-4 h-4 text-[#b45309]" />
-                Indikasi Terdeteksi (Water/Flood Suspected — Menunggu Verifikasi Temporal)
+                Indikasi Genangan Terdeteksi (Menunggu Konfirmasi Stabilitas)
               </span>
               <span className="text-xs font-mono text-[#b45309] font-bold">
                 {suspectedEvents.length} Titik Kamera
@@ -372,7 +372,7 @@ export function CCTVMonitoringView() {
                       {ev.district_name} &bull; {ev.camera_name}
                     </span>
                     <span className="text-[11px] font-mono text-[#696969]">
-                      Conf: {(ev.model_confidence * 100).toFixed(0)}% &bull; {ev.estimated_visual_severity}
+                      Keyakinan: {(ev.model_confidence * 100).toFixed(0)}% &bull; {ev.estimated_visual_severity}
                     </span>
                   </div>
                   <Eye className="w-4 h-4 text-[#b45309]" />
@@ -390,18 +390,18 @@ export function CCTVMonitoringView() {
                 70
               </div>
               <h4 className="text-sm font-bold text-[#1d1d1d] mb-1">
-                Titik PantauSemar
+                Kamera PantauSemar
               </h4>
               <p className="text-xs text-[#696969] leading-relaxed">
-                Stream HLS aktif terhubung ke CV engine tanpa interupsi.
+                Kamera CCTV terhubung dan aktif dipantau tanpa gangguan siaran.
               </p>
             </div>
             <div className="mt-3 pt-2 border-t border-[#e6e6e6] flex items-center justify-between text-[11px] font-mono text-[#007a5a]">
               <span className="flex items-center gap-1.5 font-bold">
                 <span className="w-2 h-2 rounded-full bg-[#007a5a]"></span>
-                Status: ONLINE
+                Status: Beroperasi Normal
               </span>
-              <span className="text-[#696969]">100% Terpantau</span>
+              <span className="text-[#696969]">70 Titik Terpantau</span>
             </div>
           </div>
 
@@ -411,15 +411,15 @@ export function CCTVMonitoringView() {
                 0%
               </div>
               <h4 className="text-sm font-bold text-[#1d1d1d] mb-1">
-                False Alarm Rate
+                Tingkat Alarm Palsu
               </h4>
               <p className="text-xs text-[#696969] leading-relaxed">
-                Tekstur aspal basah & sorot lampu malam tersupresi otomatis.
+                Pantulan aspal basah dan sorot lampu malam tersaring otomatis.
               </p>
             </div>
             <div className="mt-3 pt-2 border-t border-[#e6e6e6] flex items-center justify-between text-[11px] font-mono text-[#4a154b]">
-              <span className="font-bold">Benchmarked</span>
-              <span className="text-[#696969]">12/12 Lulus</span>
+              <span className="font-bold">Uji Validasi</span>
+              <span className="text-[#696969]">12 dari 12 Lulus</span>
             </div>
           </div>
 
@@ -429,15 +429,15 @@ export function CCTVMonitoringView() {
                 15
               </div>
               <h4 className="text-sm font-bold text-[#1d1d1d] mb-1">
-                Sliding Window
+                Jendela Verifikasi Waktu
               </h4>
               <p className="text-xs text-[#696969] leading-relaxed">
-                Persistensi temporal M ≥ 5 frame untuk memicu konfirmasi.
+                Laporan dikonfirmasi setelah indikasi konsisten selama beberapa bingkai foto.
               </p>
             </div>
             <div className="mt-3 pt-2 border-t border-[#e6e6e6] flex items-center justify-between text-[11px] font-mono text-[#696969]">
-              <span>Sampling Adaptif</span>
-              <b className="text-[#4a154b]">10s / 2s Suspect</b>
+              <span>Interval Pemantauan</span>
+              <b className="text-[#4a154b]">10 Detik Rutin / 2 Detik Siaga</b>
             </div>
           </div>
 
@@ -447,15 +447,15 @@ export function CCTVMonitoringView() {
                 24<span className="text-[28px] font-bold text-[#696969] ml-1">ms</span>
               </div>
               <h4 className="text-sm font-bold text-[#1d1d1d] mb-1">
-                Latency Inferensi CPU
+                Waktu Proses Analisis
               </h4>
               <p className="text-xs text-[#696969] leading-relaxed">
-                Classical CV throughput 40.3 FPS pada standard CPU.
+                Pemrosesan visual cepat rata-rata 24 milidetik per bingkai kamera.
               </p>
             </div>
             <div className="mt-3 pt-2 border-t border-[#e6e6e6] flex items-center justify-between text-[11px] font-mono text-[#696969]">
-              <span>GPU Overhead</span>
-              <b className="text-[#007a5a]">0 MB VRAM</b>
+              <span>Beban Komputasi</span>
+              <b className="text-[#007a5a]">Efisien & Ringan</b>
             </div>
           </div>
         </div>
@@ -476,7 +476,7 @@ export function CCTVMonitoringView() {
                 : 'bg-[#fcfaf7] text-[#696969] border-[#e6e6e6] hover:text-[#1d1d1d]'
             }`}
           >
-            Semua CCTV ({PANTAUSEMAR_CCTV_POINTS.length})
+            Semua Kamera ({PANTAUSEMAR_CCTV_POINTS.length})
           </button>
           <button
             type="button"
@@ -487,7 +487,7 @@ export function CCTVMonitoringView() {
                 : 'bg-[#fcfaf7] text-[#696969] border-[#e6e6e6] hover:text-[#1d1d1d]'
             }`}
           >
-            🌊 Rawan Genangan ({genanganCount})
+            🌊 Titik Rawan Banjir ({genanganCount})
           </button>
           <button
             type="button"
@@ -498,7 +498,7 @@ export function CCTVMonitoringView() {
                 : 'bg-[#fcfaf7] text-[#696969] border-[#e6e6e6] hover:text-[#1d1d1d]'
             }`}
           >
-            ⚙️ Pantau Pompa Air ({pompaCount})
+            ⚙️ Rumah Pompa & Polder ({pompaCount})
           </button>
         </div>
 
@@ -526,7 +526,7 @@ export function CCTVMonitoringView() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Cari kamera, lokasi, atau OPD..."
+              placeholder="Cari nama jalan, lokasi, atau instansi..."
               className="w-full h-10 pl-9 pr-4 rounded-[90px] bg-[#fcfaf7] border border-[#e6e6e6] text-xs text-[#1d1d1d] placeholder:text-[#696969] focus:outline-none focus:border-[#4a154b] font-body"
             />
           </div>
@@ -553,7 +553,7 @@ export function CCTVMonitoringView() {
                   </h3>
                 </div>
                 <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-[90px] font-bold bg-[#007a5a]/10 text-[#007a5a] border border-[#007a5a]/30">
-                  ONLINE
+                  AKTIF
                 </span>
               </div>
 
@@ -563,13 +563,13 @@ export function CCTVMonitoringView() {
 
               <div className="pt-2 border-t border-[#e6e6e6] grid grid-cols-2 gap-2 text-xs font-mono mb-4 text-[#696969]">
                 <div>
-                  <span className="text-[9px] uppercase block">Kategori:</span>
+                  <span className="text-[9px] uppercase block">Fokus Pantau:</span>
                   <span className="font-bold text-[#1d1d1d] text-[11px] truncate block">
-                    {cctv.category === 'rob_banjir' ? 'Rawan Genangan' : 'Pompa Polder'}
+                    {cctv.category === 'rob_banjir' ? 'Rawan Genangan' : 'Rumah Pompa'}
                   </span>
                 </div>
                 <div>
-                  <span className="text-[9px] uppercase block">Resolusi:</span>
+                  <span className="text-[9px] uppercase block">Kualitas Siaran:</span>
                   <span className="font-bold text-[#4a154b] text-[11px] block">
                     1080p (25 FPS)
                   </span>
@@ -583,17 +583,17 @@ export function CCTVMonitoringView() {
                 className="flex-1 py-2.5 px-4 rounded-[90px] bg-[#f9f0ff] hover:bg-[#ebdccb] text-[#4a154b] border border-[#d9bdde]/60 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
               >
                 <Video className="w-3.5 h-3.5 text-[#4a154b]" />
-                <span>Lihat Stream</span>
+                <span>Siaran Langsung</span>
               </button>
 
               <button
                 onClick={() => handleTriggerScan(cctv.id)}
                 disabled={isScanning}
                 className="py-2.5 px-3.5 rounded-[90px] bg-white hover:bg-[#f4ede4] text-[#1d1d1d] font-bold text-xs border border-[#e6e6e6] transition-colors cursor-pointer flex items-center gap-1.5"
-                title="Jalankan Non-YOLO CV Analysis"
+                title="Periksa Hasil Analisis Visual"
               >
                 <Sliders className="w-3.5 h-3.5 text-[#4a154b]" />
-                <span>Uji Non-YOLO</span>
+                <span>Periksa Analisis</span>
               </button>
             </div>
           </div>
@@ -621,7 +621,7 @@ export function CCTVMonitoringView() {
             <div className="flex items-start justify-between pb-4 border-b border-[#e6e6e6]">
               <div>
                 <span className="text-[10px] font-mono uppercase font-bold text-[#4a154b] px-3 py-1 rounded-[90px] bg-[#f9f0ff] border border-[#d9bdde]/50 mb-2 inline-block">
-                  NON-YOLO CV DIAGNOSTIK
+                  DIAGNOSTIK ANALISIS VISUAL
                 </span>
                 <h3 className="text-xl font-bold text-[#1d1d1d]">
                   {diagnosticsCCTV.cam.name} ({diagnosticsCCTV.cam.code})
@@ -643,20 +643,20 @@ export function CCTVMonitoringView() {
               <div className="space-y-3 p-4 rounded-[16px] bg-[#fdfbf9] border border-[#e6e6e6]">
                 <div className="flex items-center justify-between">
                   <span className="font-mono text-xs font-bold uppercase tracking-wider text-[#4a154b]">
-                    Multi-Signal Score Breakdown
+                    Rincian Indikator Analisis
                   </span>
                   <span className="font-mono text-xs font-bold text-[#007a5a]">
-                    Composite: {diagnosticsCCTV.signals.composite_detection_score}
+                    Skor Gabungan: {diagnosticsCCTV.signals.composite_detection_score}
                   </span>
                 </div>
 
                 <div className="space-y-2 pt-1 font-mono text-xs">
                   {[
-                    { label: 'Water Area Coverage', val: diagnosticsCCTV.signals.water_area_score },
-                    { label: 'Waterline Elevation', val: diagnosticsCCTV.signals.waterline_score },
-                    { label: 'Texture Homogeneity (Smoothness)', val: diagnosticsCCTV.signals.texture_score },
-                    { label: 'Spatial Blob Continuity', val: diagnosticsCCTV.signals.spatial_score },
-                    { label: 'Temporal Sliding Window Persistence', val: diagnosticsCCTV.signals.temporal_score },
+                    { label: 'Cakupan Luas Genangan Air', val: diagnosticsCCTV.signals.water_area_score },
+                    { label: 'Ketinggian Garis Air', val: diagnosticsCCTV.signals.waterline_score },
+                    { label: 'Kehalusan Permukaan (Tekstur Aspal)', val: diagnosticsCCTV.signals.texture_score },
+                    { label: 'Kontinuitas Area Tergenang', val: diagnosticsCCTV.signals.spatial_score },
+                    { label: 'Stabilitas Genangan dari Waktu ke Waktu', val: diagnosticsCCTV.signals.temporal_score },
                   ].map((sig, idx) => (
                     <div key={idx} className="space-y-1">
                       <div className="flex justify-between text-[11px]">
@@ -681,7 +681,7 @@ export function CCTVMonitoringView() {
             {diagnosticsCCTV.explainability && (
               <div className="space-y-2 p-4 rounded-[16px] bg-[#f4ede4] border border-[#e6e6e6] text-xs">
                 <span className="font-bold text-[#4a154b] block uppercase font-mono text-[11px]">
-                  Rasionalitas Klasifikasi (Explainability):
+                  Penjelasan Hasil Analisis:
                 </span>
                 <p className="font-semibold text-[#1d1d1d]">
                   {diagnosticsCCTV.explainability.verdict}
@@ -707,13 +707,13 @@ export function CCTVMonitoringView() {
             {diagnosticsCCTV.debug_url && (
               <div className="space-y-2">
                 <span className="font-mono text-[11px] font-bold uppercase text-[#4a154b] block">
-                  Debug Visualization Composite (4-Panel):
+                  Visualisasi Komparasi Analisis (4 Sudut Pandang):
                 </span>
                 <div className="rounded-[16px] overflow-hidden border border-[#e6e6e6] shadow-sm">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={diagnosticsCCTV.debug_url}
-                    alt="Non-YOLO Debug Visualization"
+                    alt="Visualisasi Komparasi Analisis"
                     className="w-full h-auto"
                   />
                 </div>
@@ -725,7 +725,7 @@ export function CCTVMonitoringView() {
                 onClick={() => setDiagnosticsCCTV(null)}
                 className="w-full h-11 rounded-[90px] bg-[#4a154b] hover:bg-[#611f69] text-white font-bold text-xs uppercase cursor-pointer"
               >
-                Tutup Panel Diagnostik
+                Tutup Rincian Diagnostik
               </button>
             </div>
           </div>

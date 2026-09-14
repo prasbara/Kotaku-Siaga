@@ -14,11 +14,11 @@ export function Footer() {
               </div>
               <span className="font-display font-bold text-2xl text-[#f4ede4]">KotaKu Siaga</span>
               <span className="text-[10px] uppercase px-3 py-0.5 rounded-full bg-[#592466] text-[#d9bdde] font-bold tracking-wider">
-                Civic Resilience
+                Resiliensi Kota
               </span>
             </div>
             <p className="text-sm text-[#d9bdde] leading-relaxed mt-1">
-              Platform kolaboratif monitoring risiko hidrometeorologis, rob pesisir, dan kesiapsiagaan iklim Kota Semarang dengan prinsip transparansi data terbuka deterministik.
+              Platform kolaboratif pemantauan banjir rob, genangan air, dan kesiapsiagaan iklim Kota Semarang berbasis data terbuka dan laporan warga terverifikasi.
             </p>
           </div>
 
@@ -44,27 +44,27 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-sm">
           <div className="flex flex-col gap-2.5">
             <span className="text-xs uppercase text-[#f4ede4] font-bold tracking-wider">
-              Transparansi Data & Audit
+              Transparansi & Akuntabilitas
             </span>
             <p className="text-[#d9bdde] text-xs leading-relaxed">
-              Formula Deterministik Terbuka & Bebas Monopoli Vendor. Seluruh bobot spasial dihitung dengan standar ISO 37120 demi akuntabilitas publik.
+              Formula pembobotan risiko terbuka berstandar ISO 37120. Seluruh perhitungan dapat diaudit publik demi memastikan penanganan yang adil dan objektif.
             </p>
             <div className="flex items-center gap-2 mt-2 text-xs text-[#f4ede4]">
               <span className="w-2 h-2 rounded-full bg-[#007a5a] animate-pulse"></span>
-              <span className="font-mono">100% Deterministic & Open Data</span>
+              <span className="font-mono">Formula Terbuka & Data Transparan</span>
             </div>
           </div>
 
           <div className="flex flex-col gap-2.5">
             <span className="text-xs uppercase text-[#f4ede4] font-bold tracking-wider">
-              Sumber Data Terbuka
+              Sumber Data Publik Terintegrasi
             </span>
             <p className="text-[#d9bdde] text-xs leading-relaxed">
-              Terintegrasi dengan BMKG Maritim Tanjung Emas, OpenStreetMap ID, BNPB InaRISK, CCTV PantauSemar Diskominfo, dan Portal Satu Data Kota Semarang.
+              Terhubung dengan BMKG Maritim Tanjung Emas, OpenStreetMap, Katalog BNPB, CCTV PantauSemar Diskominfo, dan Portal Satu Data Kota Semarang.
             </p>
             <div className="flex items-center gap-2 mt-2">
               <Link href="/data" className="text-xs text-[#f4ede4] hover:underline font-semibold flex items-center gap-1">
-                Lihat Audit Provenance →
+                Periksa Asal-Usul Data →
               </Link>
             </div>
           </div>
@@ -76,17 +76,17 @@ export function Footer() {
             <div className="flex flex-col gap-1.5 text-xs text-[#d9bdde]">
               <a href="tel:112" className="inline-flex items-center gap-2 text-[#f4ede4] font-bold hover:text-white">
                 <PhoneCall className="w-3.5 h-3.5 text-[#cc4117]" />
-                BPBD Kota Semarang: Call Center 112 (Bebas Pulsa)
+                BPBD Kota Semarang: Layanan Darurat 112 (Bebas Pulsa)
               </a>
               <span>DPU Bidang SDA & Drainase: (024) 7605655</span>
-              <span>Posko Evakuasi Tanjung Emas: Jl. Coaster No. 1</span>
+              <span>Posko Bencana Tanjung Emas: Jl. Coaster No. 1</span>
             </div>
           </div>
         </div>
 
         {/* Bottom Bar */}
         <div className="pt-6 border-t border-[#592466] flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-[#d9bdde]">
-          <span>© {new Date().getFullYear()} KotaKu Siaga — Civic Resilience Technology untuk Kota Semarang.</span>
+          <span>© {new Date().getFullYear()} KotaKu Siaga — Inisiatif Kesiapsiagaan Bencana Iklim Kota Semarang.</span>
           <div className="flex items-center gap-6">
             <Link href="/peta" className="hover:text-white transition-colors">Peta</Link>
             <Link href="/laporan" className="hover:text-white transition-colors">Laporan</Link>

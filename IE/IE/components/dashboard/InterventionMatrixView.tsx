@@ -73,14 +73,14 @@ export function InterventionMatrixView() {
           <div className="flex items-center gap-2 mb-1.5">
             <span className="w-2 h-2 rounded-full bg-[#4a154b]"></span>
             <span className="text-[11px] font-mono uppercase tracking-wider text-[#4a154b] font-bold">
-              PENENTUAN INTERVENSI DETERMINISTIK (ISO 37120)
+              FORMULA PENENTUAN PRIORITAS TERBUKA
             </span>
           </div>
           <h2 className="text-xl sm:text-2xl font-bold text-[#4a154b]">
-            Matriks Rekomendasi Disposisi 16 Kecamatan
+            Matriks Rekomendasi Penanganan 16 Kecamatan
           </h2>
           <p className="text-xs sm:text-sm text-[#696969] mt-1">
-            Prioritas penanganan otomatis berdasarkan kalkulasi matematis terbuka tanpa intervensi subyektif.
+            Rekomendasi tindakan teknis dan pembagian tugas dinas terkait berdasarkan tingkat risiko wilayah.
           </p>
         </div>
 
@@ -91,7 +91,7 @@ export function InterventionMatrixView() {
           className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#4a154b] border border-[#4a154b]/40 px-5 py-2.5 rounded-[90px] bg-white hover:bg-[#f9f0ff] transition-colors cursor-pointer shadow-2xs self-start sm:self-auto"
         >
           <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
-          <span>{loading ? 'Menghitung...' : 'Sinkronkan Matriks'}</span>
+          <span>{loading ? 'Memperbarui...' : 'Perbarui Matriks'}</span>
         </button>
       </div>
 
@@ -112,13 +112,13 @@ export function InterventionMatrixView() {
             {loading ? (
               <tr>
                 <td colSpan={6} className="py-12 text-center text-xs text-[#696969] font-mono">
-                  Memuat data matriks prioritas deterministik...
+                  Memuat data matriks prioritas penanganan...
                 </td>
               </tr>
             ) : areas.length === 0 ? (
               <tr>
                 <td colSpan={6} className="py-12 text-center text-xs text-[#696969] font-mono">
-                  Data belum tersedia.
+                  Belum ada data matriks yang tersedia saat ini.
                 </td>
               </tr>
             ) : (
@@ -149,7 +149,7 @@ export function InterventionMatrixView() {
                             : 'text-[#007a5a] border-[#007a5a]/30 bg-[#007a5a]/10'
                         }`}
                       >
-                        {area.priority_level}
+                        {area.priority_level === 'CRITICAL' ? 'Sangat Tinggi' : area.priority_level === 'HIGH' ? 'Tinggi' : area.priority_level === 'MEDIUM' ? 'Sedang' : 'Rendah'}
                       </span>
                     </td>
 
@@ -171,7 +171,7 @@ export function InterventionMatrixView() {
                         href={`/priorities/${slug}`}
                         className="inline-flex items-center gap-1 text-xs font-bold text-[#4a154b] hover:underline"
                       >
-                        <span>Audit</span>
+                        <span>Lihat Detail</span>
                         <ArrowUpRight className="h-3.5 w-3.5" />
                       </Link>
                     </td>

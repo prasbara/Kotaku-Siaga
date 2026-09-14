@@ -69,9 +69,9 @@ const CATEGORIES = [
 ]
 
 const WATER_LEVELS = [
-  { label: 'Semata Kaki (10 - 25 cm)', desc: 'Jalan masih bisa dilewati perlahan', icon: 'directions_walk' },
-  { label: 'Selutut (30 - 50 cm)', desc: 'Kendaraan roda dua rawan mogok, air masuk teras', icon: 'accessible' },
-  { label: 'Sedada / Arus Kuat (>80 cm)', desc: 'Akses terputus total, butuh perahu evakuasi BPBD', icon: 'pool' },
+  { label: 'Semata Kaki (10 - 25 cm)', desc: 'Jalan masih dapat dilewati kendaraan secara perlahan', icon: 'directions_walk' },
+  { label: 'Selutut (30 - 50 cm)', desc: 'Kendaraan roda dua rawan mogok, air mulai masuk halaman atau teras', icon: 'accessible' },
+  { label: 'Sedada atau Arus Deras (>80 cm)', desc: 'Akses jalan terputus total, memerlukan evakuasi perahu karet', icon: 'pool' },
 ]
 
 export default function LaporCepatPage() {
@@ -299,32 +299,32 @@ export default function LaporCepatPage() {
             <div className="lg:col-span-7 flex flex-col gap-4">
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-[12px] uppercase tracking-[0.96px] px-3.5 py-1 rounded-[90px] bg-white text-[#4a154b] border border-[#e6e6e6] font-bold shadow-2xs">
-                  Gotong Royong Warga
+                  Partisipasi Warga
                 </span>
                 <span className="text-xs text-[#696969] font-medium ml-1">
-                  • Tanpa Perlu Login • Perlindungan Privasi
+                  • Tanpa Perlu Masuk Akun • Menjaga Privasi
                 </span>
               </div>
               <div className="flex flex-col gap-1.5">
                 <h1 className="text-[28px] sm:text-[34px] font-bold text-[#4a154b] tracking-[-0.6px] leading-[1.2]">
-                  Pelaporan Cepat Tanggap Iklim & Rob Semarang
+                  Lapor Cepat Genangan & Bencana Semarang
                 </h1>
                 <p className="text-[15px] sm:text-[16px] text-[#1d1d1d] leading-[1.55]">
-                  Laporan Anda memandu pompa air polder dan relawan evakuasi BPBD bergerak dalam hitungan menit secara deterministik.
+                  Informasi langsung dari Anda membantu petugas mengarahkan pompa air dan tim tanggap darurat ke titik yang paling membutuhkan.
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-3 pt-1">
                 <div className="flex items-center gap-2 bg-white px-3.5 py-2 rounded-full border border-[#e6e6e6] text-xs">
                   <span className="material-symbols-outlined text-[#007a5a] text-[18px]">volunteer_activism</span>
-                  <span className="font-medium text-[#1d1d1d]">Inklusif Warga</span>
+                  <span className="font-medium text-[#1d1d1d]">Terbuka untuk Semua</span>
                 </div>
                 <div className="flex items-center gap-2 bg-white px-3.5 py-2 rounded-full border border-[#e6e6e6] text-xs">
                   <span className="material-symbols-outlined text-[#4a154b] text-[18px]">verified</span>
-                  <span className="font-medium text-[#1d1d1d]">Standar ISO 37120</span>
+                  <span className="font-medium text-[#1d1d1d]">Data Terverifikasi</span>
                 </div>
                 <div className="flex items-center gap-2 bg-white px-3.5 py-2 rounded-full border border-[#e6e6e6] text-xs">
                   <span className="material-symbols-outlined text-[#b45309] text-[18px]">speed</span>
-                  <span className="font-medium text-[#1d1d1d]">SLA Verifikasi &lt;15 Mnt</span>
+                  <span className="font-medium text-[#1d1d1d]">Respons Cepat Petugas</span>
                 </div>
               </div>
             </div>
@@ -333,14 +333,14 @@ export default function LaporCepatPage() {
               <div className="relative overflow-hidden rounded-[16px] border border-[#e6e6e6] shadow-sm group h-52 lg:h-60 bg-white flex items-center justify-center">
                 <Image
                   src="/images/civic-illustration.png"
-                  alt="Semarang Bersama Warga Tanggap Bencana"
+                  alt="Semarang Tanggap Bencana"
                   fill
                   className="object-cover group-hover:scale-105 transition-transform duration-500"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex items-end p-3">
                   <div className="flex items-center gap-2 bg-white/95 backdrop-blur-md px-3 py-1 rounded-full text-[#4a154b] text-xs font-bold shadow-subtle">
                     <span className="w-2 h-2 rounded-full bg-[#007a5a] animate-pulse"></span>
-                    Semarang Siaga Bersama
+                    Semarang Tanggap Bencana
                   </div>
                 </div>
               </div>
@@ -356,9 +356,9 @@ export default function LaporCepatPage() {
               <div className="grid grid-cols-4 gap-1.5 sm:gap-3">
                 {[
                   { step: 1, label: 'Langkah 1', name: 'Kategori' },
-                  { step: 2, label: 'Langkah 2', name: 'Bahaya' },
+                  { step: 2, label: 'Langkah 2', name: 'Tingkat Bahaya' },
                   { step: 3, label: 'Langkah 3', name: 'Lokasi' },
-                  { step: 4, label: 'Langkah 4', name: 'Foto & Bukti' },
+                  { step: 4, label: 'Langkah 4', name: 'Keterangan & Foto' },
                 ].map((s) => (
                   <button
                     key={s.step}
@@ -416,10 +416,10 @@ export default function LaporCepatPage() {
                 <div className="flex flex-col gap-6 animate-in fade-in duration-150">
                   <div>
                     <h2 className="font-display text-xl sm:text-2xl font-bold text-[#1d1d1d]">
-                      Pilih Kategori Kejadian Lapangan
+                      Pilih Jenis Kejadian
                     </h2>
                     <p className="text-xs sm:text-sm text-[#696969] mt-1">
-                      Pilih kategori yang paling sesuai dengan kejadian yang Anda saksikan di lapangan.
+                      Pilih jenis kejadian yang paling sesuai dengan kondisi yang Anda temukan di lapangan.
                     </p>
                   </div>
 
@@ -470,10 +470,10 @@ export default function LaporCepatPage() {
                     <>
                       <div>
                         <h2 className="font-display text-xl sm:text-2xl font-bold text-[#1d1d1d]">
-                          Perkiraan Ketinggian Air Lapangan
+                          Perkiraan Ketinggian Genangan Air
                         </h2>
                         <p className="text-xs sm:text-sm text-[#696969] mt-1">
-                          Tentukan ketinggian genangan air untuk memprioritaskan pompa air dan regu evakuasi BPBD.
+                          Pilih estimasi kedalaman genangan untuk membantu petugas menentukan prioritas bantuan dan penanganan pompa.
                         </p>
                       </div>
 
@@ -513,7 +513,7 @@ export default function LaporCepatPage() {
                         Kategori Terpilih: {CATEGORY_LABELS[category]}
                       </h2>
                       <p className="text-xs text-[#696969] mt-1">
-                        Pilihan ini tidak memerlukan estimasi kedalaman air. Lanjutkan dengan memilih tingkat urgensi penanganan.
+                        Kategori ini tidak memerlukan estimasi ketinggian air. Silakan tentukan tingkat urgensi penanganan di bawah ini.
                       </p>
                     </div>
                   )}
@@ -538,7 +538,7 @@ export default function LaporCepatPage() {
                               : 'bg-[#f4ede4] text-[#1d1d1d] hover:bg-[#e8ded2]'
                           }`}
                         >
-                          {u}
+                          {u === 'kritis' ? 'Darurat' : u === 'tinggi' ? 'Tinggi' : u === 'sedang' ? 'Sedang' : 'Rendah'}
                         </button>
                       ))}
                     </div>
@@ -551,10 +551,10 @@ export default function LaporCepatPage() {
                 <div className="flex flex-col gap-6 animate-in fade-in duration-150">
                   <div>
                     <h2 className="font-display text-xl sm:text-2xl font-bold text-[#1d1d1d]">
-                      Tentukan Titik Lokasi Kejadian
+                      Tentukan Lokasi Kejadian
                     </h2>
                     <p className="text-xs sm:text-sm text-[#696969] mt-1">
-                      Pilih kecamatan dan gunakan koordinat GPS untuk akurasi respons dinas terkait.
+                      Pilih kecamatan dan gunakan koordinat GPS agar tim penanganan dapat segera menuju lokasi yang tepat.
                     </p>
                   </div>
 
@@ -595,7 +595,7 @@ export default function LaporCepatPage() {
 
                     <div className="flex flex-col gap-1.5">
                       <label className="text-xs font-bold text-[#1d1d1d] uppercase tracking-wider">
-                        Patokan / Nama Jalan
+                        Nama Jalan / Patokan Lokasi
                       </label>
                       <input
                         type="text"
@@ -616,7 +616,7 @@ export default function LaporCepatPage() {
                         </span>
                         {accuracy !== null && (
                           <span className="text-[10px] px-2 py-0.5 rounded-full bg-white text-[#007a5a] font-bold border border-[#d1fae5]">
-                            ±{Math.round(accuracy)}m (Akurat)
+                            ±{Math.round(accuracy)}m (Lokasi Terdeteksi)
                           </span>
                         )}
                       </div>
@@ -629,7 +629,7 @@ export default function LaporCepatPage() {
                       type="button"
                       onClick={handleGetLocation}
                       disabled={gettingLocation}
-                      className="min-h-[48px] px-5 py-2.5 rounded-[90px] bg-[#4a154b] text-white font-bold text-xs flex items-center gap-2 hover:bg-[#481a54] transition-all"
+                      className="min-h-[48px] px-5 py-2.5 rounded-[90px] bg-[#4a154b] text-white font-bold text-xs flex items-center gap-2 hover:bg-[#481a54] transition-all cursor-pointer"
                     >
                       <Navigation className="w-4 h-4" />
                       <span>{gettingLocation ? 'Membaca GPS...' : 'Ambil Lokasi Saya'}</span>
@@ -643,23 +643,23 @@ export default function LaporCepatPage() {
                 <div className="flex flex-col gap-6 animate-in fade-in duration-150">
                   <div>
                     <h2 className="font-display text-xl sm:text-2xl font-bold text-[#1d1d1d]">
-                      Foto Bukti & Catatan Kejadian
+                      Foto Bukti & Keterangan Situasi
                     </h2>
                     <p className="text-xs sm:text-sm text-[#696969] mt-1">
-                      Lampirkan foto situasi lapangan (jika ada) dan jelaskan kondisi secara ringkas.
+                      Lampirkan foto kondisi saat ini (jika memungkinkan) dan ceritakan situasi di lapangan secara ringkas.
                     </p>
                   </div>
 
                   {/* Description input */}
                   <div className="flex flex-col gap-1.5">
                     <label className="text-xs font-bold text-[#1d1d1d] uppercase tracking-wider">
-                      Catatan Situasi Lapangan *
+                      Keterangan Kondisi Lapangan *
                     </label>
                     <textarea
                       rows={3}
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
-                      placeholder="Jelaskan kondisi: contoh debit air terus meninggi, arus deras menggenangi badan jalan, gorong-gorong tertutup sampah ranting..."
+                      placeholder="Ceritakan kondisi di lapangan, misalnya: air mulai masuk rumah, arus air deras, akses jalan terputus, atau saluran tersumbat sampah..."
                       className="w-full p-4 rounded-xl bg-white border border-[#e6e6e6] text-[#1d1d1d] text-sm focus:outline-none focus:border-[#4a154b]"
                     />
                   </div>
@@ -709,7 +709,7 @@ export default function LaporCepatPage() {
                     <div>
                       <span className="text-xs font-bold text-[#1d1d1d]">Kirim Secara Anonim</span>
                       <p className="text-xs text-[#696969] mt-0.5">
-                        Identitas pribadi Anda tidak akan disimpan atau dipublikasikan.
+                        Nama dan kontak pribadi Anda tidak akan dipublikasikan secara umum.
                       </p>
                     </div>
                     <input
@@ -728,7 +728,7 @@ export default function LaporCepatPage() {
                   <button
                     type="button"
                     onClick={() => setCurrentStep(currentStep - 1)}
-                    className="min-h-[48px] px-6 py-3 rounded-[90px] bg-[#f4ede4] hover:bg-[#e8ded2] text-[#1d1d1d] font-bold text-xs flex items-center gap-2 transition-colors"
+                    className="min-h-[48px] px-6 py-3 rounded-[90px] bg-[#f4ede4] hover:bg-[#e8ded2] text-[#1d1d1d] font-bold text-xs flex items-center gap-2 transition-colors cursor-pointer"
                   >
                     <ArrowLeft className="w-4 h-4" />
                     Kembali
@@ -741,9 +741,9 @@ export default function LaporCepatPage() {
                   <button
                     type="button"
                     onClick={() => setCurrentStep(currentStep + 1)}
-                    className="min-h-[48px] px-8 py-3.5 rounded-[90px] bg-[#4a154b] hover:bg-[#481a54] text-white font-bold text-xs uppercase tracking-wider shadow-sm flex items-center gap-2 ml-auto transition-all active:scale-[0.98]"
+                    className="min-h-[48px] px-8 py-3.5 rounded-[90px] bg-[#4a154b] hover:bg-[#481a54] text-white font-bold text-xs uppercase tracking-wider shadow-sm flex items-center gap-2 ml-auto transition-all active:scale-[0.98] cursor-pointer"
                   >
-                    Lanjut Langkah {currentStep + 1}
+                    Lanjut ke Langkah {currentStep + 1}
                     <ArrowRight className="w-4 h-4" />
                   </button>
                 ) : (
@@ -751,7 +751,7 @@ export default function LaporCepatPage() {
                     type="button"
                     onClick={handleSubmit}
                     disabled={isSubmitting}
-                    className="min-h-[48px] px-8 py-3.5 rounded-[90px] bg-[#4a154b] hover:bg-[#481a54] text-white font-bold text-xs uppercase tracking-wider shadow-cta flex items-center gap-2 ml-auto transition-all active:scale-[0.98]"
+                    className="min-h-[48px] px-8 py-3.5 rounded-[90px] bg-[#4a154b] hover:bg-[#481a54] text-white font-bold text-xs uppercase tracking-wider shadow-cta flex items-center gap-2 ml-auto transition-all active:scale-[0.98] cursor-pointer"
                   >
                     {isSubmitting ? (
                       <>
@@ -761,7 +761,7 @@ export default function LaporCepatPage() {
                     ) : (
                       <>
                         <Check className="w-4 h-4" />
-                        Kirim Laporan Lapangan
+                        Kirim Laporan
                       </>
                     )}
                   </button>
@@ -778,19 +778,19 @@ export default function LaporCepatPage() {
 
             <div className="flex flex-col gap-2 max-w-lg">
               <span className="text-xs font-bold text-[#007a5a] uppercase tracking-wider">
-                LAPORAN BERHASIL TERSIMPAN DI EOC
+                LAPORAN BERHASIL DIKIRIM
               </span>
               <h2 className="font-display text-2xl sm:text-3xl font-bold text-[#1d1d1d]">
                 Terima Kasih Atas Partisipasi Anda!
               </h2>
               <p className="text-sm text-[#696969] leading-relaxed">
-                Laporan Anda telah tercatat dengan nomor tiket resmi dan masuk dalam antrean verifikasi tim BPBD Kota Semarang.
+                Laporan Anda telah berhasil dicatat oleh sistem dan diteruskan ke tim penanganan Kota Semarang untuk diverifikasi.
               </p>
             </div>
 
             <div className="p-5 rounded-[16px] bg-[#f4ede4] border border-[#e8ded2] flex flex-col items-center gap-2 w-full max-w-md">
               <span className="text-[10px] text-[#696969] uppercase font-bold tracking-wider">
-                Kode Pelacakan Laporan
+                Nomor Tiket Laporan
               </span>
               <span className="font-mono text-2xl font-bold text-[#4a154b]">
                 {trackingCode}
@@ -798,7 +798,7 @@ export default function LaporCepatPage() {
               {verificationSummary && (
                 <div className="flex items-center gap-2 mt-1">
                   <span className="text-xs px-3 py-1 rounded-full bg-white text-[#007a5a] font-bold border border-[#d1fae5]">
-                    Skor Kredibilitas: {verificationSummary.score}/100
+                    Skor Validitas Awal: {verificationSummary.score}/100
                   </span>
                 </div>
               )}
@@ -809,14 +809,14 @@ export default function LaporCepatPage() {
                 href="/peta"
                 className="min-h-[48px] px-8 py-3.5 rounded-[90px] bg-[#4a154b] text-white hover:bg-[#481a54] font-bold text-xs uppercase tracking-wider transition-all shadow-sm"
               >
-                Pantau di Peta Spasial
+                Pantau di Peta
               </Link>
               <button
                 type="button"
                 onClick={resetForm}
-                className="min-h-[48px] px-6 py-3 rounded-[90px] bg-[#f4ede4] hover:bg-[#e8ded2] text-[#1d1d1d] font-bold text-xs transition-colors"
+                className="min-h-[48px] px-6 py-3 rounded-[90px] bg-[#f4ede4] hover:bg-[#e8ded2] text-[#1d1d1d] font-bold text-xs transition-colors cursor-pointer"
               >
-                Kirim Laporan Lain
+                Kirim Laporan Baru
               </button>
             </div>
           </div>

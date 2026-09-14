@@ -51,7 +51,7 @@ export function AdminSidebar({
   const navItems = [
     {
       id: 'overview' as DashboardTab,
-      label: 'Ringkasan Krisis',
+      label: 'Ringkasan Situasi',
       sublabel: 'Overview & Tren',
       icon: LayoutDashboard,
     },
@@ -65,27 +65,27 @@ export function AdminSidebar({
     },
     {
       id: 'priorities' as DashboardTab,
-      label: 'Matriks 16 Kecamatan',
-      sublabel: 'Intervention Matrix',
+      label: 'Matriks Prioritas Wilayah',
+      sublabel: '16 Kecamatan',
       icon: TableProperties,
     },
     {
       id: 'cctv' as DashboardTab,
-      label: 'Monitoring CCTV',
+      label: 'Pemantauan CCTV',
       sublabel: '70 Titik PantauSemar',
       icon: Video,
       count: 70,
     },
     {
       id: 'data' as DashboardTab,
-      label: 'Pemantauan Ingesti Data',
-      sublabel: 'Sensor Uptime',
+      label: 'Status Sumber Data',
+      sublabel: 'Koneksi Sensor & API',
       icon: Database,
     },
     {
       id: 'audit' as DashboardTab,
-      label: 'Log Audit Publik',
-      sublabel: 'Audit Trail',
+      label: 'Jejak Audit Publik',
+      sublabel: 'Transparansi Sistem',
       icon: History,
     },
   ]
@@ -116,7 +116,7 @@ export function AdminSidebar({
                   KotaKu Siaga
                 </span>
                 <span className="text-[10px] text-[#d9bdde] tracking-wider uppercase font-semibold">
-                  EOC Command Desk
+                  Pusat Kendali Operasi
                 </span>
               </div>
             )}
@@ -137,7 +137,7 @@ export function AdminSidebar({
         <nav className="flex flex-col gap-1.5">
           {!collapsed && (
             <span className="text-[10px] font-bold text-[#d9bdde] uppercase px-3 tracking-wider">
-              Operasional EOC
+              Menu Kendali
             </span>
           )}
 
@@ -191,7 +191,7 @@ export function AdminSidebar({
           className="min-h-[48px] w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-[90px] bg-[#cc4117] text-white font-bold text-xs hover:bg-[#b03713] transition-colors shadow-sm"
         >
           <PhoneCall className="h-4 w-4 shrink-0" />
-          {!collapsed && <span>112 BPBD Darurat</span>}
+          {!collapsed && <span>Panggilan Darurat 112</span>}
         </a>
 
         {/* Return to Portal */}
@@ -200,7 +200,7 @@ export function AdminSidebar({
           className="min-h-[44px] w-full flex items-center gap-2.5 px-3.5 py-2 rounded-[90px] text-[#d9bdde] hover:bg-[#592466] hover:text-white text-xs font-medium transition-colors"
         >
           <span className="material-symbols-outlined text-[18px]">public</span>
-          {!collapsed && <span>Buka Halaman Publik</span>}
+          {!collapsed && <span>Kembali ke Beranda</span>}
         </Link>
 
         {/* Logout button */}
@@ -211,7 +211,7 @@ export function AdminSidebar({
           className="min-h-[44px] w-full flex items-center gap-2.5 px-3.5 py-2 rounded-[90px] text-[#d9bdde] hover:bg-[#592466] hover:text-white text-xs font-medium transition-colors"
         >
           <LogOut className="h-4 w-4 shrink-0" />
-          {!collapsed && <span>{isLoggingOut ? 'Keluar...' : 'Keluar Sesi'}</span>}
+          {!collapsed && <span>{isLoggingOut ? 'Sedang Keluar...' : 'Keluar'}</span>}
         </button>
       </div>
     </div>

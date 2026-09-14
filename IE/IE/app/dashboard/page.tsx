@@ -109,10 +109,10 @@ export default function DashboardPage() {
             className="min-h-[44px] px-3.5 py-2 rounded-[90px] bg-[#f4ede4] text-[#4a154b] flex items-center gap-2 text-xs font-bold"
           >
             <Menu className="h-4 w-4" />
-            <span>Menu EOC</span>
+            <span>Menu Kendali</span>
           </button>
           <span className="font-display font-bold text-sm text-[#1d1d1d]">
-            Command Center
+            Pusat Kendali
           </span>
         </div>
 
@@ -126,14 +126,14 @@ export default function DashboardPage() {
                   <div className="flex items-center gap-2">
                     <span className="w-2.5 h-2.5 rounded-full bg-[#007a5a] animate-pulse"></span>
                     <span className="text-[12px] font-mono font-bold text-[#4a154b] uppercase tracking-[0.96px]">
-                      SITUASI OPERASIONAL REALTIME
+                      STATUS OPERASIONAL WAKTU NYATA
                     </span>
                   </div>
                   <h1 className="text-[28px] sm:text-[32px] font-bold text-[#4a154b] tracking-[-0.256px] leading-[1.2]">
-                    Command Center Kesiapsiagaan Iklim Semarang
+                    Pusat Kendali Pemantauan Banjir Semarang
                   </h1>
                   <p className="text-[15px] sm:text-[16px] text-[#1d1d1d] leading-[1.55]">
-                    Monitoring terpadu laporan warga terverifikasi, elevasi pasang rob, status 5 polder pompa, dan kesiapsiagaan 16 kecamatan.
+                    Pemantauan terpadu laporan warga, ketinggian air pasang laut, kesiapan 5 rumah pompa utama, dan status kerentanan wilayah.
                   </p>
                 </div>
 
@@ -158,7 +158,7 @@ export default function DashboardPage() {
                     <div>
                       <h4 className="text-sm font-bold">Koneksi Database Tidak Tersedia</h4>
                       <p className="text-xs mt-0.5 opacity-90">
-                        {dashboardError} — Sistem tidak menampilkan statistik fiktif. Pastikan konfigurasi Supabase terpasang.
+                        {dashboardError} — Sistem tidak menampilkan data perkiraan. Pastikan koneksi database aktif.
                       </p>
                     </div>
                   </div>
@@ -178,49 +178,49 @@ export default function DashboardPage() {
                 <div className="p-6 sm:p-7 rounded-2xl bg-white border border-[#e6e6e6] shadow-subtle flex flex-col justify-between">
                   <div>
                     <div className="flex items-center justify-between text-xs text-[#696969] font-bold uppercase tracking-wider mb-2">
-                      <span>TOTAL INSIDEN</span>
+                      <span>TOTAL LAPORAN</span>
                       <Waves className="w-4 h-4 text-[#4a154b]" />
                     </div>
                     <div className="text-[46px] sm:text-[50px] font-bold text-[#4a154b] tracking-[-0.6px] leading-[1.12] mb-1">
                       {isLoading ? '...' : dashboardError ? 'N/A' : stats.total}
                     </div>
                   </div>
-                  <span className="text-xs text-[#696969] pt-2 border-t border-[#e6e6e6]">Laporan terdaftar resmi</span>
+                  <span className="text-xs text-[#696969] pt-2 border-t border-[#e6e6e6]">Total laporan yang masuk</span>
                 </div>
 
                 {/* Active Incidents */}
                 <div className="p-6 sm:p-7 rounded-2xl bg-white border border-[#e6e6e6] shadow-subtle flex flex-col justify-between">
                   <div>
                     <div className="flex items-center justify-between text-xs text-[#696969] font-bold uppercase tracking-wider mb-2">
-                      <span>INSIDEN AKTIF</span>
+                      <span>LAPORAN AKTIF</span>
                       <span className="w-2.5 h-2.5 rounded-full bg-[#d97706] animate-pulse"></span>
                     </div>
                     <div className="text-[46px] sm:text-[50px] font-bold text-[#d97706] tracking-[-0.6px] leading-[1.12] mb-1">
                       {isLoading ? '...' : dashboardError ? 'N/A' : stats.active}
                     </div>
                   </div>
-                  <span className="text-xs text-[#696969] pt-2 border-t border-[#e6e6e6]">Sedang dalam penanganan</span>
+                  <span className="text-xs text-[#696969] pt-2 border-t border-[#e6e6e6]">Sedang diverifikasi / ditangani</span>
                 </div>
 
                 {/* Critical Reports */}
                 <div className="p-6 sm:p-7 rounded-2xl bg-white border border-[#e6e6e6] shadow-subtle flex flex-col justify-between">
                   <div>
                     <div className="flex items-center justify-between text-xs text-[#cc4117] font-bold uppercase tracking-wider mb-2">
-                      <span>KRITIS / DARURAT</span>
+                      <span>KONDISI DARURAT</span>
                       <ShieldAlert className="w-4 h-4 text-[#cc4117]" />
                     </div>
                     <div className="text-[46px] sm:text-[50px] font-bold text-[#cc4117] tracking-[-0.6px] leading-[1.12] mb-1">
                       {isLoading ? '...' : dashboardError ? 'N/A' : stats.critical}
                     </div>
                   </div>
-                  <span className="text-xs text-[#696969] pt-2 border-t border-[#e6e6e6]">Butuh evakuasi / pompa darurat</span>
+                  <span className="text-xs text-[#696969] pt-2 border-t border-[#e6e6e6]">Memerlukan penanganan segera</span>
                 </div>
 
                 {/* Resolved Percent */}
                 <div className="p-6 sm:p-7 rounded-2xl bg-white border border-[#e6e6e6] shadow-subtle flex flex-col justify-between">
                   <div>
                     <div className="flex items-center justify-between text-xs text-[#007a5a] font-bold uppercase tracking-wider mb-2">
-                      <span>TERTANGANI (RESOLVED)</span>
+                      <span>SELESAI DITANGANI</span>
                       <CheckCircle2 className="w-4 h-4 text-[#007a5a]" />
                     </div>
                     <div className="text-[46px] sm:text-[50px] font-bold text-[#007a5a] tracking-[-0.6px] leading-[1.12] mb-1">
@@ -228,7 +228,7 @@ export default function DashboardPage() {
                     </div>
                   </div>
                   <span className="text-xs text-[#696969] pt-2 border-t border-[#e6e6e6]">
-                    {stats.resolved} dari {stats.total} terselesaikan
+                    {stats.resolved} dari {stats.total} laporan selesai
                   </span>
                 </div>
               </div>
@@ -239,8 +239,8 @@ export default function DashboardPage() {
                 <div className="lg:col-span-8 p-6 sm:p-8 rounded-[16px] bg-white border border-[#e6e6e6] shadow-subtle flex flex-col gap-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="font-bold text-lg text-[#1d1d1d]">Tren Insiden 30 Hari Terakhir</h3>
-                      <p className="text-xs text-[#696969]">Frekuensi laporan warga Kota Semarang</p>
+                      <h3 className="font-bold text-lg text-[#1d1d1d]">Tren Kejadian 30 Hari Terakhir</h3>
+                      <p className="text-xs text-[#696969]">Grafik frekuensi laporan genangan air</p>
                     </div>
                   </div>
 
@@ -276,7 +276,7 @@ export default function DashboardPage() {
                       </ResponsiveContainer>
                     ) : (
                       <div className="h-full flex items-center justify-center text-xs text-[#696969]">
-                        {isLoading ? 'Memuat visualisasi tren...' : 'Data tren tidak tersedia saat ini.'}
+                        {isLoading ? 'Memuat data grafik tren...' : 'Belum ada data tren untuk periode ini.'}
                       </div>
                     )}
                   </div>
@@ -286,7 +286,7 @@ export default function DashboardPage() {
                 <div className="lg:col-span-4 p-6 sm:p-8 rounded-[16px] bg-[#f4ede4] border border-[#e8ded2] shadow-subtle flex flex-col justify-between">
                   <div>
                     <div className="flex items-center justify-between mb-4">
-                      <h3 className="font-bold text-base text-[#1d1d1d]">Status 5 Polder Pompa</h3>
+                      <h3 className="font-bold text-base text-[#1d1d1d]">Status 5 Rumah Pompa Utama</h3>
                       <Droplets className="w-4 h-4 text-[#4a154b]" />
                     </div>
                     <div className="space-y-3">
@@ -312,7 +312,7 @@ export default function DashboardPage() {
                       href="/peta"
                       className="text-xs font-bold text-[#1264a3] hover:text-[#3860be] hover:underline flex items-center gap-1"
                     >
-                      Pantau Sebaran Pompa di Peta →
+                      Lihat Lokasi Pompa di Peta →
                     </Link>
                   </div>
                 </div>
