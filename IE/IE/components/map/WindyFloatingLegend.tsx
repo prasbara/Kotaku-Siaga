@@ -70,6 +70,60 @@ export function WindyFloatingLegend({ mode, weather, onClose }: WindyFloatingLeg
           riskColor: 'text-tertiary',
           source: 'Windy.com WaveWatch III Model',
         }
+      case 'clouds':
+        return {
+          title: 'LEGENDA TUTUPAN AWAN',
+          layerName: 'Fraksi Tutupan Awan Satelit Optik',
+          icon: <CloudRain className="w-4 h-4 text-primary" />,
+          scaleName: 'Persentase Tutupan Langit',
+          scaleSteps: [
+            { color: 'bg-slate-200', label: 'Cerah (< 20%)' },
+            { color: 'bg-slate-400', label: 'Sebagian (20–70%)' },
+            { color: 'bg-slate-700', label: 'Tebal (> 70%)' },
+          ],
+          rawValueLabel: 'Tutupan Awan Terukur',
+          rawValue: weather?.cloud_cover_percent != null ? `${weather.cloud_cover_percent}%` : 'Termonitor',
+          riskLabel: 'STATUS DINAMIKA ATMOSFER',
+          riskValue: (weather?.cloud_cover_percent || 0) > 80 ? 'Potensi Presipitasi' : 'Stabil',
+          riskColor: (weather?.cloud_cover_percent || 0) > 80 ? 'text-tertiary' : 'text-secondary',
+          source: 'Windy.com Cloud Satellite Model',
+        }
+      case 'pressure':
+        return {
+          title: 'LEGENDA TEKANAN UDARA',
+          layerName: 'Isobar Tekanan Permukaan Laut (MSLP)',
+          icon: <Info className="w-4 h-4 text-primary" />,
+          scaleName: 'Tekanan Barometrik (hPa)',
+          scaleSteps: [
+            { color: 'bg-violet-400', label: 'Rendah (< 1008 hPa)' },
+            { color: 'bg-emerald-400', label: 'Normal (1008–1014 hPa)' },
+            { color: 'bg-amber-400', label: 'Tinggi (> 1014 hPa)' },
+          ],
+          rawValueLabel: 'Tekanan Permukaan Terukur',
+          rawValue: weather?.pressure_hpa != null ? `${weather.pressure_hpa} hPa` : '1011 hPa',
+          riskLabel: 'DEPRESI / SIKLONIS',
+          riskValue: (weather?.pressure_hpa || 1012) < 1008 ? 'Sistem Tekanan Rendah' : 'Normal',
+          riskColor: (weather?.pressure_hpa || 1012) < 1008 ? 'text-tertiary' : 'text-secondary',
+          source: 'Windy.com ECMWF MSLP Model',
+        }
+      default:
+        return {
+          title: 'LEGENDA CUACA SPASIAL',
+          layerName: 'Pengamatan Lapisan Spasial',
+          icon: <Info className="w-4 h-4 text-primary" />,
+          scaleName: 'Skala Relatif',
+          scaleSteps: [
+            { color: 'bg-emerald-400', label: 'Normal' },
+            { color: 'bg-amber-400', label: 'Waspada' },
+            { color: 'bg-rose-500', label: 'Tinggi' },
+          ],
+          rawValueLabel: 'Parameter Terukur',
+          rawValue: 'Termonitor',
+          riskLabel: 'STATUS LINGKUNGAN',
+          riskValue: 'Normal',
+          riskColor: 'text-secondary',
+          source: 'Stasiun Pengamatan Kota Semarang',
+        }
     }
   }
 

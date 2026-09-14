@@ -11,219 +11,8 @@ function ensureDataDir() {
   }
 }
 
-// Initial realistic seed reports for Kota Semarang
-const INITIAL_SEMAPHORE_REPORTS: Report[] = [
-  {
-    id: 'rep-smg-001',
-    report_code: 'SMG-2026-001',
-    category: 'banjir',
-    title: 'Genangan Air di Bawah Underpass Kaligawe KM 4',
-    description: 'Air limpasan hujan dan rob setinggi 35 cm menggenangi lajur lambat underpass Kaligawe. Lalu lintas tersendat, butuh pompa portabel.',
-    latitude: -6.9542,
-    longitude: 110.4721,
-    lat: -6.9542,
-    lng: 110.4721,
-    urgency: 'tinggi',
-    status: 'in_progress',
-    photo_url: '/evidence/flood_414_321_1789291801.jpg',
-    reporter_name: 'Warga Pedurungan',
-    reporter_contact: '081234567890',
-    is_demo: false,
-    created_at: new Date(Date.now() - 35 * 60 * 1000).toISOString(),
-    updated_at: new Date(Date.now() - 10 * 60 * 1000).toISOString(),
-    district_name: 'Genuk',
-    address: 'Jl. Raya Kaligawe KM 4, Genuk, Kota Semarang',
-    water_height_cm: 35,
-    credibility_score: 92,
-    location_accuracy: 8,
-    verification_metadata: {
-      confidence_level: 'TINGGI',
-      nearest_district: 'Genuk',
-      water_detected: true,
-      corroborated: true,
-      positive_evidence: ['Lokasi GPS konsisten dalam radius banjir rob Genuk', 'Foto bukti menampilkan air di badan jalan', 'Curah hujan BMKG mendukung laporan'],
-      warnings: [],
-    },
-    ai_analysis: {
-      id: 'ai-001',
-      report_id: 'rep-smg-001',
-      original_category: 'banjir',
-      ai_category: 'banjir',
-      ai_confidence: 0.92,
-      severity: 'tinggi',
-      summary: 'Genangan air rob di Underpass Kaligawe, membatasi akses kendaraan roda dua.',
-      recommended_action: 'Aktivasi unit pompa polder Sringin dan penempatan rambu peringatan.',
-      model_name: 'KotaKu-Verification-Engine',
-      created_at: new Date().toISOString(),
-    },
-  },
-  {
-    id: 'rep-smg-002',
-    report_code: 'SMG-2026-002',
-    category: 'banjir',
-    title: 'Luapan Air Pasang Rob di Kawasan Pelabuhan Tanjung Emas',
-    description: 'Air laut meluap melebihi bibir dermaga hingga setinggi lutut orang dewasa (55-60 cm). Akses menuju pos 4 terhambat.',
-    latitude: -6.9554,
-    longitude: 110.4182,
-    lat: -6.9554,
-    lng: 110.4182,
-    urgency: 'kritis',
-    status: 'verified',
-    photo_url: '/evidence/flood_414_321_1789291950.jpg',
-    reporter_name: 'Petugas Pelabuhan',
-    reporter_contact: '082198765432',
-    is_demo: false,
-    created_at: new Date(Date.now() - 90 * 60 * 1000).toISOString(),
-    updated_at: new Date(Date.now() - 40 * 60 * 1000).toISOString(),
-    district_name: 'Semarang Utara',
-    address: 'Kawasan Pelabuhan Tanjung Emas, Semarang Utara',
-    water_height_cm: 60,
-    credibility_score: 96,
-    location_accuracy: 5,
-    verification_metadata: {
-      confidence_level: 'SANGAT_TINGGI',
-      nearest_district: 'Semarang Utara',
-      water_detected: true,
-      corroborated: true,
-      positive_evidence: ['Tinggi pasang Tanjung Emas > +90 cm MSL', 'Validasi visual CCTV pelabuhan terkonfirmasi'],
-      warnings: [],
-    },
-    ai_analysis: {
-      id: 'ai-002',
-      report_id: 'rep-smg-002',
-      original_category: 'banjir',
-      ai_category: 'banjir',
-      ai_confidence: 0.96,
-      severity: 'kritis',
-      summary: 'Limpasan pasang rob maksimum di area pesisir Semarang Utara.',
-      recommended_action: 'Pengoperasian tanggul darurat dan evakuasi pekerja pergudangan.',
-      model_name: 'KotaKu-Verification-Engine',
-      created_at: new Date().toISOString(),
-    },
-  },
-  {
-    id: 'rep-smg-003',
-    report_code: 'SMG-2026-003',
-    category: 'genangan',
-    title: 'Antrean Air di Simpang Supriyadi',
-    description: 'Genangan setinggi mata kaki (15-20 cm) di depan deretan pertokoan Supriyadi akibat limpasan hujan deras.',
-    latitude: -7.0056,
-    longitude: 110.4543,
-    lat: -7.0056,
-    lng: 110.4543,
-    urgency: 'sedang',
-    status: 'submitted',
-    photo_url: '/evidence/flood_414_321_1789291955.jpg',
-    reporter_name: 'Budi Santoso',
-    reporter_contact: '081344556677',
-    is_demo: false,
-    created_at: new Date(Date.now() - 15 * 60 * 1000).toISOString(),
-    updated_at: new Date(Date.now() - 15 * 60 * 1000).toISOString(),
-    district_name: 'Pedurungan',
-    address: 'Jl. Supriyadi, Kec. Pedurungan, Kota Semarang',
-    water_height_cm: 20,
-    credibility_score: 86,
-    location_accuracy: 10,
-    verification_metadata: {
-      confidence_level: 'SEDANG',
-      nearest_district: 'Pedurungan',
-      water_detected: true,
-      corroborated: false,
-      positive_evidence: ['Kamera PantauSemar Supriyadi mendeteksi area basah'],
-      warnings: ['Menunggu konfirmasi lapangan petugas'],
-    },
-  },
-  {
-    id: 'rep-smg-004',
-    report_code: 'SMG-2026-004',
-    category: 'drainase_tersumbat',
-    title: 'Saluran Drainase Tersumbat Sampah Plastik di Barito',
-    description: 'Inlet gorong-gorong tersumbat sedimentasi lumpur dan sampah di dekat jembatan Barito, menghambat aliran air ke kali.',
-    latitude: -6.9742,
-    longitude: 110.4350,
-    lat: -6.9742,
-    lng: 110.4350,
-    urgency: 'rendah',
-    status: 'resolved',
-    photo_url: null,
-    reporter_name: 'Siti Aminah',
-    reporter_contact: null,
-    is_demo: false,
-    created_at: new Date(Date.now() - 4 * 3600 * 1000).toISOString(),
-    updated_at: new Date(Date.now() - 1 * 3600 * 1000).toISOString(),
-    district_name: 'Semarang Timur',
-    address: 'Jl. Barito, Semarang Timur',
-    water_height_cm: 10,
-    credibility_score: 88,
-    location_accuracy: 12,
-    verification_metadata: {
-      confidence_level: 'TERVERIFIKASI',
-      nearest_district: 'Semarang Timur',
-      positive_evidence: ['Pembersihan saluran selesai dilaksanakan Dinas PU'],
-      warnings: [],
-    },
-  },
-  {
-    id: 'rep-smg-005',
-    report_code: 'SMG-2026-005',
-    category: 'pohon_tumbang',
-    title: 'Dahan Pohon Tumbang Menutup Sebagian Akses Jalan',
-    description: 'Dahan pohon trembesi patah diterpa angin kencang, menimpa pembatas jalan dan kabel fiber optik.',
-    latitude: -6.9850,
-    longitude: 110.4420,
-    lat: -6.9850,
-    lng: 110.4420,
-    urgency: 'sedang',
-    status: 'verified',
-    photo_url: null,
-    reporter_name: 'Rudi Hartono',
-    reporter_contact: '085612345678',
-    is_demo: false,
-    created_at: new Date(Date.now() - 2 * 3600 * 1000).toISOString(),
-    updated_at: new Date(Date.now() - 45 * 60 * 1000).toISOString(),
-    district_name: 'Gayamsari',
-    address: 'Jl. Majapahit, Kec. Gayamsari',
-    water_height_cm: 0,
-    credibility_score: 90,
-    location_accuracy: 15,
-    verification_metadata: {
-      confidence_level: 'TINGGI',
-      nearest_district: 'Gayamsari',
-      positive_evidence: ['Laporan telah diverifikasi oleh tim Disperkim'],
-      warnings: [],
-    },
-  },
-  {
-    id: 'rep-smg-006',
-    report_code: 'SMG-2026-006',
-    category: 'longsor',
-    title: 'Retakan Tanah di Lereng Pemukiman Gombel Lama',
-    description: 'Ditemukan retakan tanah sepanjang 4 meter di talud pembatas lereng setelah hujan lebat semalaman. Perlu inspeksi teknis.',
-    latitude: -7.0250,
-    longitude: 110.4280,
-    lat: -7.0250,
-    lng: 110.4280,
-    urgency: 'tinggi',
-    status: 'in_progress',
-    photo_url: null,
-    reporter_name: 'Agus Pramono',
-    reporter_contact: '087799887766',
-    is_demo: false,
-    created_at: new Date(Date.now() - 5 * 3600 * 1000).toISOString(),
-    updated_at: new Date(Date.now() - 2 * 3600 * 1000).toISOString(),
-    district_name: 'Candisari',
-    address: 'Kawasan Perbukitan Gombel Lama, Kec. Candisari',
-    water_height_cm: 0,
-    credibility_score: 94,
-    location_accuracy: 7,
-    verification_metadata: {
-      confidence_level: 'TINGGI',
-      nearest_district: 'Candisari',
-      positive_evidence: ['Kondisi topografi kemiringan lereng > 30% mendukung potensi rayapan'],
-      warnings: [],
-    },
-  },
-]
+// PRODUCTION: No dummy or mock reports are pre-seeded.
+// Reports are solely created by actual citizen reports via API or Supabase.
 
 class LocalReportStore {
   private reports: Report[] = []
@@ -245,11 +34,11 @@ class LocalReportStore {
         }
       }
     } catch (err) {
-      console.warn('Failed to read reports.json, initializing with default seed:', err)
+      console.warn('Failed to read reports.json:', err)
     }
 
-    // Seed defaults if file doesn't exist
-    this.reports = [...INITIAL_SEMAPHORE_REPORTS]
+    // PRODUCTION: start with clean, empty database. Zero dummy reports.
+    this.reports = []
     this.save()
     this.initialized = true
   }
@@ -307,13 +96,18 @@ class LocalReportStore {
     return { data: paginated, count: totalCount }
   }
 
+  public list(filters: any = {}): { data: Report[]; count: number } {
+    return this.getAll(filters)
+  }
+
   public getById(id: string): Report | null {
     const report = this.reports.find((r) => r.id === id || r.report_code === id)
     return report || null
   }
 
   public create(reportData: Partial<Report>): Report {
-    const id = reportData.id || `rep-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`
+    const randomSuffix = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID().slice(0, 8) : Date.now().toString(36)
+    const id = reportData.id || `rep-${Date.now()}-${randomSuffix}`
     const now = new Date().toISOString()
     const reportCode = reportData.report_code || `SMG-${new Date().getFullYear()}-${String(this.reports.length + 1).padStart(3, '0')}`
 

@@ -7,6 +7,7 @@ import { ArrowLeft, MapPin, Clock, User, AlertCircle, Bot, ShieldCheck, Camera }
 import Link from 'next/link'
 import Image from 'next/image'
 import EvidenceBundlePanel from '@/components/cctv/EvidenceBundlePanel'
+import { WhyDidThisHappenCard } from '@/components/education/WhyDidThisHappenCard'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -293,6 +294,14 @@ export default async function ReportDetailPage({ params }: Props) {
                 Dihitung dari kombinasi akurasi GPS, timestamp foto, keaslian citra, dan korelasi telemetri cuaca.
               </p>
             </div>
+
+            {/* Education & Urban Resilience Context (Requirement #9) */}
+            <WhyDidThisHappenCard
+              category={r.category}
+              latitude={r.latitude}
+              longitude={r.longitude}
+              locationName={r.district_name ? `Kec. ${r.district_name}` : 'Titik Kejadian'}
+            />
           </div>
         </div>
       </section>

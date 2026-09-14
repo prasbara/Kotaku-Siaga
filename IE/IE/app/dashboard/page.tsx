@@ -11,8 +11,12 @@ import { AdminSidebar, type DashboardTab } from '@/components/dashboard/AdminSid
 import { ReportModerationView } from '@/components/dashboard/ReportModerationView'
 import { InterventionMatrixView } from '@/components/dashboard/InterventionMatrixView'
 import { CCTVMonitoringView } from '@/components/dashboard/CCTVMonitoringView'
-import { DataIngestionView } from '@/components/dashboard/DataIngestionView'
+import { DataConnectivityView } from '@/components/dashboard/DataConnectivityView'
+import { DisasterOperationsCenterView } from '@/components/dashboard/DisasterOperationsCenterView'
 import { AuditTrailView } from '@/components/dashboard/AuditTrailView'
+import { SituationalAwarenessCard } from '@/components/weather/SituationalAwarenessCard'
+import type { RealWeatherData } from '@/app/api/weather/route'
+import { PANTAUSEMAR_CCTV_POINTS } from '@/lib/data/cctv-pantausemar'
 
 interface Stats {
   total: number
@@ -35,11 +39,12 @@ const POLDER_STATIONS = [
 ]
 
 export default function DashboardPage() {
-  const [activeTab, setActiveTab] = useState<DashboardTab>('overview')
+  const [activeTab, setActiveTab] = useState<DashboardTab>('operations')
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false)
   const [stats, setStats] = useState<Stats>({ total: 0, active: 0, critical: 0, resolved: 0 })
   const [trend, setTrend] = useState<TrendPoint[]>([])
   const [latestReports, setLatestReports] = useState<Report[]>([])
+  const [weather, setWeather] = useState<RealWeatherData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [dashboardError, setDashboardError] = useState<string | null>(null)
   const [isLocalStore, setIsLocalStore] = useState(false)
@@ -49,13 +54,23 @@ export default function DashboardPage() {
     setDashboardError(null)
 
     try {
-      const [statsRes, reportsRes] = await Promise.all([
+      const [statsRes, reportsRes, weatherRes] = await Promise.all([
         fetch('/api/dashboard/stats'),
         fetch('/api/reports?limit=100'),
+        fetch('/api/weather'),
       ])
 
       const statsData = await statsRes.json()
       const reportsData = await reportsRes.json()
+
+      if (weatherRes.ok) {
+        try {
+          const weatherData = await weatherRes.json()
+          setWeather(weatherData)
+        } catch (wErr) {
+          console.error('Gagal parse cuaca:', wErr)
+        }
+      }
 
       if (statsData.is_local_store || reportsData.is_local_store) {
         setIsLocalStore(true)
@@ -123,6 +138,8 @@ export default function DashboardPage() {
 
         {/* Dynamic Tab Views */}
         <div className="p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-8">
+          {activeTab === 'operations' && <DisasterOperationsCenterView />}
+
           {activeTab === 'overview' && (
             <div className="space-y-8 animate-in fade-in duration-200">
               {/* Header Title & Refresh Bar with Pastel-Mesh Atmospheric Backdrop */}
@@ -181,6 +198,15 @@ export default function DashboardPage() {
                   </button>
                 </div>
               )}
+
+              {/* Situational Awareness Card (Requirement #16) */}
+              <SituationalAwarenessCard
+                weather={weather}
+                activeReportsCount={stats.active}
+                cctvCount={PANTAUSEMAR_CCTV_POINTS.length}
+                isLoading={isLoading}
+                onRefresh={fetchData}
+              />
 
               {/* 4 Primary Metric Cards (Slacc card-stat pattern) */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
@@ -342,7 +368,7 @@ export default function DashboardPage() {
 
           {activeTab === 'cctv' && <CCTVMonitoringView />}
 
-          {activeTab === 'data' && <DataIngestionView />}
+          {activeTab === 'data' && <DataConnectivityView />}
 
           {activeTab === 'audit' && <AuditTrailView />}
         </div>

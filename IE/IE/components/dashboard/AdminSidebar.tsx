@@ -13,12 +13,14 @@ import {
   LogOut,
   X,
   ShieldCheck,
+  ShieldAlert,
   PhoneCall,
   Video,
+  Activity,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-export type DashboardTab = 'overview' | 'reports' | 'priorities' | 'cctv' | 'data' | 'audit'
+export type DashboardTab = 'operations' | 'overview' | 'reports' | 'priorities' | 'cctv' | 'data' | 'audit'
 
 interface AdminSidebarProps {
   activeTab: DashboardTab
@@ -50,6 +52,12 @@ export function AdminSidebar({
 
   const navItems = [
     {
+      id: 'operations' as DashboardTab,
+      label: 'Pusat Operasi Bencana',
+      sublabel: 'EOC Decision Center & Timeline',
+      icon: ShieldAlert,
+    },
+    {
       id: 'overview' as DashboardTab,
       label: 'Ringkasan Situasi',
       sublabel: 'Overview & Tren',
@@ -78,9 +86,9 @@ export function AdminSidebar({
     },
     {
       id: 'data' as DashboardTab,
-      label: 'Status Sumber Data',
-      sublabel: 'Koneksi Sensor & API',
-      icon: Database,
+      label: 'Konektivitas & Observabilitas',
+      sublabel: 'Health Check & Telemetri 8 API',
+      icon: Activity,
     },
     {
       id: 'audit' as DashboardTab,

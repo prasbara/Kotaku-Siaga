@@ -19,6 +19,8 @@ import {
   Video,
   Radio
 } from 'lucide-react'
+import { WhyDidThisHappenCard } from '@/components/education/WhyDidThisHappenCard'
+import { CCTVWeatherCorrelationCard } from '@/components/weather/CCTVWeatherCorrelationCard'
 
 interface CCTVDetailPanelProps {
   cctv: CCTVPoint | null
@@ -450,6 +452,20 @@ export function CCTVDetailPanel({ cctv, onClose }: CCTVDetailPanelProps) {
             {cctv.description}
           </p>
         </div>
+
+        {/* Environmental Telemetry & Weather Correlation (Requirement #11) */}
+        <CCTVWeatherCorrelationCard
+          cctv={cctv}
+          cctvLastChecked={lastChecked}
+        />
+
+        {/* Education & Resilience Context (Requirement #7 & #9) */}
+        <WhyDidThisHappenCard
+          category="banjir"
+          latitude={cctv.latitude}
+          longitude={cctv.longitude}
+          locationName={cctv.name}
+        />
 
         {/* DIRECT ACTIONS */}
         <div className="flex flex-col gap-2 pt-1 pb-[max(1.25rem,env(safe-area-inset-bottom))]">

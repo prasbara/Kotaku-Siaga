@@ -1,7 +1,17 @@
+'use client'
+
+import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { ShieldAlert, PhoneCall } from 'lucide-react'
 
 export function Footer() {
+  const pathname = usePathname()
+
+  // Sesuai kebutuhan: footer hanya muncul di Beranda (home page '/')
+  if (pathname !== '/') {
+    return null
+  }
+
   return (
     <footer className="w-full bg-[#4a154b] text-white border-t border-[#481a54] py-14 mt-auto">
       <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col gap-10">

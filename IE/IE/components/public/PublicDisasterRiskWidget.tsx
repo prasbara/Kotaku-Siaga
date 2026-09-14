@@ -1,0 +1,291 @@
+'use client'
+
+import React, { useState, useEffect, useCallback } from 'react'
+import {
+  CloudRain,
+  Waves,
+  MapPin,
+  AlertTriangle,
+  CheckCircle2,
+  Info,
+  PhoneCall,
+} from 'lucide-react'
+import { cn } from '@/lib/utils'
+import { SEMARANG_KECAMATAN } from '@/lib/ingestion/semarang-admin'
+import type { PublicDisasterSummary } from '@/lib/intelligence/disaster-risk-engine'
+
+interface PublicDisasterRiskWidgetProps {
+  initialAreaSlug?: string
+  className?: string
+}
+
+export function PublicDisasterRiskWidget({
+  initialAreaSlug = 'semarang-utara',
+  className,
+}: PublicDisasterRiskWidgetProps) {
+  const [selectedSlug, setSelectedSlug] = useState<string>(initialAreaSlug)
+  const [summary, setSummary] = useState<PublicDisasterSummary | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+
+  const fetchSummary = useCallback(async (slug: string) => {
+    setIsLoading(true)
+    try {
+      const res = await fetch(`/api/disaster-intelligence?area=${slug}`)
+      const data = await res.json()
+      if (data.summary) {
+        setSummary(data.summary)
+      }
+    } catch (err) {
+      console.error('Failed to load public disaster summary:', err)
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchSummary(selectedSlug)
+  }, [fetchSummary, selectedSlug])
+
+  const getRiskDisplay = (level?: string) => {
+    switch (level) {
+      case 'CRITICAL':
+        return {
+          label: 'KRITIS / AWAS',
+          bg: 'bg-[#e01e5a]',
+          text: 'text-white',
+          border: 'border-[#e01e5a]',
+          dot: 'bg-white',
+          badge: 'Tingkat Bahaya Sangat Tinggi',
+        }
+      case 'HIGH':
+        return {
+          label: 'SIAGA / TINGGI',
+          bg: 'bg-[#e01e5a]/15',
+          text: 'text-[#e01e5a]',
+          border: 'border-[#e01e5a]/40',
+          dot: 'bg-[#e01e5a]',
+          badge: 'Potensi Genangan & Limpasan Signifikan',
+        }
+      case 'ELEVATED':
+        return {
+          label: 'WASPADA',
+          bg: 'bg-[#ec942c]/15',
+          text: 'text-[#b45309]',
+          border: 'border-[#ec942c]/40',
+          dot: 'bg-[#ec942c]',
+          badge: 'Kenaikan Muka Air Terpantau',
+        }
+      case 'MODERATE':
+        return {
+          label: 'PERHATIAN',
+          bg: 'bg-[#1264a3]/15',
+          text: 'text-[#1264a3]',
+          border: 'border-[#1264a3]/30',
+          dot: 'bg-[#1264a3]',
+          badge: 'Kondisi Cuaca Mulai Berubah',
+        }
+      case 'LOW':
+      default:
+        return {
+          label: 'AMAN / NORMAL',
+          bg: 'bg-[#007a5a]/10',
+          text: 'text-[#007a5a]',
+          border: 'border-[#007a5a]/30',
+          dot: 'bg-[#007a5a]',
+          badge: 'Kapasitas Saluran Normal',
+        }
+    }
+  }
+
+  const riskInfo = getRiskDisplay(summary?.currentRiskLevel)
+
+  return (
+    <div
+      className={cn(
+        'rounded-2xl bg-white border border-[#e6e6e6] shadow-subtle p-5 sm:p-7 space-y-6 text-[#1d1d1d]',
+        className
+      )}
+    >
+      {/* 1. Header with Area Selector */}
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#f0f0f0] pb-4">
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-[#007a5a] animate-pulse"></span>
+            <span className="text-[11px] font-mono font-bold text-[#4a154b] uppercase tracking-wider">
+              INFORMASI KESELAMATAN WARGA SEMARANG
+            </span>
+          </div>
+          <h2 className="text-xl sm:text-2xl font-bold text-[#4a154b] tracking-tight mt-0.5">
+            Status Risiko & Kesiapsiagaan Wilayah
+          </h2>
+        </div>
+
+        {/* District Selector */}
+        <div className="flex items-center gap-2">
+          <MapPin className="w-4 h-4 text-[#4a154b]" />
+          <select
+            value={selectedSlug}
+            disabled={isLoading}
+            onChange={(e) => setSelectedSlug(e.target.value)}
+            className="min-h-[40px] px-3 py-1.5 rounded-xl bg-[#f9f8f6] border border-[#dcdcdc] font-bold text-xs text-[#1d1d1d] focus:outline-none focus:ring-2 focus:ring-[#4a154b] disabled:opacity-50"
+          >
+            {SEMARANG_KECAMATAN.map((k) => (
+              <option key={k.id} value={k.slug}>
+                {k.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {/* 2. Main Current Risk Banner (Requirement #12) */}
+      <div className={cn('p-5 rounded-xl border flex flex-wrap items-center justify-between gap-4', riskInfo.bg, riskInfo.border)}>
+        <div className="space-y-1">
+          <span className="text-[11px] font-bold uppercase tracking-wider opacity-80">
+            STATUS RISIKO SAAT INI ({summary?.areaName || 'Kota Semarang'})
+          </span>
+          <div className="flex items-center gap-3">
+            <span className={cn('text-2xl sm:text-3xl font-bold font-display tracking-tight', riskInfo.text)}>
+              {riskInfo.label}
+            </span>
+            <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-white/60 border border-current/20">
+              Skor: {summary?.riskScore || 0}/100
+            </span>
+          </div>
+          <p className="text-xs text-[#1d1d1d]/80">{riskInfo.badge}</p>
+        </div>
+
+        <div className="text-right text-xs">
+          <div className="font-bold flex items-center gap-1.5 justify-end">
+            <span>Tingkat Keyakinan:</span>
+            <span className="text-[#007a5a] font-bold bg-white px-2 py-0.5 rounded border border-[#007a5a]/30">
+              {summary?.simpleConfidence === 'TINGGI' ? '✓ Tinggi (Data Valid)' : summary?.simpleConfidence === 'SEDANG' ? 'Sedang' : 'Perlu Verifikasi'}
+            </span>
+          </div>
+          <p className="text-[11px] text-[#696969] mt-1 font-mono">
+            Diperbarui: {summary?.lastUpdateWib || 'Baru saja'}
+          </p>
+        </div>
+      </div>
+
+      {/* 3. Parameter Grid: Rainfall & Coastal Risk */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+        {/* Rainfall Card */}
+        <div className="p-4 rounded-xl bg-[#faf9f8] border border-[#e6e6e6] space-y-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 font-bold text-[#1d1d1d]">
+              <CloudRain className="w-4 h-4 text-[#3860be]" />
+              <span>Curah Hujan Terpantau</span>
+            </div>
+            <span className="font-mono text-[11px] font-bold text-[#007a5a] bg-white px-2 py-0.5 rounded border border-[#e6e6e6]">
+              {summary?.rainfallSummary.status || 'Aktual'}
+            </span>
+          </div>
+          <div className="flex items-baseline gap-2">
+            <span className="text-2xl font-bold font-display text-[#1d1d1d]">
+              {summary?.rainfallSummary.rateMmH || 0}
+            </span>
+            <span className="text-[#696969]">mm/jam</span>
+            <span className="ml-auto text-xs font-bold text-[#4a154b]">
+              {summary?.rainfallSummary.category || 'Normal'}
+            </span>
+          </div>
+        </div>
+
+        {/* Coastal / Wave Card */}
+        <div className="p-4 rounded-xl bg-[#faf9f8] border border-[#e6e6e6] space-y-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 font-bold text-[#1d1d1d]">
+              <Waves className="w-4 h-4 text-[#1264a3]" />
+              <span>Kondisi Pesisir & Rob</span>
+            </div>
+            {summary?.coastalRiskSummary.tideWarning && (
+              <span className="font-mono text-[10px] font-bold text-[#e01e5a] bg-[#e01e5a]/10 px-2 py-0.5 rounded border border-[#e01e5a]/30">
+                Pesisir Rendah
+              </span>
+            )}
+          </div>
+          <div className="flex items-baseline gap-2">
+            <span className="text-xl font-bold font-display text-[#1d1d1d]">
+              {summary?.coastalRiskSummary.waveHeightM ? `${summary.coastalRiskSummary.waveHeightM} m` : 'Stabil'}
+            </span>
+            <span className="text-[#696969] text-[11px] truncate">
+              {summary?.coastalRiskSummary.status || 'Normal'}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* 4. "MENGAPA RISIKO INI DITETAPKAN?" (Plain Indonesian Explanation) */}
+      {summary?.whySummary && summary.whySummary.length > 0 && (
+        <div className="p-4 rounded-xl bg-[#f4ede4] border border-[#e8ded2] space-y-2 text-xs">
+          <div className="flex items-center gap-1.5 font-bold text-[#4a154b]">
+            <Info className="w-4 h-4" />
+            <span>Mengapa Status Risiko Ini Ditetapkan?</span>
+          </div>
+          <ul className="space-y-1.5 pl-5 list-disc text-[#1d1d1d]">
+            {summary.whySummary.map((point, idx) => (
+              <li key={idx} className="leading-relaxed">
+                {point}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* 5. Rekomendasi Tindakan Warga */}
+      {summary?.publicRecommendations && summary.publicRecommendations.length > 0 && (
+        <div className="space-y-2 text-xs">
+          <span className="font-bold text-[#1d1d1d] block">
+            Rekomendasi Tindakan Warga:
+          </span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {summary.publicRecommendations.map((rec, idx) => (
+              <div
+                key={idx}
+                className="p-3 rounded-lg bg-[#faf9f8] border border-[#e6e6e6] flex items-start gap-2.5 text-[#1d1d1d]"
+              >
+                <CheckCircle2 className="w-4 h-4 text-[#007a5a] shrink-0 mt-0.5" />
+                <span className="leading-relaxed">{rec}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 6. Jalan yang Perlu Dihindari */}
+      {summary?.roadsToAvoid && summary.roadsToAvoid.length > 0 && (
+        <div className="p-4 rounded-xl bg-[#fdf0f4] border border-[#e01e5a]/20 space-y-2 text-xs text-[#1d1d1d]">
+          <div className="flex items-center gap-1.5 font-bold text-[#e01e5a]">
+            <AlertTriangle className="w-4 h-4" />
+            <span>Ruas Jalan / Lokasi yang Dianjurkan Dihindari:</span>
+          </div>
+          <div className="flex items-center gap-2 flex-wrap pt-1">
+            {summary.roadsToAvoid.map((road, idx) => (
+              <span
+                key={idx}
+                className="font-bold bg-white text-[#e01e5a] px-3 py-1 rounded-lg border border-[#e01e5a]/30 shadow-2xs"
+              >
+                {road}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 7. Emergency Contact Strip */}
+      <div className="p-3.5 rounded-xl bg-[#faf9f8] border border-[#e6e6e6] flex flex-wrap items-center justify-between gap-3 text-xs">
+        <div className="flex items-center gap-2 text-[#696969]">
+          <PhoneCall className="w-4 h-4 text-[#4a154b]" />
+          <span>Nomor Kedaruratan Bencana Kota Semarang:</span>
+          <span className="font-mono font-bold text-[#1d1d1d] bg-white px-2 py-0.5 rounded border">
+            BPBD Call Center 112
+          </span>
+        </div>
+        <span className="text-[11px] text-[#696969] italic">
+          Data ini disederhanakan untuk keselamatan umum.
+        </span>
+      </div>
+    </div>
+  )
+}

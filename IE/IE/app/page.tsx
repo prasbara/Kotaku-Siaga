@@ -16,6 +16,7 @@ import {
   FileCheck2,
 } from 'lucide-react'
 import { PANTAUSEMAR_CCTV_POINTS } from '@/lib/data/cctv-pantausemar'
+import { PublicDisasterRiskWidget } from '@/components/public/PublicDisasterRiskWidget'
 
 export const metadata: Metadata = {
   title: 'KotaKu Siaga — Pemantauan Risiko Banjir & Rob Kota Semarang',
@@ -231,6 +232,11 @@ export default async function LandingPage() {
             </div>
           </div>
         </div>
+      </section>
+
+      {/* 1.5. Real-Time Public Disaster Risk & Citizen Safety Widget (Requirement #1 & #12) */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full mt-4 -mb-8">
+        <PublicDisasterRiskWidget />
       </section>
 
       {/* 2. STATS & SITUATIONAL OVERVIEW (Slacc card-stat Pattern with 50px Aubergine Numerals) */}

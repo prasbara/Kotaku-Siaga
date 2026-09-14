@@ -6,6 +6,8 @@ import { formatDate, formatRelativeTime } from '@/lib/utils'
 import { X, MapPin, Clock, User, ChevronRight, ExternalLink, PhoneCall, AlertCircle, Droplets } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
+import { WhyDidThisHappenCard } from '@/components/education/WhyDidThisHappenCard'
+import { IncidentWeatherCorrelationCard } from '@/components/weather/IncidentWeatherCorrelationCard'
 
 interface ReportDetailPanelProps {
   report: Report | null
@@ -147,6 +149,22 @@ export function ReportDetailPanel({ report, onClose }: ReportDetailPanelProps) {
             <span>Pelapor: {report.reporter_name || 'Warga (Anonim Aman)'}</span>
           </div>
         </div>
+
+        {/* Incident Weather Correlation (Requirement #10) */}
+        <IncidentWeatherCorrelationCard
+          latitude={reportLat}
+          longitude={reportLng}
+          reportCreatedAt={report.created_at}
+          districtName={report.district_name}
+        />
+
+        {/* Education & Resilience Context (Requirement #7 & #9) */}
+        <WhyDidThisHappenCard
+          category={report.category}
+          latitude={reportLat}
+          longitude={reportLng}
+          locationName={report.district_name ? `Kec. ${report.district_name}` : 'Kawasan Ini'}
+        />
 
         {/* Direct Action Dispatch Triggers */}
         <div className="flex flex-col gap-2 pt-2 pb-[max(1.25rem,env(safe-area-inset-bottom))]">

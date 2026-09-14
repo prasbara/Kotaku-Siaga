@@ -5,21 +5,25 @@ import type { Report, ReportCategory, UrgencyLevel } from '@/types'
 import { CATEGORY_LABELS, URGENCY_LABELS } from '@/types'
 import { InteractiveMap } from '@/components/map/InteractiveMap'
 import { ReportDetailPanel } from '@/components/map/ReportDetailPanel'
-import { RefreshCw, Search, X, Wind, Video, CloudRain, Waves, Info, AlertCircle } from 'lucide-react'
+import { RefreshCw, Search, X, Wind, Video, CloudRain, Waves, Info, AlertCircle, BookOpen, ShieldAlert } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { PANTAUSEMAR_CCTV_POINTS, type CCTVPoint } from '@/lib/data/cctv-pantausemar'
 import { CCTVDetailPanel } from '@/components/cctv/CCTVDetailPanel'
 import { WeatherSummaryCard } from '@/components/map/WeatherSummaryCard'
 import { WindyFloatingLegend } from '@/components/map/WindyFloatingLegend'
-import { InformationCardModal } from '@/components/map/InformationCardModal'
+import { WeatherIntelligencePanel } from '@/components/weather/WeatherIntelligencePanel'
+import { WeatherLayerSelector, type WeatherLayerKey } from '@/components/weather/WeatherLayerSelector'
+import { SEMARANG_ZONES, type SemarangZoneId, determineZoneByCoordinates } from '@/lib/weather/weather-intelligence'
 import type { RealWeatherData } from '@/app/api/weather/route'
 import type { FloodEvent } from '@/types/flood-event'
 import { FloodEventDetailModal } from '@/components/map/FloodEventDetailModal'
+import { AreaResilienceInfoModal } from '@/components/education/AreaResilienceInfoModal'
+import { PublicDisasterRiskWidget } from '@/components/public/PublicDisasterRiskWidget'
 
 const ALL_CATEGORIES = Object.keys(CATEGORY_LABELS) as ReportCategory[]
 const ALL_URGENCIES = Object.keys(URGENCY_LABELS) as UrgencyLevel[]
 
-export type MapCanvasMode = 'gis' | 'wind' | 'radar' | 'waves'
+export type MapCanvasMode = WeatherLayerKey
 
 export default function PetaPage() {
   const [reports, setReports] = useState<Report[]>([])
@@ -33,7 +37,8 @@ export default function PetaPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [showLegend, setShowLegend] = useState(true)
 
-  // Real Meteorological Weather Data State
+  // Real Meteorological Weather Data State (Requirement #1 & #7)
+  const [activeZone, setActiveZone] = useState<SemarangZoneId>('perkotaan')
   const [weather, setWeather] = useState<RealWeatherData | null>(null)
   const [isWeatherLoading, setIsWeatherLoading] = useState(true)
   const [showInfoModal, setShowInfoModal] = useState(false)
@@ -51,17 +56,44 @@ export default function PetaPage() {
   const [showFloodEvents, setShowFloodEvents] = useState(true)
   const [selectedFloodEvent, setSelectedFloodEvent] = useState<FloodEvent | null>(null)
 
-  // Fetch real weather telemetry
-  const fetchWeather = useCallback(async () => {
+  // Area Resilience Education Modal (Requirement #7)
+  const [showAreaResilienceModal, setShowAreaResilienceModal] = useState<boolean>(false)
+  const [inspectedAreaLocation, setInspectedAreaLocation] = useState<{
+    lat: number
+    lng: number
+    name: string
+  }>({ lat: -6.9932, lng: 110.4203, name: 'Pusat Kota Semarang' })
+
+  // Public Disaster Intelligence Risk Modal (Requirement #1 & #12)
+  const [showPublicRiskModal, setShowPublicRiskModal] = useState<boolean>(false)
+
+  // Fetch real weather telemetry with zone support
+  const fetchWeather = useCallback(async (zoneId?: SemarangZoneId) => {
     setIsWeatherLoading(true)
+    const targetZone = zoneId || activeZone
     try {
-      const res = await fetch('/api/weather')
+      const res = await fetch(`/api/weather?zone=${targetZone}`)
       const data = await res.json()
       setWeather(data)
     } catch (err) {
       console.error('Gagal mengambil telemetri cuaca:', err)
     } finally {
       setIsWeatherLoading(false)
+    }
+  }, [activeZone])
+
+  const handleZoneChange = (z: SemarangZoneId) => {
+    setActiveZone(z)
+    fetchWeather(z)
+  }
+
+  // Open weather panel automatically if ?view=weather in URL
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search)
+      if (params.get('view') === 'weather') {
+        setShowInfoModal(true)
+      }
     }
   }, [])
 
@@ -182,75 +214,48 @@ export default function PetaPage() {
         />
 
         <div className="flex items-center gap-2 font-mono text-xs flex-wrap ml-auto">
-          {/* Information Card Modal Toggle */}
+          {/* Progressive Weather Layer Selector (Requirement #8) */}
+          <WeatherLayerSelector
+            currentLayer={mapCanvasMode}
+            onSelectLayer={handleModeChange}
+            onOpenIntelligencePanel={() => setShowInfoModal(!showInfoModal)}
+            isPanelOpen={showInfoModal}
+          />
+
+          {/* Area Resilience Education Modal Toggle (Requirement #7) */}
           <button
-            onClick={() => setShowInfoModal(!showInfoModal)}
-            className={cn(
-              'flex items-center gap-1.5 px-3 py-1.5 rounded-[90px] border text-xs font-bold transition-colors min-h-[40px]',
-              showInfoModal
-                ? 'bg-[#4a154b] text-white border-[#4a154b]'
-                : 'bg-[#f4ede4] text-[#1d1d1d] border-[#e8ded2] hover:bg-[#e8ded2]'
-            )}
-            title="Buka Ringkasan Kondisi Terkini Aktual"
+            onClick={() => {
+              if (selectedReport) {
+                setInspectedAreaLocation({
+                  lat: selectedReport.latitude || -6.9932,
+                  lng: selectedReport.longitude || 110.4203,
+                  name: selectedReport.district_name ? `Kec. ${selectedReport.district_name}` : 'Kawasan Laporan',
+                })
+              } else if (selectedCCTV) {
+                setInspectedAreaLocation({
+                  lat: selectedCCTV.latitude,
+                  lng: selectedCCTV.longitude,
+                  name: selectedCCTV.name,
+                })
+              }
+              setShowAreaResilienceModal(true)
+            }}
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-[90px] bg-[#f9f0ff] hover:bg-[#eddcf7] border border-[#eddcf7] text-[#4a154b] text-xs font-bold transition-all shadow-xs min-h-[40px]"
+            title="Pelajari Mengapa Area Ini Berisiko & Profil Ketahanan"
           >
-            <Info className="w-3.5 h-3.5 text-[#4a154b]" />
-            <span className="hidden sm:inline">Kondisi Terkini</span>
+            <BookOpen className="w-3.5 h-3.5 text-[#4a154b]" />
+            <span className="hidden md:inline">Kajian Risiko Area</span>
           </button>
 
-          {/* Mode Switcher */}
-          <div className="flex items-center gap-1 bg-[#f4ede4] p-1 rounded-[90px] border border-[#e8ded2]">
-            <button
-              onClick={() => handleModeChange('gis')}
-              className={cn(
-                'flex items-center gap-1.5 px-3 py-1 rounded-[90px] text-[11px] font-bold uppercase transition-all',
-                mapCanvasMode === 'gis'
-                  ? 'bg-[#4a154b] text-white shadow-sm'
-                  : 'text-[#696969] hover:text-[#1d1d1d]'
-              )}
-            >
-              <span className="material-symbols-outlined text-[14px]">map</span>
-              <span>GIS</span>
-            </button>
-
-            <button
-              onClick={() => handleModeChange('wind')}
-              className={cn(
-                'flex items-center gap-1.5 px-3 py-1 rounded-[90px] text-[11px] font-bold uppercase transition-all',
-                mapCanvasMode === 'wind'
-                  ? 'bg-[#4a154b] text-white shadow-sm'
-                  : 'text-[#696969] hover:text-[#1d1d1d]'
-              )}
-            >
-              <Wind className="w-3 h-3" />
-              <span>Angin</span>
-            </button>
-
-            <button
-              onClick={() => handleModeChange('radar')}
-              className={cn(
-                'flex items-center gap-1.5 px-3 py-1 rounded-[90px] text-[11px] font-bold uppercase transition-all',
-                mapCanvasMode === 'radar'
-                  ? 'bg-[#4a154b] text-white shadow-sm'
-                  : 'text-[#696969] hover:text-[#1d1d1d]'
-              )}
-            >
-              <CloudRain className="w-3 h-3" />
-              <span>Hujan</span>
-            </button>
-
-            <button
-              onClick={() => handleModeChange('waves')}
-              className={cn(
-                'flex items-center gap-1.5 px-3 py-1 rounded-[90px] text-[11px] font-bold uppercase transition-all',
-                mapCanvasMode === 'waves'
-                  ? 'bg-[#4a154b] text-white shadow-sm'
-                  : 'text-[#696969] hover:text-[#1d1d1d]'
-              )}
-            >
-              <Waves className="w-3 h-3" />
-              <span>Ombak</span>
-            </button>
-          </div>
+          {/* Public Disaster Intelligence Risk Modal Toggle (Requirement #1 & #12) */}
+          <button
+            onClick={() => setShowPublicRiskModal(true)}
+            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-[90px] bg-[#4a154b] hover:bg-[#3d113e] text-white text-xs font-bold transition-all shadow-xs min-h-[40px]"
+            title="Lihat Status Risiko & Rekomendasi Keselamatan Warga"
+          >
+            <ShieldAlert className="w-3.5 h-3.5 text-[#f4ede4]" />
+            <span className="hidden md:inline">Status Risiko Warga</span>
+          </button>
 
           <button
             onClick={handleGlobalRefresh}
@@ -458,6 +463,13 @@ export default function PetaPage() {
                 setSelectedReport(r)
                 setSelectedCCTV(null)
                 setSelectedFloodEvent(null)
+                const lat = r.latitude ?? r.lat
+                const lon = r.longitude ?? r.lng
+                if (lat && lon) {
+                  const detectedZone = determineZoneByCoordinates(lat, lon)
+                  setActiveZone(detectedZone)
+                  fetchWeather(detectedZone)
+                }
               }}
               selectedReport={selectedReport}
               cctvList={filteredCCTVs}
@@ -466,6 +478,9 @@ export default function PetaPage() {
                 setSelectedCCTV(cctv)
                 setSelectedReport(null)
                 setSelectedFloodEvent(null)
+                const detectedZone = determineZoneByCoordinates(cctv.latitude, cctv.longitude)
+                setActiveZone(detectedZone)
+                fetchWeather(detectedZone)
               }}
               floodEvents={floodEvents}
               showFloodEvents={showFloodEvents}
@@ -522,13 +537,14 @@ export default function PetaPage() {
           </div>
         )}
 
-        {/* INFORMATION CARD MODAL */}
+        {/* WEATHER INTELLIGENCE & RISK INDICATORS PANEL (Requirements #1-15) */}
         {showInfoModal && (
-          <InformationCardModal
+          <WeatherIntelligencePanel
             weather={weather}
-            cctvCount={PANTAUSEMAR_CCTV_POINTS.length}
             isLoading={isWeatherLoading}
-            onRefresh={fetchWeather}
+            activeZone={activeZone}
+            onZoneChange={handleZoneChange}
+            onRefresh={() => fetchWeather(activeZone)}
             onClose={() => setShowInfoModal(false)}
           />
         )}
@@ -563,6 +579,32 @@ export default function PetaPage() {
             }}
             onResolve={handleResolveFloodEvent}
           />
+        )}
+
+        {/* AREA RESILIENCE INFO MODAL (Requirement #7) */}
+        <AreaResilienceInfoModal
+          isOpen={showAreaResilienceModal}
+          onClose={() => setShowAreaResilienceModal(false)}
+          latitude={inspectedAreaLocation.lat}
+          longitude={inspectedAreaLocation.lng}
+          areaName={inspectedAreaLocation.name}
+          reportsCount={reports.length}
+        />
+
+        {/* PUBLIC DISASTER RISK MODAL (Requirement #1 & #12) */}
+        {showPublicRiskModal && (
+          <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl border border-[#e6e6e6] shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-150 relative">
+              <button
+                type="button"
+                onClick={() => setShowPublicRiskModal(false)}
+                className="absolute top-4 right-4 z-10 p-2 rounded-full bg-[#f4ede4] hover:bg-[#e8ded2] text-[#4a154b] font-bold text-xs"
+              >
+                ✕
+              </button>
+              <PublicDisasterRiskWidget />
+            </div>
+          </div>
         )}
       </div>
     </div>
