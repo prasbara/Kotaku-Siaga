@@ -104,29 +104,32 @@ export function DataIngestionView() {
   const getStatusBadge = (status: SourceStatus['status']) => {
     switch (status) {
       case 'Connected':
-        return 'text-secondary border-secondary/40 bg-secondary/10'
+        return 'text-[#007a5a] border-[#007a5a]/30 bg-[#007a5a]/10'
       case 'Syncing':
-        return 'text-primary border-primary/40 bg-primary/10'
+        return 'text-[#4a154b] border-[#4a154b]/30 bg-[#f9f0ff]'
       case 'Delayed':
-        return 'text-tertiary border-tertiary/40 bg-tertiary/10'
+        return 'text-[#b45309] border-[#b45309]/30 bg-[#fffbeb]'
       case 'Unavailable':
       default:
-        return 'text-error border-error/40 bg-error/10'
+        return 'text-[#cc4117] border-[#cc4117]/30 bg-[#cc4117]/10'
     }
   }
 
   return (
-    <div className="space-y-6 font-body text-on-surface">
+    <div className="space-y-6 font-body text-[#1d1d1d]">
       {/* Header & Sync Trigger */}
-      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 pb-4 border-b border-outline-variant/30">
+      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 pb-4 border-b border-[#e6e6e6]">
         <div>
-          <span className="text-[10px] font-mono uppercase tracking-wider text-primary font-bold block mb-1">
-            INTEGRITAS SUMBER TERBUKA
-          </span>
-          <h2 className="font-headline text-xl sm:text-2xl font-bold text-on-surface">
+          <div className="flex items-center gap-2 mb-1.5">
+            <span className="w-2 h-2 rounded-full bg-[#4a154b]"></span>
+            <span className="text-[11px] font-mono uppercase tracking-wider text-[#4a154b] font-bold">
+              INTEGRITAS SUMBER TERBUKA
+            </span>
+          </div>
+          <h2 className="text-xl sm:text-2xl font-bold text-[#4a154b]">
             Pemantauan Data Terbuka & Sensor Lingkungan
           </h2>
-          <p className="text-xs text-on-surface-variant mt-0.5">
+          <p className="text-xs sm:text-sm text-[#696969] mt-1">
             Status koneksi dan ingestion pipa data publik tanpa autentikasi / tanpa kunci API rahasia.
           </p>
         </div>
@@ -135,9 +138,9 @@ export function DataIngestionView() {
           type="button"
           onClick={handleSync}
           disabled={isSyncing}
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-xs font-mono font-bold uppercase tracking-wider bg-primary text-on-primary hover:brightness-110 disabled:opacity-50 transition-all self-start sm:self-auto shadow-sm"
+          className="inline-flex items-center gap-2 px-6 py-3 rounded-[90px] text-xs font-bold uppercase tracking-wider bg-[#4a154b] text-white hover:bg-[#611f69] disabled:opacity-50 transition-all self-start sm:self-auto shadow-sm cursor-pointer"
         >
-          <RefreshCw className={`h-3.5 w-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
+          <RefreshCw className={`h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`} />
           <span>{isSyncing ? 'Menyinkronkan Pipeline...' : 'Sync Data Sekarang'}</span>
         </button>
       </div>
@@ -145,18 +148,18 @@ export function DataIngestionView() {
       {/* Sync Result Feedback Alert */}
       {syncFeedback && (
         <div
-          className={`p-4 rounded-xl border text-xs ${
+          className={`p-5 rounded-[16px] border text-xs leading-relaxed ${
             syncFeedback.success
-              ? 'bg-secondary/10 border-secondary/40 text-secondary'
-              : 'bg-error/10 border-error/40 text-error'
+              ? 'bg-[#007a5a]/10 border-[#007a5a]/30 text-[#007a5a]'
+              : 'bg-[#cc4117]/10 border-[#cc4117]/30 text-[#cc4117]'
           }`}
         >
-          <div className="font-semibold font-mono mb-1">{syncFeedback.message}</div>
+          <div className="font-bold text-sm mb-1">{syncFeedback.message}</div>
           {syncFeedback.details && (
-            <div className="font-mono text-[11px] mt-2 space-y-0.5 opacity-90">
-              <div>• BMKG Weather Records: {syncFeedback.details.bmkg_weather_points} titik</div>
-              <div>• OpenStreetMap Waterways: {syncFeedback.details.osm_spatial_features} fitur</div>
-              <div>• BNPB Disaster Events: {syncFeedback.details.bnpb_historical_events} record</div>
+            <div className="font-mono text-xs mt-2 space-y-1 opacity-95">
+              <div>• BMKG Weather Records: {syncFeedback.details.bmkg_weather_points} titik stasiun</div>
+              <div>• OpenStreetMap Waterways: {syncFeedback.details.osm_spatial_features} fitur hidrografi</div>
+              <div>• BNPB Disaster Events: {syncFeedback.details.bnpb_historical_events} record historis</div>
               <div>• BPS Referensi Wilayah: {syncFeedback.details.semarang_kecamatan_ref} kecamatan</div>
             </div>
           )}
@@ -164,48 +167,48 @@ export function DataIngestionView() {
       )}
 
       {/* Data Source Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         {sources.map((src) => (
-          <div key={src.id} className="bg-surface-container-low border border-outline-variant/30 rounded-xl p-5 space-y-4 shadow-sm">
+          <div key={src.id} className="bg-white border border-[#e6e6e6] rounded-[16px] p-6 space-y-4 shadow-2xs">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <span className="text-[10px] font-mono uppercase text-primary font-bold block mb-1">
+                <span className="text-[10px] font-mono uppercase text-[#4a154b] font-bold block mb-1">
                   {src.type}
                 </span>
-                <h3 className="font-headline text-base font-bold text-on-surface">
+                <h3 className="text-base font-bold text-[#1d1d1d]">
                   {src.name}
                 </h3>
-                <p className="text-xs text-on-surface-variant mt-0.5">
+                <p className="text-xs text-[#696969] mt-1">
                   {src.provider}
                 </p>
               </div>
 
-              <span className={`text-[10px] font-mono uppercase font-bold px-2 py-0.5 rounded border ${getStatusBadge(src.status)}`}>
+              <span className={`text-[10px] font-mono uppercase font-bold px-3 py-1 rounded-[90px] border ${getStatusBadge(src.status)}`}>
                 {src.status}
               </span>
             </div>
 
-            <div className="pt-3 border-t border-outline-variant/20 grid grid-cols-2 gap-4 text-xs">
+            <div className="pt-3 border-t border-[#e6e6e6] grid grid-cols-2 gap-4 text-xs">
               <div>
-                <span className="text-[10px] font-mono text-on-surface-variant uppercase block">
+                <span className="text-[10px] font-mono text-[#696969] uppercase block mb-0.5">
                   Status Autentikasi
                 </span>
-                <span className="font-medium text-on-surface text-xs">
+                <span className="font-medium text-[#1d1d1d] text-xs">
                   {src.authRequirement}
                 </span>
               </div>
 
               <div>
-                <span className="text-[10px] font-mono text-on-surface-variant uppercase block">
+                <span className="text-[10px] font-mono text-[#696969] uppercase block mb-0.5">
                   Jumlah Record
                 </span>
-                <span className="font-mono text-primary font-bold text-xs">
+                <span className="font-mono text-[#4a154b] font-bold text-xs">
                   {src.recordCount}
                 </span>
               </div>
             </div>
 
-            <div className="pt-2 text-[11px] text-on-surface-variant font-mono border-t border-outline-variant/20">
+            <div className="pt-2.5 text-[11px] text-[#696969] font-mono border-t border-[#e6e6e6]">
               {src.lastSync}
             </div>
           </div>

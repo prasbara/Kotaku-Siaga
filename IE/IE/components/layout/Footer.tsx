@@ -1,36 +1,40 @@
 import Link from 'next/link'
+import { ShieldAlert, PhoneCall } from 'lucide-react'
 
 export function Footer() {
   return (
-    <footer className="w-full bg-surface-container-lowest border-t border-outline-variant/30 py-12 mt-auto">
-      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col gap-8">
+    <footer className="w-full bg-[#4a154b] text-white border-t border-[#481a54] py-14 mt-auto">
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col gap-10">
         {/* Top Header Row with SDGs */}
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 pb-6 border-b border-outline-variant/20">
-          <div className="flex flex-col gap-2">
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 pb-8 border-b border-[#592466]">
+          <div className="flex flex-col gap-2 max-w-xl">
             <div className="flex items-center gap-3">
-              <span className="font-headline font-bold text-xl text-on-surface">KotaKu Siaga</span>
-              <span className="font-mono text-[10px] px-2.5 py-0.5 rounded bg-secondary-container/20 text-secondary border border-secondary/30 font-semibold tracking-wider uppercase">
-                Civic Intelligence Platform
+              <div className="w-8 h-8 rounded-[8px] bg-white/10 flex items-center justify-center">
+                <ShieldAlert className="w-4 h-4 text-[#f4ede4]" />
+              </div>
+              <span className="font-display font-bold text-2xl text-[#f4ede4]">KotaKu Siaga</span>
+              <span className="text-[10px] uppercase px-3 py-0.5 rounded-full bg-[#592466] text-[#d9bdde] font-bold tracking-wider">
+                Civic Resilience
               </span>
             </div>
-            <p className="font-body text-sm text-on-surface-variant max-w-xl">
-              Platform kolaboratif monitoring risiko hidrometeorologis, rob pesisir, dan resiliensi iklim Kota Semarang dengan prinsip transparansi data terbuka deterministik.
+            <p className="text-sm text-[#d9bdde] leading-relaxed mt-1">
+              Platform kolaboratif monitoring risiko hidrometeorologis, rob pesisir, dan kesiapsiagaan iklim Kota Semarang dengan prinsip transparansi data terbuka deterministik.
             </p>
           </div>
 
           <div className="flex items-center gap-3 flex-wrap">
-            <div className="flex items-center gap-2.5 px-3 py-1.5 rounded bg-surface-container border border-outline-variant/40">
-              <span className="material-symbols-outlined text-secondary text-[20px]">location_city</span>
+            <div className="flex items-center gap-2.5 px-4 py-2 rounded-full bg-white/10 border border-white/10">
+              <span className="material-symbols-outlined text-[#f4ede4] text-[20px]">location_city</span>
               <div className="flex flex-col">
-                <span className="font-mono text-[9px] text-on-surface-variant uppercase font-semibold">SDG GOAL 11</span>
-                <span className="text-xs text-on-surface font-semibold">Kota Berkelanjutan</span>
+                <span className="text-[9px] font-mono text-[#d9bdde] uppercase font-bold">SDG GOAL 11</span>
+                <span className="text-xs text-white font-semibold">Kota Berkelanjutan</span>
               </div>
             </div>
-            <div className="flex items-center gap-2.5 px-3 py-1.5 rounded bg-surface-container border border-outline-variant/40">
-              <span className="material-symbols-outlined text-primary text-[20px]">cyclone</span>
+            <div className="flex items-center gap-2.5 px-4 py-2 rounded-full bg-white/10 border border-white/10">
+              <span className="material-symbols-outlined text-[#f4ede4] text-[20px]">cyclone</span>
               <div className="flex flex-col">
-                <span className="font-mono text-[9px] text-on-surface-variant uppercase font-semibold">SDG GOAL 13</span>
-                <span className="text-xs text-on-surface font-semibold">Aksi Iklim Terpadu</span>
+                <span className="text-[9px] font-mono text-[#d9bdde] uppercase font-bold">SDG GOAL 13</span>
+                <span className="text-xs text-white font-semibold">Aksi Iklim Terpadu</span>
               </div>
             </div>
           </div>
@@ -38,49 +42,57 @@ export function Footer() {
 
         {/* 3 Columns */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-sm">
-          <div className="flex flex-col gap-2">
-            <span className="font-mono text-xs uppercase text-primary font-semibold tracking-wider">
+          <div className="flex flex-col gap-2.5">
+            <span className="text-xs uppercase text-[#f4ede4] font-bold tracking-wider">
               Transparansi Data & Audit
             </span>
-            <p className="text-on-surface-variant text-xs leading-relaxed">
-              Formula Deterministik Terbuka & Bebas Biaya API. Seluruh bobot spasial dihitung dengan standar ISO 37120 tanpa monopoli vendor.
+            <p className="text-[#d9bdde] text-xs leading-relaxed">
+              Formula Deterministik Terbuka & Bebas Monopoli Vendor. Seluruh bobot spasial dihitung dengan standar ISO 37120 demi akuntabilitas publik.
             </p>
-            <div className="flex items-center gap-2 mt-2">
-              <span className="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
-              <span className="font-mono text-xs text-on-surface">Uptime Sensor 99.82% Realtime</span>
+            <div className="flex items-center gap-2 mt-2 text-xs text-[#f4ede4]">
+              <span className="w-2 h-2 rounded-full bg-[#007a5a] animate-pulse"></span>
+              <span className="font-mono">100% Deterministic & Open Data</span>
             </div>
           </div>
 
-          <div className="flex flex-col gap-2">
-            <span className="font-mono text-xs uppercase text-primary font-semibold tracking-wider">
+          <div className="flex flex-col gap-2.5">
+            <span className="text-xs uppercase text-[#f4ede4] font-bold tracking-wider">
               Sumber Data Terbuka
             </span>
-            <p className="text-on-surface-variant text-xs leading-relaxed">
-              Terintegrasi dengan BMKG Maritim Stasiun Tanjung Emas, OpenStreetMap ID, BNPB InaRISK, BBWS Pemali-Juana, dan Portal Satu Data Kota Semarang.
+            <p className="text-[#d9bdde] text-xs leading-relaxed">
+              Terintegrasi dengan BMKG Maritim Tanjung Emas, OpenStreetMap ID, BNPB InaRISK, CCTV PantauSemar Diskominfo, dan Portal Satu Data Kota Semarang.
             </p>
+            <div className="flex items-center gap-2 mt-2">
+              <Link href="/data" className="text-xs text-[#f4ede4] hover:underline font-semibold flex items-center gap-1">
+                Lihat Audit Provenance →
+              </Link>
+            </div>
           </div>
 
-          <div className="flex flex-col gap-2">
-            <span className="font-mono text-xs uppercase text-primary font-semibold tracking-wider">
-              Kontak Darurat & Koordinasi
+          <div className="flex flex-col gap-2.5">
+            <span className="text-xs uppercase text-[#f4ede4] font-bold tracking-wider">
+              Kontak Tanggap Darurat
             </span>
-            <div className="flex flex-col gap-1 text-xs text-on-surface-variant">
-              <span>EOC Call Center: <strong className="text-error font-mono font-bold">(024) 112</strong> (BPBD Semarang)</span>
-              <span>Posko Terpadu: Jl. Pemuda No. 148, Balai Kota Semarang</span>
-              <span>Kanal WhatsApp Bot: <span className="font-mono text-on-surface">+62 811-2600-112</span></span>
+            <div className="flex flex-col gap-1.5 text-xs text-[#d9bdde]">
+              <a href="tel:112" className="inline-flex items-center gap-2 text-[#f4ede4] font-bold hover:text-white">
+                <PhoneCall className="w-3.5 h-3.5 text-[#cc4117]" />
+                BPBD Kota Semarang: Call Center 112 (Bebas Pulsa)
+              </a>
+              <span>DPU Bidang SDA & Drainase: (024) 7605655</span>
+              <span>Posko Evakuasi Tanjung Emas: Jl. Coaster No. 1</span>
             </div>
           </div>
         </div>
 
-        {/* Bottom copyright */}
-        <div className="flex flex-col sm:flex-row justify-between items-center pt-6 border-t border-outline-variant/20 gap-4 text-xs text-on-surface-variant">
-          <span className="font-mono text-[11px]">
-            © 2024–2026 Pemerintah Kota Semarang & Koalisi Komunitas Resiliensi Pesisir.
-          </span>
-          <div className="flex items-center gap-4 text-xs">
-            <Link href="/data" className="hover:text-primary transition-colors">Katalog Dataset</Link>
-            <Link href="/priorities" className="hover:text-primary transition-colors">Metodologi & Bobot</Link>
-            <Link href="/edukasi" className="hover:text-primary transition-colors">Panduan Evakuasi</Link>
+        {/* Bottom Bar */}
+        <div className="pt-6 border-t border-[#592466] flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-[#d9bdde]">
+          <span>© {new Date().getFullYear()} KotaKu Siaga — Civic Resilience Technology untuk Kota Semarang.</span>
+          <div className="flex items-center gap-6">
+            <Link href="/peta" className="hover:text-white transition-colors">Peta</Link>
+            <Link href="/laporan" className="hover:text-white transition-colors">Laporan</Link>
+            <Link href="/priorities" className="hover:text-white transition-colors">Prioritas</Link>
+            <Link href="/data" className="hover:text-white transition-colors">Integritas Data</Link>
+            <Link href="/edukasi" className="hover:text-white transition-colors">Edukasi</Link>
           </div>
         </div>
       </div>

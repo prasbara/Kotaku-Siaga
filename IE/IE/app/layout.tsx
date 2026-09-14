@@ -12,7 +12,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 5,
   viewportFit: 'cover',
-  themeColor: '#0c1421',
+  themeColor: '#4a154b',
 }
 
 export const metadata: Metadata = {
@@ -33,12 +33,12 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="id" className="dark" suppressHydrationWarning>
+    <html lang="id" className="light" suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
           rel="stylesheet"
         />
         <link
@@ -46,7 +46,7 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="min-h-screen bg-surface text-on-surface font-body antialiased flex flex-col selection:bg-primary/20 selection:text-primary">
+      <body className="min-h-screen bg-[#fdfbf9] text-[#1d1d1d] font-sans antialiased flex flex-col selection:bg-[#4a154b]/15 selection:text-[#4a154b]">
         <DemoBanner />
         <Navbar />
         <FloodAlertBanner />

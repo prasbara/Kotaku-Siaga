@@ -44,16 +44,19 @@ export function AuditTrailView() {
   ]
 
   return (
-    <div className="space-y-6 font-body text-on-surface">
+    <div className="space-y-6 font-body text-[#1d1d1d]">
       {/* Header */}
-      <div className="pb-4 border-b border-outline-variant/30">
-        <span className="text-[10px] font-mono uppercase tracking-wider text-primary font-bold block mb-1">
-          REPRODUSIBILITAS & AKUNTABILITAS ISO 37120
-        </span>
-        <h2 className="font-headline text-xl sm:text-2xl font-bold text-on-surface">
+      <div className="pb-4 border-b border-[#e6e6e6]">
+        <div className="flex items-center gap-2 mb-1.5">
+          <span className="w-2 h-2 rounded-full bg-[#4a154b]"></span>
+          <span className="text-[11px] font-mono uppercase tracking-wider text-[#4a154b] font-bold">
+            REPRODUSIBILITAS & AKUNTABILITAS ISO 37120
+          </span>
+        </div>
+        <h2 className="text-xl sm:text-2xl font-bold text-[#4a154b]">
           Log Audit Publik, Provenance & Integritas Algoritma
         </h2>
-        <p className="text-xs text-on-surface-variant mt-0.5">
+        <p className="text-xs sm:text-sm text-[#696969] mt-1">
           Catatan riwayat verifikasi data, versi formula kalkulasi matematis, dan jejak asal data publik tanpa monopoli.
         </p>
       </div>
@@ -61,22 +64,24 @@ export function AuditTrailView() {
       {/* Audit List */}
       <div className="space-y-4">
         {auditLogs.map((log) => (
-          <div key={log.id} className="p-5 rounded-xl bg-surface-container-low border border-outline-variant/30 space-y-3 shadow-sm">
-            <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2 border-b border-outline-variant/20 pb-2.5">
-              <div className="flex items-center gap-2.5">
-                <span className="font-mono text-xs font-bold text-primary">{log.id}</span>
-                <span className="text-on-surface font-semibold text-xs">{log.action}</span>
+          <div key={log.id} className="p-6 rounded-[16px] bg-white border border-[#e6e6e6] space-y-3.5 shadow-2xs">
+            <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2 border-b border-[#e6e6e6] pb-3">
+              <div className="flex items-center gap-3">
+                <span className="font-mono text-xs font-bold text-[#4a154b] px-2.5 py-1 rounded-[90px] bg-[#f9f0ff] border border-[#d9bdde]/40">
+                  {log.id}
+                </span>
+                <span className="text-[#1d1d1d] font-bold text-sm">{log.action}</span>
               </div>
-              <span className="font-mono text-[11px] text-on-surface-variant">{log.timestamp}</span>
+              <span className="font-mono text-xs text-[#696969]">{log.timestamp}</span>
             </div>
 
-            <p className="text-xs text-on-surface-variant leading-relaxed font-body">
+            <p className="text-xs sm:text-sm text-[#696969] leading-relaxed font-body">
               {log.notes}
             </p>
 
-            <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-outline-variant/20 text-[11px] font-mono">
-              <span className="text-primary font-semibold">Formula: {log.formula}</span>
-              <span className="px-2 py-0.5 rounded bg-secondary/10 text-secondary border border-secondary/30 font-bold uppercase">
+            <div className="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-[#e6e6e6] text-xs font-mono">
+              <span className="text-[#4a154b] font-bold">{log.formula}</span>
+              <span className="px-3 py-1 rounded-[90px] bg-[#007a5a]/10 text-[#007a5a] border border-[#007a5a]/30 font-bold uppercase tracking-wider text-[10px]">
                 {log.status}
               </span>
             </div>

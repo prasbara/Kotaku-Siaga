@@ -1,4 +1,3 @@
-/* Google Fonts loaded via <link> in app/layout.tsx — no duplicate @import needed */
 @import url('https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css');
 
 @tailwind base;
@@ -7,40 +6,40 @@
 
 @layer base {
   :root {
-    /* Municipal Civic Intelligence (Dark Mode Standard) */
-    --background: #0c1421;
-    --foreground: #dbe2f5;
+    /* Slacc-inspired Editorial System — Light / Cream / Aubergine Baseline */
+    --background: #ffffff;
+    --foreground: #1d1d1d;
 
-    --card: #141c29;
-    --card-foreground: #dbe2f5;
+    --card: #ffffff;
+    --card-foreground: #1d1d1d;
 
-    --popover: #18202d;
-    --popover-foreground: #dbe2f5;
+    --popover: #ffffff;
+    --popover-foreground: #1d1d1d;
 
-    --primary: #4cd7f6;
-    --primary-foreground: #003640;
+    --primary: #4a154b;
+    --primary-foreground: #ffffff;
 
-    --secondary: #4edea3;
-    --secondary-foreground: #003824;
+    --secondary: #f9f0ff;
+    --secondary-foreground: #1d1d1d;
 
-    --muted: #222a38;
-    --muted-foreground: #bcc9cd;
+    --muted: #f4ede4;
+    --muted-foreground: #696969;
 
-    --accent: #18202d;
-    --accent-foreground: #dbe2f5;
+    --accent: #f9f0ff;
+    --accent-foreground: #4a154b;
 
-    --destructive: #ffb4ab;
-    --destructive-foreground: #690005;
+    --destructive: #cc4117;
+    --destructive-foreground: #ffffff;
 
-    --border: #243654;
-    --input: #18202d;
-    --ring: #4cd7f6;
+    --border: #e6e6e6;
+    --input: #e6e6e6;
+    --ring: #4a154b;
 
-    --radius: 0.25rem;
+    --radius: 16px;
   }
 
   * {
-    border-color: #243654;
+    border-color: #e6e6e6;
     box-sizing: border-box;
   }
 
@@ -48,17 +47,17 @@
     scroll-behavior: smooth;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    background-color: #0c1421;
-    color: #dbe2f5;
-    color-scheme: dark;
+    background-color: #fdfbf9;
+    color: #1d1d1d;
+    color-scheme: light;
   }
   
   body {
-    background-color: #0c1421;
-    color: #dbe2f5;
+    background-color: #fdfbf9;
+    color: #1d1d1d;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    line-height: 1.6;
-    font-size: 15px;
+    line-height: 1.55;
+    font-size: 16px;
     min-height: 100vh;
     min-height: 100dvh;
     padding-left: env(safe-area-inset-left, 0px);
@@ -83,8 +82,9 @@
 
   /* Typography Defaults */
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     letter-spacing: -0.02em;
+    color: #1d1d1d;
   }
 
   code, pre, .font-mono {
@@ -97,14 +97,14 @@
     height: 6px;
   }
   ::-webkit-scrollbar-track {
-    background: #070e1b;
+    background: #f4ede4;
   }
   ::-webkit-scrollbar-thumb {
-    background: #222a38;
-    border-radius: 4px;
+    background: #d9bdde;
+    border-radius: 90px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: #323948;
+    background: #4a154b;
   }
 }
 
@@ -124,62 +124,61 @@
   -webkit-font-smoothing: antialiased;
 }
 
-/* Leaflet Dark Map Tweaks (Tactical Dark Filter, Zero Watermark) */
+/* Leaflet Map Tweaks (Clean High-Clarity Filter) */
 .leaflet-container {
-  background-color: #0c1421 !important;
+  background-color: #f4ede4 !important;
   font-family: 'Inter', sans-serif !important;
-}
-
-.leaflet-tile {
-  filter: brightness(0.6) invert(1) contrast(2.5) hue-rotate(200deg) saturate(0.35) brightness(0.75) !important;
+  border-radius: 16px;
 }
 
 .leaflet-popup-content-wrapper {
-  background-color: #141c29 !important;
-  color: #dbe2f5 !important;
-  border: 1px solid #243654 !important;
-  border-radius: 0.375rem !important;
-  box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.6) !important;
+  background-color: #ffffff !important;
+  color: #1d1d1d !important;
+  border: 1px solid #e6e6e6 !important;
+  border-radius: 16px !important;
+  box-shadow: 0 10px 25px -5px rgba(74, 21, 75, 0.12) !important;
 }
 
 .leaflet-popup-tip {
-  background-color: #141c29 !important;
-  border: 1px solid #243654 !important;
+  background-color: #ffffff !important;
+  border: 1px solid #e6e6e6 !important;
 }
 
 .leaflet-popup-content {
-  margin: 12px 14px !important;
+  margin: 14px 16px !important;
   line-height: 1.5 !important;
 }
 
 .leaflet-container a.leaflet-popup-close-button {
-  color: #bcc9cd !important;
+  color: #696969 !important;
   padding: 6px !important;
 }
 .leaflet-container a.leaflet-popup-close-button:hover {
-  color: #4cd7f6 !important;
+  color: #4a154b !important;
 }
 
-/* Tactical HUD Glassmorphism & Elevation */
-.tactical-panel {
-  background-color: rgba(20, 28, 41, 0.88);
-  backdrop-filter: blur(12px);
-  border: 1px solid #243654;
+/* Atmospheric Pastel Mesh Helper Classes */
+.pastel-mesh-hero {
+  background: radial-gradient(circle at 10% 20%, #f9f0ff 0%, transparent 40%),
+              radial-gradient(circle at 90% 15%, #f4ede4 0%, transparent 45%),
+              radial-gradient(circle at 80% 85%, #fdf2e9 0%, transparent 35%),
+              radial-gradient(circle at 15% 85%, #edf7ee 0%, transparent 35%),
+              #ffffff;
 }
 
-.tactical-card {
-  background-color: #141c29;
-  border: 1px solid #243654;
-  transition: all 0.2s ease;
+.pastel-mesh-soft {
+  background: radial-gradient(circle at 20% 20%, #f9f0ff 0%, transparent 50%),
+              radial-gradient(circle at 80% 80%, #f4ede4 0%, transparent 50%),
+              #ffffff;
 }
 
-.tactical-card:hover {
-  background-color: #18202d;
-  border-color: #323948;
+.aubergine-panel {
+  background-color: #4a154b;
+  color: #ffffff;
 }
 
 .editorial-container {
-  max-width: 1320px;
+  max-width: 1280px;
   margin-left: auto;
   margin-right: auto;
   padding-left: 1.5rem;

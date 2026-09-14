@@ -11,11 +11,9 @@ import {
   ChevronLeft,
   ChevronRight,
   LogOut,
-  Radio,
   X,
   ShieldCheck,
   PhoneCall,
-  Activity,
   Video,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -40,7 +38,6 @@ export function AdminSidebar({
   const [collapsed, setCollapsed] = useState(false)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
 
-  // Listen to Escape key to close mobile drawer
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isMobileOpen) {
@@ -60,8 +57,8 @@ export function AdminSidebar({
     },
     {
       id: 'reports' as DashboardTab,
-      label: 'Antrean Verifikasi Tindakan',
-      sublabel: 'Verifikasi Laporan',
+      label: 'Moderasi Laporan',
+      sublabel: 'Verifikasi Tindakan',
       icon: ClipboardCheck,
       count: pendingReportsCount,
       countAriaLabel: `${pendingReportsCount} laporan menunggu verifikasi`,
@@ -74,14 +71,14 @@ export function AdminSidebar({
     },
     {
       id: 'cctv' as DashboardTab,
-      label: 'Monitoring CCTV & Flood AI',
-      sublabel: '70 Titik PantauSemar & YOLO',
+      label: 'Monitoring CCTV',
+      sublabel: '70 Titik PantauSemar',
       icon: Video,
       count: 70,
     },
     {
       id: 'data' as DashboardTab,
-      label: 'Pemantauan Data Ingestion',
+      label: 'Pemantauan Ingesti Data',
       sublabel: 'Sensor Uptime',
       icon: Database,
     },
@@ -104,22 +101,22 @@ export function AdminSidebar({
   }
 
   const sidebarContent = (
-    <div className="h-full flex flex-col justify-between py-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] bg-surface-container-low border-r border-outline-variant/30 text-on-surface">
+    <div className="h-full flex flex-col justify-between py-6 px-3 bg-[#4a154b] text-white select-none">
       {/* Top Section */}
-      <div className="flex flex-col gap-6 px-3">
+      <div className="flex flex-col gap-6">
         {/* Brand Header */}
         <div className="px-3 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3 group min-w-0">
-            <div className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/40 flex items-center justify-center shrink-0 text-primary group-hover:bg-primary group-hover:text-on-primary transition-colors">
-              <span className="material-symbols-outlined text-[18px]">grid_view</span>
+            <div className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center shrink-0 text-white group-hover:bg-white group-hover:text-[#4a154b] transition-colors">
+              <ShieldCheck className="w-5 h-5" />
             </div>
             {!collapsed && (
               <div className="flex flex-col min-w-0">
-                <span className="font-headline font-bold text-sm text-on-surface leading-tight truncate">
+                <span className="font-display font-bold text-base text-[#f4ede4] leading-tight truncate">
                   KotaKu Siaga
                 </span>
-                <span className="font-mono text-[10px] text-primary tracking-wider uppercase font-semibold">
-                  EOC Control Desk
+                <span className="text-[10px] text-[#d9bdde] tracking-wider uppercase font-semibold">
+                  EOC Command Desk
                 </span>
               </div>
             )}
@@ -129,7 +126,7 @@ export function AdminSidebar({
           <button
             type="button"
             onClick={() => setCollapsed(!collapsed)}
-            className="hidden md:flex p-1.5 rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors"
+            className="hidden md:flex p-1.5 rounded-lg text-[#d9bdde] hover:text-white hover:bg-white/10 transition-colors"
             title={collapsed ? 'Perluas Menu' : 'Perkecil Menu'}
           >
             {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
@@ -139,8 +136,8 @@ export function AdminSidebar({
         {/* Navigation items */}
         <nav className="flex flex-col gap-1.5">
           {!collapsed && (
-            <span className="font-mono text-[9px] text-on-surface-variant uppercase px-3 tracking-wider font-semibold">
-              Operasional Spasial EOC
+            <span className="text-[10px] font-bold text-[#d9bdde] uppercase px-3 tracking-wider">
+              Operasional EOC
             </span>
           )}
 
@@ -157,19 +154,24 @@ export function AdminSidebar({
                   if (isMobileOpen) onMobileClose()
                 }}
                 className={cn(
-                  'w-full min-h-[44px] flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-body transition-all text-left group relative',
+                  'w-full min-h-[48px] flex items-center gap-3 px-3.5 py-2.5 rounded-[90px] text-xs font-semibold transition-all text-left group relative',
                   isActive
-                    ? 'bg-primary-container text-on-primary-container font-bold shadow-sm'
-                    : 'text-on-surface-variant hover:bg-surface-container hover:text-on-surface'
+                    ? 'bg-white text-[#4a154b] font-bold shadow-sm'
+                    : 'text-[#d9bdde] hover:bg-[#592466] hover:text-white'
                 )}
                 title={collapsed ? item.label : undefined}
               >
-                <Icon className={cn('h-4 w-4 shrink-0', isActive ? 'text-on-primary-container' : 'text-on-surface-variant group-hover:text-primary')} />
+                <Icon className={cn('h-4 w-4 shrink-0', isActive ? 'text-[#4a154b]' : 'text-[#d9bdde] group-hover:text-white')} />
                 {!collapsed && (
                   <div className="flex-1 min-w-0 flex items-center justify-between">
                     <span className="truncate">{item.label}</span>
                     {typeof item.count === 'number' && item.count > 0 && (
-                      <span className="ml-2 px-1.5 py-0.5 rounded-full bg-error text-on-error font-mono text-[10px] font-bold">
+                      <span
+                        className={cn(
+                          'ml-2 px-2 py-0.5 rounded-full text-[10px] font-bold font-mono',
+                          isActive ? 'bg-[#4a154b] text-white' : 'bg-[#cc4117] text-white'
+                        )}
+                      >
                         {item.count}
                       </span>
                     )}
@@ -181,61 +183,36 @@ export function AdminSidebar({
         </nav>
       </div>
 
-      {/* Bottom Section: Live Pump Widget & Emergency Dispatch */}
-      <div className="flex flex-col gap-3 px-3 pt-4 border-t border-outline-variant/30">
-        {!collapsed ? (
-          <>
-            {/* Live Pump Status Card */}
-            <div className="p-3 rounded-lg bg-surface-container border border-outline-variant/30 flex flex-col gap-1.5">
-              <div className="flex items-center justify-between">
-                <span className="font-mono text-[10px] text-on-surface-variant uppercase font-semibold">Status Pompa</span>
-                <span className="font-mono text-[10px] text-secondary font-bold">52/54 AKTIF</span>
-              </div>
-              <div className="w-full bg-surface-container-highest h-1.5 rounded-full overflow-hidden">
-                <div className="bg-secondary h-full rounded-full" style={{ width: '96%' }}></div>
-              </div>
-              <span className="font-mono text-[9px] text-on-surface-variant">Sringin & Tenggang Normal</span>
-            </div>
+      {/* Bottom Section */}
+      <div className="flex flex-col gap-2 pt-4 border-t border-[#592466]">
+        {/* Emergency Call Pill */}
+        <a
+          href="tel:112"
+          className="min-h-[48px] w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-[90px] bg-[#cc4117] text-white font-bold text-xs hover:bg-[#b03713] transition-colors shadow-sm"
+        >
+          <PhoneCall className="h-4 w-4 shrink-0" />
+          {!collapsed && <span>112 BPBD Darurat</span>}
+        </a>
 
-            {/* Emergency Dispatch Button */}
-            <a
-              href="tel:112"
-              className="w-full flex items-center justify-center gap-2 py-2 rounded-lg bg-error-container/40 border border-error/50 text-error hover:bg-error-container font-mono text-xs font-bold uppercase transition-colors"
-            >
-              <PhoneCall className="w-3.5 h-3.5" />
-              Dispatch Darurat 112
-            </a>
+        {/* Return to Portal */}
+        <Link
+          href="/"
+          className="min-h-[44px] w-full flex items-center gap-2.5 px-3.5 py-2 rounded-[90px] text-[#d9bdde] hover:bg-[#592466] hover:text-white text-xs font-medium transition-colors"
+        >
+          <span className="material-symbols-outlined text-[18px]">public</span>
+          {!collapsed && <span>Buka Halaman Publik</span>}
+        </Link>
 
-            {/* Logout button */}
-            <button
-              type="button"
-              onClick={handleLogout}
-              disabled={isLoggingOut}
-              className="w-full flex items-center gap-2 px-3 py-2 text-xs font-mono text-on-surface-variant hover:text-error hover:bg-error/10 rounded transition-colors"
-            >
-              <LogOut className="h-3.5 w-3.5" />
-              <span>Keluar Control Desk</span>
-            </button>
-          </>
-        ) : (
-          <div className="flex flex-col items-center gap-3">
-            <a
-              href="tel:112"
-              className="p-2 rounded bg-error-container/40 text-error hover:bg-error-container"
-              title="Dispatch 112"
-            >
-              <PhoneCall className="w-4 h-4" />
-            </a>
-            <button
-              type="button"
-              onClick={handleLogout}
-              className="p-2 text-on-surface-variant hover:text-error rounded"
-              title="Keluar"
-            >
-              <LogOut className="w-4 h-4" />
-            </button>
-          </div>
-        )}
+        {/* Logout button */}
+        <button
+          type="button"
+          onClick={handleLogout}
+          disabled={isLoggingOut}
+          className="min-h-[44px] w-full flex items-center gap-2.5 px-3.5 py-2 rounded-[90px] text-[#d9bdde] hover:bg-[#592466] hover:text-white text-xs font-medium transition-colors"
+        >
+          <LogOut className="h-4 w-4 shrink-0" />
+          {!collapsed && <span>{isLoggingOut ? 'Keluar...' : 'Keluar Sesi'}</span>}
+        </button>
       </div>
     </div>
   )
@@ -245,7 +222,7 @@ export function AdminSidebar({
       {/* Desktop Sidebar */}
       <aside
         className={cn(
-          'hidden md:block shrink-0 transition-all duration-300 z-30 sticky top-20 h-[calc(100vh-80px)]',
+          'hidden md:block shrink-0 transition-all duration-200 border-r border-[#481a54] sticky top-0 h-screen',
           collapsed ? 'w-16' : 'w-64'
         )}
       >
@@ -254,16 +231,16 @@ export function AdminSidebar({
 
       {/* Mobile Drawer */}
       {isMobileOpen && (
-        <div className="fixed inset-0 z-50 md:hidden flex">
+        <div className="md:hidden fixed inset-0 z-50 flex">
           <div
             className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
             onClick={onMobileClose}
           />
-          <div className="relative w-72 max-w-[85vw] h-full z-10 shadow-2xl">
+          <div className="relative w-72 max-w-[80vw] h-full shadow-2xl z-10">
             <button
+              type="button"
               onClick={onMobileClose}
-              className="absolute top-3.5 right-3.5 w-9 h-9 flex items-center justify-center rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container z-20"
-              aria-label="Tutup menu navigasi"
+              className="absolute top-4 right-3 text-white p-2 rounded-full hover:bg-white/10"
             >
               <X className="w-5 h-5" />
             </button>

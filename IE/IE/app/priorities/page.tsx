@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
 import {
   Search,
@@ -15,6 +15,7 @@ import {
   ArrowRight,
   TrendingUp,
   FileSpreadsheet,
+  RefreshCw,
 } from 'lucide-react'
 
 interface DistrictData {
@@ -122,89 +123,91 @@ const INITIAL_DISTRICTS: DistrictData[] = [
     score: 52.8,
     level: 'MEDIUM',
     reportsCount: 11,
-    primaryIssue: 'Luapan Aliran Saluran Silandak',
-    trend: 'Stabil',
-    vars: { L: 50, U: 52, P: 60, H: 54, K: 50, C: 64 },
+    primaryIssue: 'Saluran Tersumbat Sedimen Industri',
+    trend: '+1 laporan mgg ini',
+    vars: { L: 50, U: 52, P: 58, H: 52, K: 50, C: 65 },
   },
   {
     id: 'gajahmungkur',
     name: 'Gajahmungkur',
-    score: 48.6,
+    score: 49.5,
     level: 'MEDIUM',
-    reportsCount: 7,
-    primaryIssue: 'Drainase Lereng & Tebing Gombel Lama',
-    trend: '-2 laporan mgg ini',
-    vars: { L: 42, U: 48, P: 55, H: 52, K: 58, C: 65 },
+    reportsCount: 8,
+    primaryIssue: 'Dinding Saluran Kali Garang & Erosi',
+    trend: 'Stabil',
+    vars: { L: 45, U: 48, P: 55, H: 50, K: 55, C: 62 },
   },
   {
     id: 'semarang-tengah',
     name: 'Semarang Tengah',
-    score: 46.5,
+    score: 47.3,
     level: 'MEDIUM',
-    reportsCount: 8,
-    primaryIssue: 'Polder Pemuda & Kawasan Johar',
-    trend: 'Terkendali',
-    vars: { L: 45, U: 46, P: 75, H: 50, K: 42, C: 40 },
+    reportsCount: 10,
+    primaryIssue: 'Antrean Air Hujan di Protokol Pemuda',
+    trend: '-2 laporan mgg ini',
+    vars: { L: 42, U: 46, P: 84, H: 45, K: 40, C: 48 },
   },
   {
     id: 'semarang-selatan',
     name: 'Semarang Selatan',
-    score: 42.0,
+    score: 44.1,
     level: 'MEDIUM',
-    reportsCount: 6,
-    primaryIssue: 'Saluran Peterongan & Sompok',
-    trend: 'Terkendali',
-    vars: { L: 40, U: 42, P: 68, H: 45, K: 40, C: 42 },
-  },
-  {
-    id: 'banyumanik',
-    name: 'Banyumanik',
-    score: 38.4,
-    level: 'LOW',
-    reportsCount: 5,
-    primaryIssue: 'Drainase Jalur Perintis Kemerdekaan',
-    trend: 'Aman',
-    vars: { L: 35, U: 36, P: 58, H: 38, K: 35, C: 50 },
+    reportsCount: 7,
+    primaryIssue: 'Genangan Lokal Simpang Lima Saat Hujan Lebat',
+    trend: 'Stabil',
+    vars: { L: 40, U: 42, P: 78, H: 42, K: 38, C: 50 },
   },
   {
     id: 'tugu',
     name: 'Tugu',
-    score: 36.2,
+    score: 42.0,
+    level: 'MEDIUM',
+    reportsCount: 12,
+    primaryIssue: 'Tambak Tergerus Rob Pesisir Barat',
+    trend: '+1 laporan mgg ini',
+    vars: { L: 38, U: 40, P: 35, H: 65, K: 70, C: 58 },
+  },
+  {
+    id: 'banyumanik',
+    name: 'Banyumanik',
+    score: 38.6,
     level: 'LOW',
-    reportsCount: 4,
-    primaryIssue: 'Pesisir Mangkang & Muara Beringin',
-    trend: 'Terkendali Pompa',
-    vars: { L: 38, U: 40, P: 40, H: 45, K: 50, C: 42 },
+    reportsCount: 6,
+    primaryIssue: 'Topografi Tinggi, Drainase Cepat Mengalir',
+    trend: 'Stabil',
+    vars: { L: 30, U: 35, P: 60, H: 38, K: 30, C: 72 },
   },
   {
     id: 'gunungpati',
     name: 'Gunungpati',
-    score: 32.0,
+    score: 31.4,
     level: 'LOW',
-    reportsCount: 3,
-    primaryIssue: 'Aliran Sungai Garang Hulu',
-    trend: 'Aman',
-    vars: { L: 28, U: 30, P: 45, H: 35, K: 40, C: 55 },
+    reportsCount: 4,
+    primaryIssue: 'Kawasan Konservasi & Resapan Air Hulu',
+    trend: 'Stabil',
+    vars: { L: 25, U: 28, P: 40, H: 30, K: 32, C: 68 },
   },
   {
     id: 'mijen',
     name: 'Mijen',
-    score: 28.5,
+    score: 28.0,
     level: 'LOW',
-    reportsCount: 2,
-    primaryIssue: 'Saluran Perkebunan & Batas Barat',
-    trend: 'Aman Terkendali',
-    vars: { L: 22, U: 25, P: 35, H: 30, K: 30, C: 45 },
+    reportsCount: 3,
+    primaryIssue: 'Risiko Hidrologi Rendah, Tutupan Hijau Luas',
+    trend: 'Stabil',
+    vars: { L: 20, U: 22, P: 32, H: 25, K: 28, C: 60 },
   },
 ]
 
 export default function PrioritiesPage() {
+  const [districts, setDistricts] = useState<DistrictData[]>(INITIAL_DISTRICTS)
   const [searchQuery, setSearchQuery] = useState('')
   const [riskFilter, setRiskFilter] = useState<'ALL' | 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW'>('ALL')
   const [selectedDistrict, setSelectedDistrict] = useState<DistrictData>(INITIAL_DISTRICTS[0])
   const [showSimulator, setShowSimulator] = useState(false)
+  const [isLoadingApi, setIsLoadingApi] = useState(false)
 
-  // Dynamic Weights (default deterministic: 0.25, 0.20, 0.15, 0.15, 0.15, 0.10)
+  // Dynamic Weights (deterministic ISO baseline: 0.25, 0.20, 0.15, 0.15, 0.15, 0.10)
   const [weights, setWeights] = useState({
     L: 0.25,
     U: 0.20,
@@ -214,9 +217,46 @@ export default function PrioritiesPage() {
     C: 0.10,
   })
 
+  // Try fetching live scores from API
+  useEffect(() => {
+    setIsLoadingApi(true)
+    fetch('/api/priority-scores')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && Array.isArray(data.data) && data.data.length > 0) {
+          const apiMapped: DistrictData[] = data.data.map((item: any) => {
+            const foundInitial = INITIAL_DISTRICTS.find((d) => d.name.toLowerCase() === item.area.name.toLowerCase())
+            return {
+              id: item.area.slug || item.area.id,
+              name: item.area.name,
+              score: Math.round(item.score * 10) / 10,
+              level: (item.riskLabel || 'LOW') as any,
+              reportsCount: item.report_count ?? foundInitial?.reportsCount ?? 0,
+              primaryIssue: foundInitial?.primaryIssue || 'Kawasan Pemantauan Terpadu',
+              trend: foundInitial?.trend || 'Stabil',
+              vars: {
+                L: item.factors?.reportFrequency?.normalized ?? foundInitial?.vars.L ?? 50,
+                U: item.factors?.urgency?.normalized ?? foundInitial?.vars.U ?? 50,
+                P: item.factors?.populationDensity?.normalized ?? foundInitial?.vars.P ?? 50,
+                H: foundInitial?.vars.H ?? 50,
+                K: item.factors?.vulnerability?.normalized ?? foundInitial?.vars.K ?? 50,
+                C: foundInitial?.vars.C ?? 50,
+              },
+            }
+          })
+          setDistricts(apiMapped)
+          if (apiMapped.length > 0) {
+            setSelectedDistrict(apiMapped[0])
+          }
+        }
+      })
+      .catch((err) => console.warn('Gagal memuat API priority-scores:', err))
+      .finally(() => setIsLoadingApi(false))
+  }, [])
+
   // Recalculate district scores dynamically based on weights
   const recalculatedDistricts = useMemo(() => {
-    return INITIAL_DISTRICTS.map((d) => {
+    return districts.map((d) => {
       const calcScore =
         weights.L * d.vars.L +
         weights.U * d.vars.U +
@@ -237,7 +277,7 @@ export default function PrioritiesPage() {
         level,
       }
     }).sort((a, b) => b.score - a.score)
-  }, [weights])
+  }, [districts, weights])
 
   const filteredDistricts = useMemo(() => {
     return recalculatedDistricts.filter((d) => {
@@ -271,384 +311,225 @@ export default function PrioritiesPage() {
   }
 
   return (
-    <div className="flex flex-col w-full bg-surface text-on-surface min-h-screen">
-      {/* 1. FORMULA INTELLIGENCE & METOCEAN BANNER */}
-      <section className="w-full px-4 sm:px-6 lg:px-8 py-8 bg-surface-container-lowest border-b border-outline-variant/30">
+    <div className="flex flex-col w-full bg-[#fdfbf9] text-[#1d1d1d] min-h-screen pb-24">
+      {/* Header Banner */}
+      <section className="w-full px-4 sm:px-6 lg:px-8 py-10 bg-white border-b border-[#e6e6e6]">
         <div className="max-w-7xl mx-auto flex flex-col gap-6">
-          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-4">
-            <div className="flex flex-col gap-1.5 max-w-3xl">
+          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6">
+            <div className="flex flex-col gap-2 max-w-3xl">
               <div className="flex items-center gap-2">
-                <span className="px-2.5 py-0.5 rounded bg-primary-container text-on-primary-container font-mono text-[10px] font-bold tracking-wider uppercase">
-                  ALGORITMA TERVERIFIKASI ISO 37120
+                <span className="px-3 py-1 rounded-full bg-[#f9f0ff] text-[#4a154b] text-xs font-bold border border-[#eddcf7] uppercase tracking-wider">
+                  ALGORITMA TERBUKA ISO 37120
                 </span>
-                <span className="font-mono text-xs text-secondary flex items-center gap-1">
-                  <span className="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
-                  SINKRONISASI REAL-TIME
+                <span className="text-xs text-[#007a5a] font-semibold flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full bg-[#007a5a] animate-pulse"></span>
+                  Deterministik Tanpa AI Monopoli
                 </span>
               </div>
-              <h1 className="font-headline text-2xl sm:text-3xl font-extrabold text-on-surface">
-                Matriks Risiko Spasial & Transparansi Data
+              <h1 className="font-display text-3xl sm:text-4xl font-bold text-[#1d1d1d]">
+                Matriks Risiko Spasial 16 Kecamatan
               </h1>
-              <p className="font-body text-xs sm:text-sm text-on-surface-variant leading-relaxed">
-                Sistem pembobotan risiko deterministik non-komersial Kota Semarang. Menghitung kerentanan hidrometeorologis kumulatif secara terbuka tanpa dependensi API proprietary berbayar.
+              <p className="text-sm text-[#696969] leading-relaxed">
+                Sistem pembobotan kerentanan kumulatif Kota Semarang. Menghitung peringkat intervensi pompa dan bantuan secara terbuka dan dapat direproduksi oleh seluruh warga.
               </p>
             </div>
 
-            <div className="flex items-center gap-3 bg-surface-container px-4 py-2.5 rounded-xl border border-outline-variant/40 shadow-sm">
-              <span className="material-symbols-outlined text-primary text-[28px]">biotech</span>
-              <div className="flex flex-col">
-                <span className="font-mono text-[10px] text-on-surface-variant uppercase font-semibold">
-                  Versi Formula
-                </span>
-                <span className="font-mono text-sm text-on-surface font-bold">
-                  D-RISK v2.4 (Open Math)
-                </span>
-              </div>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={exportCSV}
+                className="min-h-[48px] px-6 py-3 rounded-[90px] bg-[#f4ede4] hover:bg-[#e8ded2] text-[#4a154b] font-bold text-xs flex items-center gap-2 transition-colors"
+              >
+                <Download className="w-4 h-4" />
+                <span>Unduh CSV Matriks</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowSimulator(!showSimulator)}
+                className="min-h-[48px] px-6 py-3 rounded-[90px] bg-[#4a154b] text-white hover:bg-[#481a54] font-bold text-xs flex items-center gap-2 shadow-sm transition-colors"
+              >
+                <Sliders className="w-4 h-4" />
+                <span>{showSimulator ? 'Tutup Simulator' : 'Simulator Bobot'}</span>
+              </button>
             </div>
           </div>
 
-          {/* Formula Breakdown Cards & Metocean Banner */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-            {/* Mathematical Formula Visualizer */}
-            <div className="lg:col-span-8 bg-surface-container rounded-xl p-5 sm:p-6 border border-outline-variant/30 shadow-md flex flex-col gap-4">
-              <div className="flex items-center justify-between">
-                <span className="font-mono text-xs text-primary font-bold uppercase tracking-wider">
-                  Persamaan Deterministik Terbuka
-                </span>
-                <span className="font-mono text-xs text-on-surface-variant">Total Bobot Σ = 1.00 (100%)</span>
-              </div>
-              <div className="bg-surface-container-low rounded-lg p-3 sm:p-4 overflow-x-auto border border-outline-variant/30">
-                <code className="font-mono text-sm sm:text-base text-primary whitespace-nowrap block font-bold">
-                  FinalScore = ({weights.L.toFixed(2)}·L) + ({weights.U.toFixed(2)}·U) + ({weights.P.toFixed(2)}·P) + ({weights.H.toFixed(2)}·H) + ({weights.K.toFixed(2)}·K) + ({weights.C.toFixed(2)}·C)
-                </code>
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 pt-1">
-                <div className="flex flex-col bg-surface-container-high p-2.5 rounded border border-outline-variant/20">
-                  <span className="font-mono text-[11px] text-primary font-bold">{(weights.L * 100).toFixed(0)}% [L]</span>
-                  <span className="font-body text-xs text-on-surface font-semibold truncate">Laporan Warga</span>
-                  <span className="font-mono text-[9px] text-on-surface-variant">Telemetri + Bot</span>
-                </div>
-                <div className="flex flex-col bg-surface-container-high p-2.5 rounded border border-outline-variant/20">
-                  <span className="font-mono text-[11px] text-tertiary font-bold">{(weights.U * 100).toFixed(0)}% [U]</span>
-                  <span className="font-body text-xs text-on-surface font-semibold truncate">Tingkat Urgensi</span>
-                  <span className="font-mono text-[9px] text-on-surface-variant">Kenaikan Air/Jam</span>
-                </div>
-                <div className="flex flex-col bg-surface-container-high p-2.5 rounded border border-outline-variant/20">
-                  <span className="font-mono text-[11px] text-secondary font-bold">{(weights.P * 100).toFixed(0)}% [P]</span>
-                  <span className="font-body text-xs text-on-surface font-semibold truncate">Kepadatan Jiwa</span>
-                  <span className="font-mono text-[9px] text-on-surface-variant">BPS Kota Smg</span>
-                </div>
-                <div className="flex flex-col bg-surface-container-high p-2.5 rounded border border-outline-variant/20">
-                  <span className="font-mono text-[11px] text-primary font-bold">{(weights.H * 100).toFixed(0)}% [H]</span>
-                  <span className="font-body text-xs text-on-surface font-semibold truncate">Data Historis</span>
-                  <span className="font-mono text-[9px] text-on-surface-variant">InaRISK 10 Thn</span>
-                </div>
-                <div className="flex flex-col bg-surface-container-high p-2.5 rounded border border-outline-variant/20">
-                  <span className="font-mono text-[11px] text-tertiary font-bold">{(weights.K * 100).toFixed(0)}% [K]</span>
-                  <span className="font-body text-xs text-on-surface font-semibold truncate">Kerentanan Fisik</span>
-                  <span className="font-mono text-[9px] text-on-surface-variant">DEM Elevasi Rob</span>
-                </div>
-                <div className="flex flex-col bg-surface-container-high p-2.5 rounded border border-outline-variant/20">
-                  <span className="font-mono text-[11px] text-secondary font-bold">{(weights.C * 100).toFixed(0)}% [C]</span>
-                  <span className="font-body text-xs text-on-surface font-semibold truncate">Curah Hujan</span>
-                  <span className="font-mono text-[9px] text-on-surface-variant">AWS BMKG Maritim</span>
-                </div>
-              </div>
+          {/* Formula Display Box */}
+          <div className="rounded-[16px] bg-[#f4ede4] p-6 border border-[#e8ded2] flex flex-col gap-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-[#4a154b] uppercase tracking-wider">
+                Persamaan Linear Deterministik (Open Math)
+              </span>
+              <span className="text-xs text-[#696969]">Total Bobot Σ = 1.00 (100%)</span>
             </div>
-
-            {/* Metocean Coastal Live Feeds */}
-            <div className="lg:col-span-4 bg-surface-container rounded-xl p-5 sm:p-6 border border-outline-variant/30 shadow-md flex flex-col justify-between gap-4">
-              <div className="flex items-center justify-between">
-                <span className="font-mono text-xs text-tertiary font-bold uppercase tracking-wider">
-                  Telemetri Pesisir Semarang
-                </span>
-                <span className="material-symbols-outlined text-tertiary text-[20px]">tsunami</span>
-              </div>
-              <div className="flex flex-col gap-3">
-                <div className="flex items-center justify-between p-3 rounded-lg bg-surface-container-low border border-outline-variant/30">
-                  <div className="flex flex-col">
-                    <span className="font-mono text-[10px] text-on-surface-variant uppercase">
-                      Pasang Air Laut (St. Tanjung Emas)
-                    </span>
-                    <span className="font-mono text-2xl text-error font-bold">+92 cm</span>
-                  </div>
-                  <span className="px-2 py-1 rounded bg-error/20 text-error font-mono text-[10px] font-bold">
-                    PASANG MAKS
-                  </span>
-                </div>
-                <div className="flex items-center justify-between p-3 rounded-lg bg-surface-container-low border border-outline-variant/30">
-                  <div className="flex flex-col">
-                    <span className="font-mono text-[10px] text-on-surface-variant uppercase">
-                      Curah Hujan Maritim BMKG
-                    </span>
-                    <span className="font-mono text-2xl text-tertiary font-bold">48.2 mm/j</span>
-                  </div>
-                  <span className="px-2 py-1 rounded bg-tertiary/20 text-tertiary font-mono text-[10px] font-bold">
-                    HUJAN LEBAT
-                  </span>
-                </div>
-              </div>
-              <div className="flex items-center justify-between text-xs text-on-surface-variant">
-                <span className="font-mono text-[10px]">Stasiun: AWS-MARITIM-TE01</span>
-                <span className="font-mono text-[11px] text-primary font-semibold">Valid 3 Jam Kedepan</span>
-              </div>
+            <div className="p-3 bg-white rounded-xl border border-[#e8ded2] overflow-x-auto">
+              <code className="text-sm font-mono text-[#4a154b] font-bold whitespace-nowrap block">
+                Skor = ({weights.L.toFixed(2)}·Laporan) + ({weights.U.toFixed(2)}·Urgensi) + ({weights.P.toFixed(2)}·Kepadatan) + ({weights.H.toFixed(2)}·Historis) + ({weights.K.toFixed(2)}·ElevasiRob) + ({weights.C.toFixed(2)}·CurahHujan)
+              </code>
             </div>
           </div>
         </div>
       </section>
 
-      {/* 2. INTERACTIVE MATRIX OF 16 DISTRICTS */}
-      <section className="w-full px-4 sm:px-6 lg:px-8 py-10 max-w-7xl mx-auto w-full">
-        <div className="flex flex-col gap-6">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
-            <div className="flex flex-col gap-1">
-              <span className="font-mono text-xs text-primary uppercase font-bold tracking-wider">
-                Tingkat Prioritas Intervensi Wilayah
+      {/* Simulator Drawer (if enabled) */}
+      {showSimulator && (
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+          <div className="p-6 rounded-[16px] bg-white border border-[#4a154b]/30 shadow-card flex flex-col gap-4 animate-in fade-in">
+            <div className="flex items-center justify-between border-b border-[#e6e6e6] pb-3">
+              <span className="font-bold text-sm text-[#4a154b]">
+                Simulator Interaktif Pembobotan Parameter
               </span>
-              <h2 className="font-headline text-2xl font-bold text-on-surface">
-                Urutan Prioritas Risiko 16 Kecamatan
-              </h2>
-              <p className="font-body text-xs sm:text-sm text-on-surface-variant">
-                Pilih kecamatan untuk membuka rincian nilai 6 variabel dan rekomendasi aksi dinas terkait.
-              </p>
+              <button
+                onClick={() =>
+                  setWeights({ L: 0.25, U: 0.20, P: 0.15, H: 0.15, K: 0.15, C: 0.10 })
+                }
+                className="text-xs text-[#696969] hover:underline"
+              >
+                Reset ke Standar ISO
+              </button>
             </div>
 
-            {/* Controls */}
-            <div className="flex items-center gap-2 sm:gap-3 flex-wrap w-full md:w-auto">
-              <div className="relative flex-1 min-w-[180px] sm:w-64">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div>
+                <div className="flex justify-between text-xs mb-1 font-semibold">
+                  <span>Laporan Warga (L)</span>
+                  <span className="text-[#4a154b]">{(weights.L * 100).toFixed(0)}%</span>
+                </div>
+                <input
+                  type="range"
+                  min="0.05"
+                  max="0.5"
+                  step="0.05"
+                  value={weights.L}
+                  onChange={(e) => setWeights({ ...weights, L: parseFloat(e.target.value) })}
+                  className="w-full accent-[#4a154b]"
+                />
+              </div>
+
+              <div>
+                <div className="flex justify-between text-xs mb-1 font-semibold">
+                  <span>Tingkat Urgensi (U)</span>
+                  <span className="text-[#4a154b]">{(weights.U * 100).toFixed(0)}%</span>
+                </div>
+                <input
+                  type="range"
+                  min="0.05"
+                  max="0.5"
+                  step="0.05"
+                  value={weights.U}
+                  onChange={(e) => setWeights({ ...weights, U: parseFloat(e.target.value) })}
+                  className="w-full accent-[#4a154b]"
+                />
+              </div>
+
+              <div>
+                <div className="flex justify-between text-xs mb-1 font-semibold">
+                  <span>Kepadatan Penduduk (P)</span>
+                  <span className="text-[#4a154b]">{(weights.P * 100).toFixed(0)}%</span>
+                </div>
+                <input
+                  type="range"
+                  min="0.05"
+                  max="0.5"
+                  step="0.05"
+                  value={weights.P}
+                  onChange={(e) => setWeights({ ...weights, P: parseFloat(e.target.value) })}
+                  className="w-full accent-[#4a154b]"
+                />
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Main Content Grid: District Table & Detail Sidebar */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          {/* Left: District Ranking Table (Col 8) */}
+          <div className="lg:col-span-8 space-y-4">
+            {/* Filter Pills & Search */}
+            <div className="p-4 rounded-[16px] bg-white border border-[#e6e6e6] shadow-subtle flex flex-col sm:flex-row items-center justify-between gap-3">
+              <div className="relative w-full sm:w-64">
+                <Search className="w-4 h-4 text-[#696969] absolute left-3 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Cari nama kecamatan..."
-                  className="w-full pl-9 pr-3 h-10 rounded-lg bg-surface-container border border-outline-variant/40 text-on-surface font-body text-xs focus:outline-none focus:border-primary"
+                  placeholder="Cari kecamatan..."
+                  className="w-full h-10 pl-9 pr-3 rounded-xl border border-[#e6e6e6] text-xs focus:outline-none focus:border-[#4a154b]"
                 />
-                <Search className="w-4 h-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-on-surface-variant" />
               </div>
 
-              {/* Risk Level Filter */}
-              <div className="flex items-center gap-1 bg-surface-container p-1 rounded-lg border border-outline-variant/30 overflow-x-auto max-w-full">
-                {(['ALL', 'CRITICAL', 'HIGH', 'MEDIUM', 'LOW'] as const).map((level) => (
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {(['ALL', 'CRITICAL', 'HIGH', 'MEDIUM', 'LOW'] as const).map((r) => (
                   <button
-                    key={level}
-                    onClick={() => setRiskFilter(level)}
-                    className={`px-2.5 min-h-[36px] flex items-center justify-center rounded font-mono text-[10px] font-bold transition-all ${
-                      riskFilter === level
-                        ? 'bg-primary text-on-primary shadow-sm'
-                        : 'text-on-surface-variant hover:text-on-surface'
+                    key={r}
+                    onClick={() => setRiskFilter(r)}
+                    className={`px-3 py-1.5 rounded-[90px] text-xs font-bold transition-all ${
+                      riskFilter === r
+                        ? 'bg-[#4a154b] text-white'
+                        : 'bg-[#f4ede4] text-[#1d1d1d] hover:bg-[#e8ded2]'
                     }`}
                   >
-                    {level === 'ALL' ? 'SEMUA' : level}
+                    {r}
                   </button>
                 ))}
               </div>
-
-              {/* Simulator & Export buttons */}
-              <button
-                onClick={() => setShowSimulator(!showSimulator)}
-                className={`min-h-[38px] px-3 rounded-lg border flex items-center justify-center gap-1.5 font-mono text-xs font-semibold transition-colors ${
-                  showSimulator
-                    ? 'bg-primary text-on-primary border-primary'
-                    : 'bg-surface-container text-on-surface border-outline-variant/40 hover:bg-surface-container-high'
-                }`}
-                title="Buka Simulator Bobot Formula"
-              >
-                <Sliders className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Simulator</span>
-              </button>
-
-              <button
-                onClick={exportCSV}
-                className="min-h-[38px] px-3 rounded-lg bg-surface-container text-on-surface border border-outline-variant/40 hover:bg-surface-container-high font-mono text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
-                title="Ekspor CSV Data Terbuka"
-              >
-                <Download className="w-3.5 h-3.5 text-primary" />
-                <span className="hidden sm:inline">Ekspor CSV</span>
-              </button>
             </div>
-          </div>
 
-          {/* DYNAMIC WEIGHT SIMULATOR PANEL */}
-          {showSimulator && (
-            <div className="p-5 rounded-xl bg-surface-container-low border border-primary/40 shadow-xl flex flex-col gap-4 animate-in fade-in duration-200">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Sliders className="w-4 h-4 text-primary" />
-                  <span className="font-mono text-xs font-bold uppercase tracking-wider text-primary">
-                    Simulator Bobot Deterministik (Uji Sensitivitas Wilayah)
-                  </span>
-                </div>
-                <button
-                  onClick={() =>
-                    setWeights({ L: 0.25, U: 0.20, P: 0.15, H: 0.15, K: 0.15, C: 0.10 })
-                  }
-                  className="font-mono text-[11px] text-on-surface-variant hover:text-primary underline"
-                >
-                  Reset ke Bobot Standar ISO 37120
-                </button>
-              </div>
-
-              {/* Simulation-only notice */}
-              <div className="px-3 py-2 rounded-lg bg-tertiary/10 border border-tertiary/30 flex items-center gap-2">
-                <span className="material-symbols-outlined text-tertiary text-[16px]">science</span>
-                <span className="font-mono text-[11px] text-tertiary font-bold uppercase tracking-wider">
-                  Simulasi Saja — Tidak mempengaruhi data produksi, database, atau statistik dashboard
-                </span>
-              </div>
-
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 text-xs font-mono">
-                <div>
-                  <div className="flex justify-between mb-1">
-                    <span>Laporan Warga (L)</span>
-                    <span className="text-primary font-bold">{(weights.L * 100).toFixed(0)}%</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="0"
-                    max="0.5"
-                    step="0.05"
-                    value={weights.L}
-                    onChange={(e) => setWeights({ ...weights, L: parseFloat(e.target.value) })}
-                    className="w-full accent-primary"
-                  />
-                </div>
-                <div>
-                  <div className="flex justify-between mb-1">
-                    <span>Tingkat Urgensi (U)</span>
-                    <span className="text-tertiary font-bold">{(weights.U * 100).toFixed(0)}%</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="0"
-                    max="0.5"
-                    step="0.05"
-                    value={weights.U}
-                    onChange={(e) => setWeights({ ...weights, U: parseFloat(e.target.value) })}
-                    className="w-full accent-tertiary"
-                  />
-                </div>
-                <div>
-                  <div className="flex justify-between mb-1">
-                    <span>Kepadatan Jiwa (P)</span>
-                    <span className="text-secondary font-bold">{(weights.P * 100).toFixed(0)}%</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="0"
-                    max="0.5"
-                    step="0.05"
-                    value={weights.P}
-                    onChange={(e) => setWeights({ ...weights, P: parseFloat(e.target.value) })}
-                    className="w-full accent-secondary"
-                  />
-                </div>
-                <div>
-                  <div className="flex justify-between mb-1">
-                    <span>Data Historis (H)</span>
-                    <span className="text-primary font-bold">{(weights.H * 100).toFixed(0)}%</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="0"
-                    max="0.5"
-                    step="0.05"
-                    value={weights.H}
-                    onChange={(e) => setWeights({ ...weights, H: parseFloat(e.target.value) })}
-                    className="w-full accent-primary"
-                  />
-                </div>
-                <div>
-                  <div className="flex justify-between mb-1">
-                    <span>Kerentanan DEM (K)</span>
-                    <span className="text-tertiary font-bold">{(weights.K * 100).toFixed(0)}%</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="0"
-                    max="0.5"
-                    step="0.05"
-                    value={weights.K}
-                    onChange={(e) => setWeights({ ...weights, K: parseFloat(e.target.value) })}
-                    className="w-full accent-tertiary"
-                  />
-                </div>
-                <div>
-                  <div className="flex justify-between mb-1">
-                    <span>Curah Hujan (C)</span>
-                    <span className="text-secondary font-bold">{(weights.C * 100).toFixed(0)}%</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="0"
-                    max="0.5"
-                    step="0.05"
-                    value={weights.C}
-                    onChange={(e) => setWeights({ ...weights, C: parseFloat(e.target.value) })}
-                    className="w-full accent-secondary"
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* District Table & Detail Inspection Card */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-            {/* Table (Col 8) */}
-            <div className="lg:col-span-8 min-w-0 bg-surface-container-low rounded-xl border border-outline-variant/30 overflow-hidden shadow-md">
-              <div className="overflow-x-auto w-full">
+            {/* Table Card */}
+            <div className="rounded-[16px] bg-white border border-[#e6e6e6] overflow-hidden shadow-subtle">
+              <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
-                  <thead className="bg-surface-container border-b border-outline-variant/30 font-mono text-[10px] text-on-surface-variant uppercase">
+                  <thead className="bg-[#f4ede4] border-b border-[#e8ded2] text-[#4a154b] font-bold text-[11px] uppercase">
                     <tr>
-                      <th className="py-3 px-4"># Rank</th>
-                      <th className="py-3 px-4">Kecamatan</th>
-                      <th className="py-3 px-4">Skor Risiko</th>
-                      <th className="py-3 px-4">Level</th>
-                      <th className="py-3 px-4">Aduan Warga</th>
-                      <th className="py-3 px-4 text-right">Aksi</th>
+                      <th className="py-3.5 px-4"># Rank</th>
+                      <th className="py-3.5 px-4">Kecamatan</th>
+                      <th className="py-3.5 px-4">Skor Risiko</th>
+                      <th className="py-3.5 px-4">Tingkat Risiko</th>
+                      <th className="py-3.5 px-4">Laporan</th>
+                      <th className="py-3.5 px-4 text-right">Aksi</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-outline-variant/20">
-                    {filteredDistricts.map((d, index) => {
+                  <tbody className="divide-y divide-[#e6e6e6]">
+                    {filteredDistricts.map((d, idx) => {
                       const isSelected = selectedDistrict.id === d.id
                       return (
                         <tr
                           key={d.id}
                           onClick={() => setSelectedDistrict(d)}
                           className={`cursor-pointer transition-colors ${
-                            isSelected
-                              ? 'bg-primary/10'
-                              : 'hover:bg-surface-container/60'
+                            isSelected ? 'bg-[#f9f0ff]' : 'hover:bg-[#fdfbf9]'
                           }`}
                         >
-                          <td className="py-3 px-4 font-mono font-bold text-on-surface-variant">
-                            0{index + 1}
+                          <td className="py-3 px-4 font-bold text-[#696969]">
+                            {idx + 1}
                           </td>
-                          <td className="py-3 px-4 font-bold text-on-surface">
+                          <td className="py-3 px-4 font-bold text-[#1d1d1d] text-sm">
                             {d.name}
                           </td>
-                          <td className="py-3 px-4 font-mono font-bold text-primary">
+                          <td className="py-3 px-4 font-bold text-[#4a154b] text-sm">
                             {d.score.toFixed(1)}
                           </td>
                           <td className="py-3 px-4">
                             <span
-                              className={`font-mono text-[10px] px-2 py-0.5 rounded font-bold uppercase ${
+                              className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase border ${
                                 d.level === 'CRITICAL'
-                                  ? 'bg-error/20 text-error'
+                                  ? 'bg-[#fef2f2] text-[#cc4117] border-[#fecaca]'
                                   : d.level === 'HIGH'
-                                  ? 'bg-tertiary/20 text-tertiary'
-                                  : 'bg-secondary/20 text-secondary'
+                                  ? 'bg-[#fff7ed] text-[#c2410c] border-[#fed7aa]'
+                                  : 'bg-[#f4ede4] text-[#1d1d1d] border-[#e8ded2]'
                               }`}
                             >
                               {d.level}
                             </span>
                           </td>
-                          <td className="py-3 px-4 font-mono text-on-surface-variant">
+                          <td className="py-3 px-4 text-[#696969]">
                             {d.reportsCount} Laporan
                           </td>
                           <td className="py-3 px-4 text-right">
-                            <span className="font-mono text-[11px] text-primary hover:underline">
-                              Rincian &rarr;
+                            <span className="text-[#4a154b] font-bold hover:underline">
+                              Detail &rarr;
                             </span>
                           </td>
                         </tr>
@@ -658,117 +539,86 @@ export default function PrioritiesPage() {
                 </table>
               </div>
             </div>
+          </div>
 
-            {/* Selected District Detail Breakdown Card (Col 4) */}
-            <div className="lg:col-span-4 min-w-0 bg-surface-container rounded-xl p-5 sm:p-6 border border-outline-variant/40 shadow-lg flex flex-col justify-between gap-5">
-              <div className="flex flex-col gap-4">
-                <div className="flex items-start justify-between border-b border-outline-variant/30 pb-3">
-                  <div className="flex flex-col">
-                    <span className="font-mono text-[10px] text-primary uppercase font-bold tracking-wider">
-                      Inspeksi Variabel Wilayah
-                    </span>
-                    <h3 className="font-headline text-lg font-bold text-on-surface">
-                      Kecamatan {selectedDistrict.name}
-                    </h3>
-                  </div>
-                  <span
-                    className={`font-mono text-xs px-2.5 py-1 rounded font-bold uppercase ${
-                      selectedDistrict.level === 'CRITICAL'
-                        ? 'bg-error/20 text-error'
-                        : selectedDistrict.level === 'HIGH'
-                        ? 'bg-tertiary/20 text-tertiary'
-                        : 'bg-secondary/20 text-secondary'
-                    }`}
-                  >
-                    {selectedDistrict.level}
+          {/* Right: Selected District Detail (Col 4) */}
+          <div className="lg:col-span-4 rounded-[16px] bg-white border border-[#e6e6e6] p-6 shadow-subtle flex flex-col justify-between gap-6">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between border-b border-[#e6e6e6] pb-3">
+                <div>
+                  <span className="text-[10px] uppercase font-bold text-[#4a154b] tracking-wider">
+                    Variabel Wilayah
                   </span>
+                  <h3 className="font-display text-xl font-bold text-[#1d1d1d]">
+                    Kecamatan {selectedDistrict.name}
+                  </h3>
+                </div>
+                <span className="font-bold text-2xl text-[#4a154b]">
+                  {selectedDistrict.score.toFixed(1)}
+                </span>
+              </div>
+
+              <div className="p-3.5 rounded-xl bg-[#f4ede4] text-xs">
+                <span className="font-bold text-[#4a154b] block mb-1">Isu Lapangan Utama:</span>
+                <p className="text-[#1d1d1d] font-medium">{selectedDistrict.primaryIssue}</p>
+                <span className="text-[11px] text-[#696969] block mt-1">{selectedDistrict.trend}</span>
+              </div>
+
+              {/* Variable Bars */}
+              <div className="space-y-3 pt-2 text-xs">
+                <span className="text-xs font-bold text-[#1d1d1d] uppercase tracking-wider block">
+                  Nilai 6 Parameter Normalisasi (0-100):
+                </span>
+
+                <div>
+                  <div className="flex justify-between mb-1">
+                    <span>Laporan Warga (L)</span>
+                    <span className="font-bold text-[#4a154b]">{selectedDistrict.vars.L}/100</span>
+                  </div>
+                  <div className="h-2 rounded-full bg-[#f4ede4] overflow-hidden">
+                    <div className="h-full bg-[#4a154b]" style={{ width: `${selectedDistrict.vars.L}%` }}></div>
+                  </div>
                 </div>
 
-                <div className="p-3 rounded-lg bg-surface-container-low border border-outline-variant/30 flex flex-col gap-1">
-                  <span className="font-mono text-[10px] text-on-surface-variant uppercase">Isu Utama Lapangan</span>
-                  <span className="font-body text-xs font-semibold text-on-surface">
-                    {selectedDistrict.primaryIssue}
-                  </span>
-                  <span className="font-mono text-[10px] text-secondary mt-0.5">
-                    {selectedDistrict.trend}
-                  </span>
+                <div>
+                  <div className="flex justify-between mb-1">
+                    <span>Tingkat Urgensi (U)</span>
+                    <span className="font-bold text-[#d97706]">{selectedDistrict.vars.U}/100</span>
+                  </div>
+                  <div className="h-2 rounded-full bg-[#f4ede4] overflow-hidden">
+                    <div className="h-full bg-[#d97706]" style={{ width: `${selectedDistrict.vars.U}%` }}></div>
+                  </div>
                 </div>
 
-                {/* 6 Variables Bar Breakdown */}
-                <div className="flex flex-col gap-2.5 font-mono text-xs">
-                  <span className="text-[10px] text-on-surface-variant uppercase font-bold">
-                    Nilai Bobot 6 Parameter:
-                  </span>
-                  <div>
-                    <div className="flex justify-between text-[11px] mb-1">
-                      <span>Laporan Warga (L)</span>
-                      <span className="text-primary font-bold">{selectedDistrict.vars.L}/100</span>
-                    </div>
-                    <div className="w-full bg-surface-container-high h-1.5 rounded-full overflow-hidden">
-                      <div className="bg-primary h-full" style={{ width: `${selectedDistrict.vars.L}%` }}></div>
-                    </div>
+                <div>
+                  <div className="flex justify-between mb-1">
+                    <span>Kepadatan Penduduk (P)</span>
+                    <span className="font-bold text-[#007a5a]">{selectedDistrict.vars.P}/100</span>
                   </div>
-
-                  <div>
-                    <div className="flex justify-between text-[11px] mb-1">
-                      <span>Tingkat Urgensi (U)</span>
-                      <span className="text-tertiary font-bold">{selectedDistrict.vars.U}/100</span>
-                    </div>
-                    <div className="w-full bg-surface-container-high h-1.5 rounded-full overflow-hidden">
-                      <div className="bg-tertiary h-full" style={{ width: `${selectedDistrict.vars.U}%` }}></div>
-                    </div>
+                  <div className="h-2 rounded-full bg-[#f4ede4] overflow-hidden">
+                    <div className="h-full bg-[#007a5a]" style={{ width: `${selectedDistrict.vars.P}%` }}></div>
                   </div>
+                </div>
 
-                  <div>
-                    <div className="flex justify-between text-[11px] mb-1">
-                      <span>Kepadatan Penduduk (P)</span>
-                      <span className="text-secondary font-bold">{selectedDistrict.vars.P}/100</span>
-                    </div>
-                    <div className="w-full bg-surface-container-high h-1.5 rounded-full overflow-hidden">
-                      <div className="bg-secondary h-full" style={{ width: `${selectedDistrict.vars.P}%` }}></div>
-                    </div>
+                <div>
+                  <div className="flex justify-between mb-1">
+                    <span>Elevasi & Rob Pesisir (K)</span>
+                    <span className="font-bold text-[#cc4117]">{selectedDistrict.vars.K}/100</span>
                   </div>
-
-                  <div>
-                    <div className="flex justify-between text-[11px] mb-1">
-                      <span>Data Historis InaRISK (H)</span>
-                      <span className="text-primary font-bold">{selectedDistrict.vars.H}/100</span>
-                    </div>
-                    <div className="w-full bg-surface-container-high h-1.5 rounded-full overflow-hidden">
-                      <div className="bg-primary h-full" style={{ width: `${selectedDistrict.vars.H}%` }}></div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="flex justify-between text-[11px] mb-1">
-                      <span>Kerentanan Elevasi Rob (K)</span>
-                      <span className="text-tertiary font-bold">{selectedDistrict.vars.K}/100</span>
-                    </div>
-                    <div className="w-full bg-surface-container-high h-1.5 rounded-full overflow-hidden">
-                      <div className="bg-tertiary h-full" style={{ width: `${selectedDistrict.vars.K}%` }}></div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="flex justify-between text-[11px] mb-1">
-                      <span>Curah Hujan BMKG (C)</span>
-                      <span className="text-secondary font-bold">{selectedDistrict.vars.C}/100</span>
-                    </div>
-                    <div className="w-full bg-surface-container-high h-1.5 rounded-full overflow-hidden">
-                      <div className="bg-secondary h-full" style={{ width: `${selectedDistrict.vars.C}%` }}></div>
-                    </div>
+                  <div className="h-2 rounded-full bg-[#f4ede4] overflow-hidden">
+                    <div className="h-full bg-[#cc4117]" style={{ width: `${selectedDistrict.vars.K}%` }}></div>
                   </div>
                 </div>
               </div>
-
-              <Link
-                href={`/peta?q=${selectedDistrict.name}`}
-                className="w-full min-h-[44px] py-3 rounded-lg bg-primary text-on-primary font-mono text-xs font-bold uppercase tracking-wider text-center hover:brightness-110 transition-all flex items-center justify-center gap-2"
-              >
-                <span>Lihat di Peta Spasial</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </Link>
             </div>
+
+            <Link
+              href={`/peta?q=${selectedDistrict.name}`}
+              className="w-full min-h-[48px] py-3 rounded-[90px] bg-[#4a154b] hover:bg-[#481a54] text-white font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-sm"
+            >
+              <span>Lihat di Peta Spasial</span>
+              <ArrowRight className="w-4 h-4" />
+            </Link>
           </div>
         </div>
       </section>

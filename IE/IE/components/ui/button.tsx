@@ -3,33 +3,38 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#78716C] focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 gap-2 rounded-none shadow-none font-sans",
+  "inline-flex items-center justify-center whitespace-nowrap text-sm font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4a154b] focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 gap-2 font-sans select-none min-h-[48px]",
   {
     variants: {
       variant: {
+        // Primary: #4a154b, white, padding 14px 28px, border-radius 90px, font-weight 700, pressed #611f69
         default:
-          "bg-[#78716C] text-[#FAFAF9] border border-[#78716C] hover:bg-[#57534E] hover:border-[#57534E] active:bg-[#1C1917]",
+          "bg-[#4a154b] text-white hover:bg-[#481a54] active:bg-[#611f69] font-bold rounded-[90px] shadow-sm hover:shadow active:scale-[0.98]",
+        primary:
+          "bg-[#4a154b] text-white hover:bg-[#481a54] active:bg-[#611f69] font-bold rounded-[90px] shadow-sm hover:shadow active:scale-[0.98]",
+        // Secondary: #f9f0ff, #1d1d1d, padding 10px 30px, border-radius 90px
         secondary:
-          "bg-transparent text-[#78716C] border border-[#D6D3D1] hover:bg-[#F5F5F4] hover:text-[#1C1917]",
+          "bg-[#f9f0ff] text-[#1d1d1d] hover:bg-[#eedcfc] active:bg-[#e4caf7] font-semibold rounded-[90px] border border-[#e6e6e6]/50 active:scale-[0.98]",
+        // Outline: white, #4a154b, 2px solid #4a154b, border-radius 90px
         outline:
-          "border border-[#D6D3D1] bg-transparent text-[#1C1917] hover:bg-[#F5F5F4]",
+          "bg-white text-[#4a154b] border-2 border-[#4a154b] hover:bg-[#f9f0ff] font-bold rounded-[90px] active:scale-[0.98]",
+        // Destructive / Emergency: #cc4117
         destructive:
-          "bg-[#DC2626] text-[#FAFAF9] border border-[#DC2626] hover:bg-[#B91C1C]",
+          "bg-[#cc4117] text-white hover:bg-[#b03713] active:bg-[#992e0e] font-bold rounded-[90px] shadow-sm active:scale-[0.98]",
+        // Success / Resolved: #007a5a
+        success:
+          "bg-[#007a5a] text-white hover:bg-[#00664b] active:bg-[#00543d] font-bold rounded-[90px] shadow-sm active:scale-[0.98]",
         ghost:
-          "text-[#57534E] hover:bg-[#F5F5F4] hover:text-[#1C1917]",
+          "text-[#1d1d1d] hover:bg-[#f9f0ff] hover:text-[#4a154b] rounded-[90px]",
         link:
-          "text-[#78716C] underline-offset-4 hover:underline p-0 h-auto",
-        warning:
-          "bg-[#CA8A04] text-[#FAFAF9] border border-[#CA8A04] hover:bg-[#A16207]",
-        critical:
-          "bg-[#DC2626] text-[#FAFAF9] border border-[#DC2626] hover:bg-[#B91C1C]",
+          "text-[#1264a3] hover:text-[#3860be] underline-offset-4 hover:underline p-0 min-h-0 h-auto font-medium",
       },
       size: {
-        default: "h-12 px-6 py-3", // 12px 24px
-        sm: "h-9 px-3.5 py-1.5 text-xs",
-        lg: "h-14 px-8 py-3.5 text-base",
-        icon: "h-10 w-10",
-        "icon-sm": "h-8 w-8",
+        default: "min-h-[48px] px-7 py-3.5 text-sm", // 14px 28px standard
+        sm: "min-h-[40px] px-4 py-2 text-xs",
+        lg: "min-h-[52px] px-8 py-4 text-base",
+        icon: "h-12 w-12 min-h-[48px] min-w-[48px] p-0 rounded-full",
+        "icon-sm": "h-9 w-9 min-h-[36px] min-w-[36px] p-0 rounded-full",
       },
     },
     defaultVariants: {
@@ -56,7 +61,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         {...props}
       >
         {loading && (
-          <span className="inline-block animate-spin mr-1.5">●</span>
+          <span className="inline-block animate-spin mr-2 h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
         )}
         {children}
       </button>

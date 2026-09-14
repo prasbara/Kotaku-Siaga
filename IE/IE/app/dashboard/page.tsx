@@ -1,14 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer
 } from 'recharts'
-import { RefreshCw, Menu, Droplets, CheckCircle2, ArrowRight, ShieldAlert, PhoneCall, Wind, Video } from 'lucide-react'
+import { RefreshCw, Menu, Droplets, CheckCircle2, ArrowRight, ShieldAlert, PhoneCall, Waves, AlertCircle } from 'lucide-react'
 import Link from 'next/link'
 import type { Report } from '@/types'
-import { CATEGORY_LABELS } from '@/types'
-import { formatRelativeTime } from '@/lib/utils'
 import { AdminSidebar, type DashboardTab } from '@/components/dashboard/AdminSidebar'
 import { ReportModerationView } from '@/components/dashboard/ReportModerationView'
 import { InterventionMatrixView } from '@/components/dashboard/InterventionMatrixView'
@@ -43,10 +41,12 @@ export default function DashboardPage() {
   const [trend, setTrend] = useState<TrendPoint[]>([])
   const [latestReports, setLatestReports] = useState<Report[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [dashboardError, setDashboardError] = useState<string | null>(null)
 
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setIsLoading(true)
+    setDashboardError(null)
+
     try {
       const [statsRes, reportsRes] = await Promise.all([
         fetch('/api/dashboard/stats'),
@@ -56,34 +56,40 @@ export default function DashboardPage() {
       const statsData = await statsRes.json()
       const reportsData = await reportsRes.json()
 
-      if (statsData.success) {
+      if (!statsRes.ok || !statsData.success) {
+        setDashboardError(statsData.error || 'Gagal memuat statistik sistem dari database.')
+      } else {
         setStats(statsData.stats)
         if (statsData.trend) {
-          setTrend(statsData.trend.map((t: { date: string; count: number }) => ({
-            date: t.date.slice(5),
-            count: t.count,
-          })))
+          setTrend(
+            statsData.trend.map((t: { date: string; count: number }) => ({
+              date: t.date.slice(5),
+              count: t.count,
+            }))
+          )
         }
       }
 
-      if (reportsData.success) {
-        setLatestReports(reportsData.data)
+      if (reportsRes.ok && reportsData.success) {
+        setLatestReports(reportsData.data || [])
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Gagal mengambil data dashboard:', err)
+      setDashboardError('Koneksi ke backend atau database terputus. Silakan periksa konfigurasi database.')
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [])
 
   useEffect(() => {
     fetchData()
-  }, [])
+  }, [fetchData])
 
-  const pendingReportsCount = latestReports.filter(r => r.status === 'submitted').length
+  const pendingReportsCount = latestReports.filter((r) => r.status === 'submitted').length
+  const resolvedPercent = stats.total > 0 ? Math.round((stats.resolved / stats.total) * 100) : 0
 
   return (
-    <div className="min-h-screen bg-surface text-on-surface font-body flex flex-col md:flex-row">
+    <div className="min-h-screen bg-[#fdfbf9] text-[#1d1d1d] font-sans flex flex-col md:flex-row">
       {/* 1. Tactical Sidebar */}
       <AdminSidebar
         activeTab={activeTab}
@@ -94,19 +100,19 @@ export default function DashboardPage() {
       />
 
       {/* 2. Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 bg-surface">
+      <div className="flex-1 flex flex-col min-w-0 bg-[#fdfbf9]">
         {/* Mobile Header Bar */}
-        <div className="md:hidden border-b border-outline-variant/30 bg-surface-container px-4 py-3 flex items-center justify-between sticky top-0 z-20">
+        <div className="md:hidden border-b border-[#e6e6e6] bg-white px-4 py-3 flex items-center justify-between sticky top-0 z-20 shadow-subtle">
           <button
             type="button"
             onClick={() => setIsMobileSidebarOpen(true)}
-            className="p-1.5 rounded bg-surface-container-high border border-outline-variant/40 text-on-surface flex items-center gap-2 text-xs font-mono font-semibold uppercase tracking-wider"
+            className="min-h-[44px] px-3.5 py-2 rounded-[90px] bg-[#f4ede4] text-[#4a154b] flex items-center gap-2 text-xs font-bold"
           >
             <Menu className="h-4 w-4" />
             <span>Menu EOC</span>
           </button>
-          <span className="font-headline font-bold text-sm text-on-surface">
-            Control Desk
+          <span className="font-display font-bold text-sm text-[#1d1d1d]">
+            Command Center
           </span>
         </div>
 
@@ -115,313 +121,220 @@ export default function DashboardPage() {
           {activeTab === 'overview' && (
             <div className="space-y-8 animate-in fade-in duration-200">
               {/* Header Title & Refresh Bar */}
-              <div className="p-4 sm:p-6 rounded-xl bg-surface-container-low border border-outline-variant/30 flex flex-wrap items-center justify-between gap-4 shadow-sm">
+              <div className="p-6 rounded-[16px] bg-white border border-[#e6e6e6] shadow-subtle flex flex-wrap items-center justify-between gap-4">
                 <div className="flex flex-col gap-1">
                   <div className="flex items-center gap-2">
-                    <span className="px-2.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/30 font-mono text-[10px] font-bold uppercase tracking-wider">
-                      EOC EMERGENCY OPERATIONS DESK
-                    </span>
-                    <span className="font-mono text-xs text-secondary flex items-center gap-1">
-                      <span className="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
-                      LIVE SINKRONISASI
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#007a5a] animate-pulse"></span>
+                    <span className="text-xs font-bold text-[#4a154b] uppercase tracking-wider">
+                      SITUASI OPERASIONAL REALTIME
                     </span>
                   </div>
-                  <h1 className="font-headline text-2xl sm:text-3xl font-bold text-on-surface">
-                    Pusat Komando & Respon Siaga Bencana
+                  <h1 className="font-display text-2xl sm:text-3xl font-bold text-[#1d1d1d]">
+                    Command Center Kesiapsiagaan Iklim Semarang
                   </h1>
-                  <p className="font-body text-xs sm:text-sm text-on-surface-variant">
-                    Sistem pemantauan telemetri terpadu untuk koordinasi armada pompa air, tanggul rob, dan respon aduan warga Kota Semarang.
+                  <p className="text-xs sm:text-sm text-[#696969]">
+                    Monitoring terpadu laporan warga, ketinggian rob, pompa polder, dan kesiapsiagaan 16 kecamatan.
                   </p>
                 </div>
 
-                <div className="flex items-center gap-2 flex-wrap">
-                  {/* Windy Radar — Link ke Peta Spasial */}
-                  <Link
-                    href="/peta"
-                    className="min-h-[40px] inline-flex items-center gap-1.5 text-xs font-mono font-bold uppercase tracking-wider text-primary border border-primary/40 px-3.5 py-2 rounded-lg bg-primary/15 hover:bg-primary hover:text-on-primary transition-all"
-                    title="Buka Radar Cuaca &amp; Angin Maritim Windy di Peta Spasial"
-                  >
-                    <Wind className="h-3.5 w-3.5" />
-                    <span>Radar Windy</span>
-                  </Link>
-
-                  {/* CCTV PantauSemar Shortcut */}
-                  <Link
-                    href="/peta"
-                    className="min-h-[40px] inline-flex items-center gap-1.5 text-xs font-mono font-bold uppercase tracking-wider text-secondary border border-secondary/40 px-3.5 py-2 rounded-lg bg-secondary/15 hover:bg-secondary hover:text-on-secondary transition-all"
-                    title="Buka Titik Kamera CCTV PantauSemar di Peta"
-                  >
-                    <Video className="h-3.5 w-3.5" />
-                    <span>CCTV PantauSemar</span>
-                  </Link>
-
+                <div className="flex items-center gap-3">
                   <button
+                    type="button"
                     onClick={fetchData}
                     disabled={isLoading}
-                    className="min-h-[40px] inline-flex items-center gap-2 text-xs font-mono font-semibold uppercase tracking-wider text-on-surface border border-outline-variant/50 px-3.5 py-2 rounded-lg bg-surface-container hover:bg-surface-container-high transition-colors"
+                    className="min-h-[44px] px-4 py-2 rounded-[90px] bg-[#f4ede4] hover:bg-[#e8ded2] text-[#4a154b] font-bold text-xs flex items-center gap-2 transition-colors"
                   >
-                    <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? 'animate-spin' : ''}`} />
-                    <span>{isLoading ? 'Sinkron...' : 'Sinkron Data'}</span>
+                    <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
+                    <span>Perbarui Data</span>
                   </button>
-                  <a
-                    href="tel:112"
-                    className="min-h-[40px] inline-flex items-center gap-1.5 text-xs font-mono font-bold uppercase tracking-wider text-error bg-error-container/40 border border-error/50 px-3.5 py-2 rounded-lg hover:bg-error-container transition-colors"
-                  >
-                    <PhoneCall className="h-3.5 w-3.5" />
-                    <span>Dispatch 112</span>
-                  </a>
                 </div>
               </div>
 
-              {/* 4 Critical Metric Pillars */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                {/* 1: Total Reports */}
-                <div className="p-5 rounded-xl bg-surface-container-low border border-outline-variant/30 flex flex-col justify-between">
-                  <span className="font-mono text-[10px] text-on-surface-variant uppercase tracking-wider font-semibold">
-                    TOTAL LAPORAN MASUK
-                  </span>
-                  <div className="my-2 flex items-baseline justify-between">
-                    <span className="font-mono text-3xl font-bold text-on-surface">{stats.total}</span>
-                    <span className="font-mono text-xs text-secondary font-semibold">+18.4%</span>
+              {/* Explicit Database/Error State Banner */}
+              {dashboardError && (
+                <div className="p-6 rounded-[16px] bg-[#fef2f2] border border-[#fecaca] text-[#cc4117] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm">
+                  <div className="flex items-center gap-3">
+                    <AlertCircle className="w-6 h-6 shrink-0" />
+                    <div>
+                      <h4 className="text-sm font-bold">Koneksi Database Tidak Tersedia</h4>
+                      <p className="text-xs mt-0.5 opacity-90">
+                        {dashboardError} — Sistem tidak menampilkan statistik fiktif. Pastikan konfigurasi Supabase terpasang.
+                      </p>
+                    </div>
                   </div>
-                  <span className="text-xs text-on-surface-variant">24 Jam terakhir di 16 kecamatan</span>
+                  <button
+                    type="button"
+                    onClick={fetchData}
+                    className="min-h-[40px] px-5 py-2 rounded-[90px] bg-[#cc4117] text-white font-bold text-xs hover:bg-[#b03713] transition-colors shrink-0"
+                  >
+                    Coba Lagi
+                  </button>
                 </div>
+              )}
 
-                {/* 2: Critical Active */}
-                <div className="p-5 rounded-xl bg-surface-container-low border border-outline-variant/30 flex flex-col justify-between">
-                  <span className="font-mono text-[10px] text-error uppercase tracking-wider font-bold flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-error animate-ping"></span>
-                    KRITIS AKTIF
-                  </span>
-                  <div className="my-2 flex items-baseline justify-between">
-                    <span className="font-mono text-3xl font-bold text-error">{stats.critical}</span>
-                    <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-error/20 text-error font-bold">URGENT</span>
+              {/* 4 Primary Metric Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                {/* Total Reports */}
+                <div className="p-6 rounded-[16px] bg-white border border-[#e6e6e6] shadow-subtle flex flex-col justify-between">
+                  <div className="flex items-center justify-between text-xs text-[#696969] font-semibold uppercase tracking-wider">
+                    <span>TOTAL INSIDEN</span>
+                    <Waves className="w-4 h-4 text-[#4a154b]" />
                   </div>
-                  <span className="text-xs text-error">Butuh eskalasi tim pompa & perahu</span>
-                </div>
-
-                {/* 3: Resolved */}
-                <div className="p-5 rounded-xl bg-surface-container-low border border-outline-variant/30 flex flex-col justify-between">
-                  <span className="font-mono text-[10px] text-on-surface-variant uppercase tracking-wider font-semibold">
-                    DISPOSISI SELESAI
-                  </span>
-                  <div className="my-2 flex items-baseline justify-between">
-                    <span className="font-mono text-3xl font-bold text-secondary">{stats.resolved}</span>
-                    <span className="font-mono text-xs text-secondary font-semibold flex items-center gap-1">
-                      <CheckCircle2 className="w-3.5 h-3.5" /> 77.1%
+                  <div className="my-4">
+                    <span className="font-display text-3xl sm:text-4xl font-bold text-[#1d1d1d]">
+                      {isLoading ? '...' : dashboardError ? 'N/A' : stats.total}
                     </span>
                   </div>
-                  <span className="text-xs text-on-surface-variant">Rerata durasi penanganan 48 mnt</span>
+                  <span className="text-xs text-[#696969]">Laporan terdaftar resmi</span>
                 </div>
 
-                {/* 4: Critical Hotspot */}
-                <div className="p-5 rounded-xl bg-surface-container-low border border-outline-variant/30 flex flex-col justify-between">
-                  <span className="font-mono text-[10px] text-tertiary uppercase tracking-wider font-semibold">
-                    HOTSPOT TERKRITIS
-                  </span>
-                  <div className="my-2 flex flex-col">
-                    <span className="font-headline text-lg font-bold text-on-surface truncate">Genuk & Smg Utara</span>
-                    <span className="font-mono text-xs text-tertiary">Skor Bahaya: 88.4 / 100</span>
+                {/* Active Incidents */}
+                <div className="p-6 rounded-[16px] bg-white border border-[#e6e6e6] shadow-subtle flex flex-col justify-between">
+                  <div className="flex items-center justify-between text-xs text-[#696969] font-semibold uppercase tracking-wider">
+                    <span>INSIDEN AKTIF</span>
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#d97706] animate-pulse"></span>
                   </div>
-                  <span className="text-xs text-primary font-mono">Pasang Rob +92cm (18:30 WIB)</span>
+                  <div className="my-4">
+                    <span className="font-display text-3xl sm:text-4xl font-bold text-[#d97706]">
+                      {isLoading ? '...' : dashboardError ? 'N/A' : stats.active}
+                    </span>
+                  </div>
+                  <span className="text-xs text-[#696969]">Sedang dalam penanganan</span>
+                </div>
+
+                {/* Critical Reports */}
+                <div className="p-6 rounded-[16px] bg-white border border-[#e6e6e6] shadow-subtle flex flex-col justify-between">
+                  <div className="flex items-center justify-between text-xs text-[#cc4117] font-semibold uppercase tracking-wider">
+                    <span>KRITIS / DARURAT</span>
+                    <ShieldAlert className="w-4 h-4 text-[#cc4117]" />
+                  </div>
+                  <div className="my-4">
+                    <span className="font-display text-3xl sm:text-4xl font-bold text-[#cc4117]">
+                      {isLoading ? '...' : dashboardError ? 'N/A' : stats.critical}
+                    </span>
+                  </div>
+                  <span className="text-xs text-[#696969]">Butuh evakuasi / pompa darurat</span>
+                </div>
+
+                {/* Resolved Percent */}
+                <div className="p-6 rounded-[16px] bg-white border border-[#e6e6e6] shadow-subtle flex flex-col justify-between">
+                  <div className="flex items-center justify-between text-xs text-[#007a5a] font-semibold uppercase tracking-wider">
+                    <span>TERTANGANI (RESOLVED)</span>
+                    <CheckCircle2 className="w-4 h-4 text-[#007a5a]" />
+                  </div>
+                  <div className="my-4">
+                    <span className="font-display text-3xl sm:text-4xl font-bold text-[#007a5a]">
+                      {isLoading ? '...' : dashboardError ? 'N/A' : `${resolvedPercent}%`}
+                    </span>
+                  </div>
+                  <span className="text-xs text-[#696969]">
+                    {stats.resolved} dari {stats.total} terselesaikan
+                  </span>
                 </div>
               </div>
 
-              {/* 30-Day Trend Chart & Live Pump Status */}
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                {/* Trend Chart (Col 8) */}
-                <div className="lg:col-span-8 min-w-0 p-5 sm:p-6 rounded-xl bg-surface-container-low border border-outline-variant/30 flex flex-col gap-4">
+              {/* Chart & Polder Status Grid */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                {/* 30-Day Trend Chart */}
+                <div className="lg:col-span-8 p-6 sm:p-8 rounded-[16px] bg-white border border-[#e6e6e6] shadow-subtle flex flex-col gap-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <span className="font-mono text-[10px] uppercase text-primary font-semibold tracking-wider block">
-                        GRAFIK TREN KEJADIAN
-                      </span>
-                      <h2 className="font-headline text-lg font-bold text-on-surface">
-                        Volume Laporan 30 Hari Terakhir
-                      </h2>
+                      <h3 className="font-bold text-lg text-[#1d1d1d]">Tren Insiden 30 Hari Terakhir</h3>
+                      <p className="text-xs text-[#696969]">Frekuensi laporan warga Kota Semarang</p>
                     </div>
-                    <span className="font-mono text-xs text-on-surface-variant">Satuan: Laporan / Hari</span>
                   </div>
 
-                  <div className="h-56 w-full pt-2">
-                    {trend.length === 0 ? (
-                      <div className="h-full flex items-center justify-center text-xs text-on-surface-variant font-mono">
-                        Memuat data deret waktu...
-                      </div>
-                    ) : (
+                  <div className="h-64 w-full pt-4">
+                    {trend.length > 0 ? (
                       <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={trend} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
+                        <AreaChart data={trend}>
                           <defs>
-                            <linearGradient id="cyanArea" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.4} />
-                              <stop offset="95%" stopColor="#06b6d4" stopOpacity={0} />
+                            <linearGradient id="aubergineGrad" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#4a154b" stopOpacity={0.4} />
+                              <stop offset="95%" stopColor="#4a154b" stopOpacity={0.0} />
                             </linearGradient>
                           </defs>
-                          <XAxis
-                            dataKey="date"
-                            stroke="#869397"
-                            fontSize={10}
-                            tickLine={false}
-                            axisLine={false}
-                          />
-                          <YAxis
-                            stroke="#869397"
-                            fontSize={10}
-                            tickLine={false}
-                            axisLine={false}
-                          />
+                          <XAxis dataKey="date" stroke="#696969" fontSize={11} tickLine={false} />
+                          <YAxis stroke="#696969" fontSize={11} tickLine={false} allowDecimals={false} />
                           <Tooltip
                             contentStyle={{
-                              backgroundColor: '#141c29',
-                              border: '1px solid #243654',
-                              borderRadius: '8px',
-                              fontSize: '11px',
-                              fontFamily: 'monospace',
-                              color: '#dbe2f5',
+                              backgroundColor: '#ffffff',
+                              border: '1px solid #e6e6e6',
+                              borderRadius: '12px',
+                              fontSize: '12px',
                             }}
                           />
                           <Area
                             type="monotone"
                             dataKey="count"
-                            stroke="#4cd7f6"
-                            strokeWidth={2}
+                            stroke="#4a154b"
+                            strokeWidth={2.5}
                             fillOpacity={1}
-                            fill="url(#cyanArea)"
+                            fill="url(#aubergineGrad)"
                           />
                         </AreaChart>
                       </ResponsiveContainer>
+                    ) : (
+                      <div className="h-full flex items-center justify-center text-xs text-[#696969]">
+                        {isLoading ? 'Memuat visualisasi tren...' : 'Data tren tidak tersedia saat ini.'}
+                      </div>
                     )}
                   </div>
                 </div>
 
-                {/* Live Polder Pump Status (Col 4) */}
-                <div className="lg:col-span-4 min-w-0 p-5 sm:p-6 rounded-xl bg-surface-container-low border border-outline-variant/30 flex flex-col justify-between gap-4">
-                  <div className="flex items-center justify-between">
-                    <span className="font-mono text-[10px] text-secondary uppercase font-bold tracking-wider">
-                      STASIUN POMPA POLDER
-                    </span>
-                    <span className="material-symbols-outlined text-secondary text-[20px]">water</span>
-                  </div>
-
-                  <div className="flex flex-col gap-2.5">
-                    {POLDER_STATIONS.map((st, i) => (
-                      <div key={i} className="p-2.5 rounded-lg bg-surface-container border border-outline-variant/30 flex items-center justify-between text-xs">
-                        <div className="flex flex-col">
-                          <span className="text-on-surface font-semibold">{st.name}</span>
-                          <span className="font-mono text-[10px] text-on-surface-variant">{st.capacity}</span>
-                        </div>
-                        <span className={`font-mono text-[10px] px-2 py-0.5 rounded font-bold ${st.health === 'NORMAL' ? 'bg-secondary/10 text-secondary' : 'bg-tertiary/10 text-tertiary'}`}>
-                          {st.status}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="flex items-center justify-between text-xs text-on-surface-variant pt-2 border-t border-outline-variant/20">
-                    <span className="font-mono text-[10px]">BBWS Pemali-Juana</span>
-                    <span className="font-mono text-[10px] text-secondary font-semibold">Semua Polder Siaga</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Recent Incidents Moderation Fast Queue */}
-              <div className="p-5 sm:p-6 rounded-xl bg-surface-container-low border border-outline-variant/30 flex flex-col gap-4">
-                <div className="flex items-center justify-between">
+                {/* Polder Pump Stations Health */}
+                <div className="lg:col-span-4 p-6 sm:p-8 rounded-[16px] bg-[#f4ede4] border border-[#e8ded2] shadow-subtle flex flex-col justify-between">
                   <div>
-                    <span className="font-mono text-[10px] uppercase text-primary font-semibold tracking-wider block">
-                      FEED LAPORAN TERAKHIR
-                    </span>
-                    <h2 className="font-headline text-lg font-bold text-on-surface">
-                      Antrean Laporan Masuk Warga
-                    </h2>
-                  </div>
-                  <button
-                    onClick={() => setActiveTab('reports')}
-                    className="text-xs font-mono text-primary font-semibold hover:underline flex items-center gap-1"
-                  >
-                    Buka Semua Antrean ({latestReports.length}) <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs">
-                    <thead>
-                      <tr className="border-b border-outline-variant/30 font-mono text-[10px] text-on-surface-variant uppercase">
-                        <th className="py-2.5 px-3">Kode Laporan</th>
-                        <th className="py-2.5 px-3">Kategori</th>
-                        <th className="py-2.5 px-3">Wilayah</th>
-                        <th className="py-2.5 px-3">Urgensi</th>
-                        <th className="py-2.5 px-3">Status</th>
-                        <th className="py-2.5 px-3">Waktu</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-outline-variant/20">
-                      {latestReports.slice(0, 6).map((report) => (
-                        <tr key={report.id} className="hover:bg-surface-container/60 transition-colors">
-                          <td className="py-2.5 px-3 font-mono font-semibold text-primary">
-                            {report.report_code || 'SMG-ALERT'}
-                          </td>
-                          <td className="py-2.5 px-3 text-on-surface">
-                            {CATEGORY_LABELS[report.category as keyof typeof CATEGORY_LABELS] || report.category}
-                          </td>
-                          <td className="py-2.5 px-3 text-on-surface-variant">
-                            {report.district_name || 'Kota Semarang'}
-                          </td>
-                          <td className="py-2.5 px-3">
-                            <span className={`font-mono text-[10px] px-2 py-0.5 rounded font-bold uppercase ${
-                              report.urgency === 'kritis'
-                                ? 'bg-error/20 text-error'
-                                : report.urgency === 'tinggi'
-                                ? 'bg-tertiary/20 text-tertiary'
-                                : 'bg-primary/20 text-primary'
-                            }`}>
-                              {report.urgency}
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="font-bold text-base text-[#1d1d1d]">Status 5 Polder Pompa</h3>
+                      <Droplets className="w-4 h-4 text-[#4a154b]" />
+                    </div>
+                    <div className="space-y-3">
+                      {POLDER_STATIONS.map((p) => (
+                        <div key={p.name} className="p-3 rounded-xl bg-white border border-[#e8ded2] text-xs">
+                          <div className="flex items-center justify-between font-bold text-[#1d1d1d]">
+                            <span>{p.name}</span>
+                            <span className={p.health === 'NORMAL' ? 'text-[#007a5a]' : 'text-[#d97706]'}>
+                              {p.health}
                             </span>
-                          </td>
-                          <td className="py-2.5 px-3 font-mono text-[11px] text-secondary">
-                            {report.status}
-                          </td>
-                          <td className="py-2.5 px-3 font-mono text-on-surface-variant text-[11px]">
-                            {formatRelativeTime(report.created_at)}
-                          </td>
-                        </tr>
+                          </div>
+                          <div className="flex items-center justify-between text-[#696969] mt-1 text-[11px]">
+                            <span>{p.capacity}</span>
+                            <span>{p.status}</span>
+                          </div>
+                        </div>
                       ))}
-                    </tbody>
-                  </table>
+                    </div>
+                  </div>
+
+                  <div className="pt-4 mt-4 border-t border-[#e8ded2]">
+                    <Link
+                      href="/peta"
+                      className="text-xs font-bold text-[#4a154b] hover:underline flex items-center gap-1"
+                    >
+                      Pantau Sebaran Pompa di Peta →
+                    </Link>
+                  </div>
                 </div>
               </div>
             </div>
           )}
 
           {activeTab === 'reports' && (
-            <div className="space-y-6 animate-in fade-in duration-200">
-              <ReportModerationView reports={latestReports} onReportUpdated={fetchData} onRefresh={fetchData} />
-            </div>
+            <ReportModerationView
+              reports={latestReports}
+              onRefresh={fetchData}
+              onReportUpdated={fetchData}
+            />
           )}
 
-          {activeTab === 'priorities' && (
-            <div className="space-y-6 animate-in fade-in duration-200">
-              <InterventionMatrixView />
-            </div>
-          )}
+          {activeTab === 'priorities' && <InterventionMatrixView />}
 
-          {activeTab === 'cctv' && (
-            <div className="space-y-6 animate-in fade-in duration-200">
-              <CCTVMonitoringView />
-            </div>
-          )}
+          {activeTab === 'cctv' && <CCTVMonitoringView />}
 
-          {activeTab === 'data' && (
-            <div className="space-y-6 animate-in fade-in duration-200">
-              <DataIngestionView />
-            </div>
-          )}
+          {activeTab === 'data' && <DataIngestionView />}
 
-          {activeTab === 'audit' && (
-            <div className="space-y-6 animate-in fade-in duration-200">
-              <AuditTrailView />
-            </div>
-          )}
+          {activeTab === 'audit' && <AuditTrailView />}
         </div>
       </div>
     </div>

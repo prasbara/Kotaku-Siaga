@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Eye, EyeOff, ShieldCheck, ArrowLeft, KeyRound, Lock } from 'lucide-react'
+import { Eye, EyeOff, ShieldCheck, ArrowLeft, KeyRound, Lock, Radio } from 'lucide-react'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -54,34 +54,43 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-surface flex items-center justify-center p-4 sm:p-6 font-body text-on-surface">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen bg-[#fdfbf9] flex items-center justify-center p-4 sm:p-6 font-body text-[#1d1d1d] relative overflow-hidden">
+      {/* Pastel mesh atmosphere */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_50%_at_50%_20%,#f9f0ff_0%,transparent_70%)] pointer-events-none" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_50%_40%_at_80%_80%,#f4ede4_0%,transparent_60%)] pointer-events-none" />
+
+      <div className="relative w-full max-w-md my-8">
         {/* Header */}
         <div className="mb-6 text-center">
           <Link
             href="/"
-            className="inline-flex items-center gap-1.5 text-xs font-mono text-on-surface-variant hover:text-primary mb-4 transition-colors"
+            className="inline-flex items-center gap-2 text-xs font-mono text-[#696969] hover:text-[#4a154b] mb-5 transition-colors px-3.5 py-1.5 rounded-[90px] bg-white border border-[#e6e6e6] shadow-2xs"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
             Kembali ke Beranda
           </Link>
-          <div className="text-[10px] uppercase tracking-widest font-mono font-bold text-primary mb-1">
-            KOTAKU SIAGA — SISTEM AUTORISASI EOC
+
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-[#4a154b]"></span>
+            <span className="text-[11px] uppercase tracking-widest font-mono font-bold text-[#4a154b]">
+              KOTAKU SIAGA — EOC CONTROL DESK
+            </span>
           </div>
-          <h1 className="font-headline text-2xl font-bold text-on-surface">
+
+          <h1 className="text-3xl font-bold text-[#4a154b] tracking-tight">
             Masuk ke Panel Kontrol
           </h1>
-          <p className="text-xs text-on-surface-variant mt-1">
-            Akses EOC Control Desk untuk verifikasi laporan warga dan koordinasi armada
+          <p className="text-xs sm:text-sm text-[#696969] mt-2 leading-relaxed">
+            Akses EOC untuk verifikasi laporan warga, koordinasi pompa polder, dan disposisi armada
           </p>
         </div>
 
         {/* Card */}
-        <div className="bg-surface-container-low border border-outline-variant/30 rounded-2xl p-6 sm:p-8 shadow-2xl space-y-5">
+        <div className="bg-white border border-[#e6e6e6] rounded-[16px] p-6 sm:p-8 shadow-sm space-y-5">
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <label className="block text-[11px] font-mono font-bold text-on-surface uppercase tracking-wider mb-1.5">
-                Username / Email
+              <label className="block text-xs font-bold text-[#1d1d1d] uppercase tracking-wider mb-1.5 font-mono">
+                Username atau Email
               </label>
               <Input
                 id="identifier"
@@ -90,14 +99,14 @@ export default function LoginPage() {
                 onChange={e => setIdentifier(e.target.value)}
                 placeholder="admin atau nama@email.com"
                 required
-                className="rounded-lg bg-surface-container border-outline-variant/40 text-on-surface focus:border-primary focus:ring-0 text-xs h-10 font-body"
+                className="rounded-xl bg-[#fcfaf7] border-[#e6e6e6] text-[#1d1d1d] focus:border-[#4a154b] focus:ring-1 focus:ring-[#4a154b] text-sm h-11 font-body"
                 autoComplete="username"
               />
             </div>
 
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label className="block text-[11px] font-mono font-bold text-on-surface uppercase tracking-wider">
+                <label className="block text-xs font-bold text-[#1d1d1d] uppercase tracking-wider font-mono">
                   Password
                 </label>
               </div>
@@ -109,13 +118,13 @@ export default function LoginPage() {
                   onChange={e => setPassword(e.target.value)}
                   placeholder="••••••••"
                   required
-                  className="rounded-lg bg-surface-container border-outline-variant/40 text-on-surface focus:border-primary focus:ring-0 text-xs h-10 pr-10 font-body"
+                  className="rounded-xl bg-[#fcfaf7] border-[#e6e6e6] text-[#1d1d1d] focus:border-[#4a154b] focus:ring-1 focus:ring-[#4a154b] text-sm h-11 pr-10 font-body"
                   autoComplete="current-password"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPw(!showPw)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface"
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#696969] hover:text-[#1d1d1d] cursor-pointer"
                   aria-label="Toggle password visibility"
                 >
                   {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -124,14 +133,14 @@ export default function LoginPage() {
             </div>
 
             {error && (
-              <div className="text-xs font-mono text-error bg-error/10 border border-error/30 p-3 rounded-lg">
+              <div className="text-xs font-mono text-[#cc4117] bg-[#cc4117]/10 border border-[#cc4117]/30 p-3 rounded-xl leading-relaxed">
                 {error}
               </div>
             )}
 
             <Button
               type="submit"
-              className="w-full h-10 rounded-lg bg-primary hover:brightness-110 text-on-primary font-mono font-bold text-xs uppercase tracking-wider transition-all shadow-sm"
+              className="w-full h-12 rounded-[90px] bg-[#4a154b] hover:bg-[#611f69] text-white font-bold text-sm tracking-wide transition-all shadow-sm cursor-pointer"
               disabled={loading}
             >
               {loading ? 'Memverifikasi...' : 'Masuk ke Control Desk'}
@@ -139,18 +148,18 @@ export default function LoginPage() {
           </form>
 
           {/* Quick preset for Admin */}
-          <div className="pt-4 border-t border-outline-variant/20">
-            <div className="bg-surface-container border border-outline-variant/30 rounded-xl p-3.5">
-              <div className="flex items-start gap-2.5">
-                <KeyRound className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-                <div className="text-xs space-y-1 text-on-surface-variant">
-                  <div className="font-semibold text-on-surface">Kredensial Pengujian EOC:</div>
-                  <div className="font-mono text-[11px]">User: <code className="bg-surface-container-high px-1.5 py-0.5 rounded text-primary">admin</code></div>
-                  <div className="font-mono text-[11px]">Pass: <code className="bg-surface-container-high px-1.5 py-0.5 rounded text-primary">superadmin.</code></div>
+          <div className="pt-4 border-t border-[#e6e6e6]">
+            <div className="bg-[#f4ede4] border border-[#e6e6e6] rounded-[16px] p-4">
+              <div className="flex items-start gap-3">
+                <KeyRound className="h-4 w-4 text-[#4a154b] mt-0.5 shrink-0" />
+                <div className="text-xs space-y-1 text-[#696969]">
+                  <div className="font-bold text-[#1d1d1d]">Kredensial Pengujian EOC:</div>
+                  <div className="font-mono text-[11px]">User: <code className="bg-white px-2 py-0.5 rounded border border-[#e6e6e6] text-[#4a154b] font-bold">admin</code></div>
+                  <div className="font-mono text-[11px]">Pass: <code className="bg-white px-2 py-0.5 rounded border border-[#e6e6e6] text-[#4a154b] font-bold">superadmin.</code></div>
                   <button
                     type="button"
                     onClick={fillAdminCredentials}
-                    className="inline-flex items-center gap-1 text-[11px] font-mono text-primary hover:underline mt-1 cursor-pointer"
+                    className="inline-flex items-center gap-1 text-xs font-bold text-[#4a154b] hover:underline mt-1 cursor-pointer"
                   >
                     Otomatis isi form login
                   </button>
@@ -161,8 +170,8 @@ export default function LoginPage() {
         </div>
 
         {/* Footer info */}
-        <div className="mt-6 text-center text-xs font-mono text-on-surface-variant">
-          KotaKu Siaga • Platform Pemantauan & Respons Bencana Iklim
+        <div className="mt-6 text-center text-xs font-mono text-[#696969]">
+          KotaKu Siaga • Platform Pemantauan & Respons Bencana Iklim Kota Semarang
         </div>
       </div>
     </div>

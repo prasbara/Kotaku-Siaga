@@ -3,25 +3,32 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const badgeVariants = cva(
-  "inline-flex items-center rounded-none border px-2 py-0.5 text-[11px] font-semibold tracking-wider uppercase transition-colors",
+  "inline-flex items-center rounded-[90px] border px-3 py-1 text-xs font-semibold tracking-wide transition-colors gap-1.5",
   {
     variants: {
       variant: {
-        default: "border-[#E7E5E4] bg-[#F5F5F4] text-[#1C1917]",
-        secondary: "border-[#E7E5E4] bg-[#EFEDEB] text-[#57534E]",
-        destructive: "border-[#DC2626] bg-[#DC2626]/10 text-[#DC2626]",
-        outline: "border-[#D6D3D1] bg-transparent text-[#1C1917]",
-        rendah: "border-[#E7E5E4] bg-[#F5F5F4] text-[#57534E]",
-        sedang: "border-[#E7E5E4] bg-[#F5F5F4] text-[#78716C]",
-        tinggi: "border-[#CA8A04] bg-[#CA8A04]/10 text-[#CA8A04]",
-        kritis: "border-[#DC2626] bg-[#DC2626]/10 text-[#DC2626]",
-        submitted: "border-[#E7E5E4] bg-[#F5F5F4] text-[#57534E]",
-        under_review: "border-[#D6D3D1] bg-[#F5F5F4] text-[#57534E]",
-        verified: "border-[#78716C] bg-[#EFEDEB] text-[#1C1917]",
-        in_progress: "border-[#CA8A04] bg-[#CA8A04]/10 text-[#CA8A04]",
-        resolved: "border-[#65A30D] bg-[#65A30D]/10 text-[#65A30D]",
-        rejected: "border-[#DC2626] bg-[#DC2626]/10 text-[#DC2626]",
-        duplicate: "border-[#E7E5E4] bg-[#F5F5F4] text-[#A8A29E]",
+        // Default Neutral
+        default: "border-[#e6e6e6] bg-[#f4ede4] text-[#1d1d1d]",
+        secondary: "border-[#eddcf7] bg-[#f9f0ff] text-[#4a154b]",
+        outline: "border-[#e6e6e6] bg-transparent text-[#1d1d1d]",
+        // Aubergine Brand
+        primary: "border-[#481a54] bg-[#4a154b] text-white",
+        // Urgency
+        rendah: "border-[#e6e6e6] bg-[#f4ede4] text-[#696969]",
+        sedang: "border-[#fef3c7] bg-[#fffbeb] text-[#b45309]",
+        tinggi: "border-[#fed7aa] bg-[#fff7ed] text-[#c2410c]",
+        kritis: "border-[#fecaca] bg-[#fef2f2] text-[#cc4117] font-bold",
+        // Status Workflow
+        submitted: "border-[#eddcf7] bg-[#f9f0ff] text-[#4a154b]",
+        under_review: "border-[#fef3c7] bg-[#fffbeb] text-[#b45309]",
+        verified: "border-[#d1fae5] bg-[#ecfdf5] text-[#007a5a] font-bold",
+        in_progress: "border-[#bfdbfe] bg-[#eff6ff] text-[#1264a3]",
+        resolved: "border-[#d1fae5] bg-[#007a5a] text-white font-bold",
+        rejected: "border-[#fecaca] bg-[#fef2f2] text-[#cc4117]",
+        suspicious: "border-[#fecaca] bg-[#fff1f2] text-[#be123c] font-bold",
+        duplicate: "border-[#e6e6e6] bg-[#f5f5f5] text-[#737373]",
+        destructive: "border-[#fecaca] bg-[#cc4117] text-white font-bold",
+        success: "border-[#d1fae5] bg-[#007a5a] text-white font-bold",
       },
     },
     defaultVariants: {

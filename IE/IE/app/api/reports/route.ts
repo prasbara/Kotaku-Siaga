@@ -3,9 +3,6 @@ import { createAdminClient, isSupabaseConfigured } from '@/lib/supabase/server'
 import { checkRateLimit } from '@/lib/verification/rate-limiter'
 import { runVerificationPipeline } from '@/lib/verification/pipeline'
 
-// PRODUCTION: citizen reports come from the real database only.
-// No hardcoded citizen reports are used as fallback data.
-
 // Helper to safely extract IP
 function getClientIp(request: NextRequest): string {
   const forwarded = request.headers.get('x-forwarded-for')
@@ -19,7 +16,7 @@ function getClientIp(request: NextRequest): string {
   return '127.0.0.1'
 }
 
-// GET /api/reports — fetch reports with filters
+// GET /api/reports — fetch reports with search, district, category, urgency, status filters
 export async function GET(request: NextRequest) {
   if (!isSupabaseConfigured()) {
     return NextResponse.json(
@@ -30,22 +27,28 @@ export async function GET(request: NextRequest) {
 
   try {
     const searchParams = request.nextUrl.searchParams
+    const search = searchParams.get('q') || searchParams.get('search')
     const category = searchParams.get('category')
     const urgency = searchParams.get('urgency')
     const status = searchParams.get('status')
+    const district = searchParams.get('district')
     const limit = parseInt(searchParams.get('limit') || '100')
     const page = parseInt(searchParams.get('page') || '0')
 
     const supabase = await createAdminClient()
     let query = supabase
       .from('reports')
-      .select('*, ai_analysis(*)')
+      .select('*, ai_analysis(*)', { count: 'exact' })
       .order('created_at', { ascending: false })
       .range(page * limit, (page + 1) * limit - 1)
 
     if (category && category !== 'all') query = query.eq('category', category)
     if (urgency && urgency !== 'all') query = query.eq('urgency', urgency)
     if (status && status !== 'all') query = query.eq('status', status)
+    if (district && district !== 'all') query = query.ilike('district_name', `%${district}%`)
+    if (search && search.trim()) {
+      query = query.or(`title.ilike.%${search.trim()}%,description.ilike.%${search.trim()}%,district_name.ilike.%${search.trim()}%,report_code.ilike.%${search.trim()}%`)
+    }
 
     const { data, error, count } = await query
 
@@ -58,14 +61,20 @@ export async function GET(request: NextRequest) {
     }
 
     // Successful query — return real data (may be empty array if no reports yet)
-    return NextResponse.json({ success: true, data: data ?? [], count: count ?? 0 })
+    return NextResponse.json({
+      success: true,
+      data: data ?? [],
+      count: count ?? (data ? data.length : 0),
+      page,
+      limit,
+    })
   } catch (error) {
     console.error('GET /api/reports error:', error)
     return NextResponse.json({ error: 'Gagal mengambil laporan.' }, { status: 500 })
   }
 }
 
-// POST /api/reports — create new citizen report with multi-layered verification
+// POST /api/reports — create new citizen report with multi-layered verification and real DB corroboration
 export async function POST(request: NextRequest) {
   if (!isSupabaseConfigured()) {
     return NextResponse.json(
@@ -131,8 +140,33 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Koordinat tidak valid.' }, { status: 400 })
     }
 
-    // 3. Multi-Layered Verification Pipeline
-    // PRODUCTION: Pass empty array — citizen corroboration uses only real DB reports via flood-event-manager
+    // 3. Multi-Layered Verification Pipeline with Real Database Corroboration
+    const supabase = await createAdminClient()
+    let recentReports: Array<{
+      id: string
+      report_code: string
+      latitude: number
+      longitude: number
+      created_at: string
+      photo_url?: string | null
+      category?: string
+    }> = []
+
+    try {
+      const past24Hours = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+      const { data: dbRecent } = await supabase
+        .from('reports')
+        .select('id, report_code, latitude, longitude, created_at, photo_url, category')
+        .gte('created_at', past24Hours)
+        .limit(100)
+
+      if (dbRecent && Array.isArray(dbRecent)) {
+        recentReports = dbRecent
+      }
+    } catch (fetchErr) {
+      console.warn('Could not fetch recent reports for corroboration:', fetchErr)
+    }
+
     const verification = await runVerificationPipeline(
       {
         category,
@@ -152,13 +186,12 @@ export async function POST(request: NextRequest) {
         districtName: district_name,
         address,
       },
-      [] // PRODUCTION: No hardcoded reports used for verification context
+      recentReports
     )
 
     const reportCode = verification.reportCode
     const determinedStatus = verification.status
 
-    const supabase = await createAdminClient()
     const { data, error } = await supabase
       .from('reports')
       .insert({

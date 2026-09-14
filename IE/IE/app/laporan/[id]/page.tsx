@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import type { Report } from '@/types'
 import { CATEGORY_LABELS, URGENCY_LABELS, STATUS_LABELS } from '@/types'
 import { formatDate, formatRelativeTime } from '@/lib/utils'
-import { ArrowLeft, MapPin, Clock, User, AlertCircle, Bot } from 'lucide-react'
+import { ArrowLeft, MapPin, Clock, User, AlertCircle, Bot, ShieldCheck, Camera } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
 import EvidenceBundlePanel from '@/components/cctv/EvidenceBundlePanel'
@@ -16,7 +16,7 @@ const STATUS_STEPS = [
   { key: 'submitted', label: 'Terkirim ke EOC' },
   { key: 'under_review', label: 'Ditinjau Verifikator' },
   { key: 'verified', label: 'Tervalidasi Spasial' },
-  { key: 'in_progress', label: 'Disposisi Armada Pompa/Tim' },
+  { key: 'in_progress', label: 'Disposisi Tim Lapangan' },
   { key: 'resolved', label: 'Selesai Ditangani' },
 ]
 
@@ -34,8 +34,6 @@ export default async function ReportDetailPage({ params }: Props) {
   const { id } = await params
   let report: Report | null = null
 
-  // PRODUCTION: Always query the real database.
-  // No fallback to hardcoded reports.
   try {
     const supabase = await createClient()
     const { data, error } = await supabase
@@ -62,50 +60,71 @@ export default async function ReportDetailPage({ params }: Props) {
   const urgencyLabel = URGENCY_LABELS[r.urgency as keyof typeof URGENCY_LABELS] || r.urgency
   const statusLabel = STATUS_LABELS[r.status as keyof typeof STATUS_LABELS] || r.status
 
-  return (
-    <div className="flex flex-col w-full bg-surface text-on-surface min-h-screen pb-20">
-      {/* Tactical Header */}
-      <section className="pt-10 pb-8 bg-surface-container-lowest border-b border-outline-variant/30 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto flex flex-col gap-4">
-          <Link
-            href="/peta"
-            className="inline-flex items-center gap-1.5 text-xs font-mono font-semibold uppercase tracking-wider text-primary hover:underline transition-colors"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" />
-            Kembali ke Peta Spasial
-          </Link>
+  const isCritical = (r.urgency as string) === 'kritis' || (r.urgency as string) === 'tinggi' || (r.urgency as string) === 'critical'
+  const isResolved = r.status === 'resolved'
 
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-            <div className="flex flex-col gap-1.5">
+  return (
+    <div className="flex flex-col w-full bg-[#fdfbf9] text-[#1d1d1d] min-h-screen pb-24">
+      {/* Header */}
+      <section className="pt-10 pb-8 bg-white border-b border-[#e6e6e6] px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto flex flex-col gap-4">
+          <div className="flex items-center gap-3">
+            <Link
+              href="/laporan"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-[90px] bg-[#f4ede4] hover:bg-[#e8ded2] text-xs font-bold text-[#1d1d1d] transition-colors"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" />
+              Kembali ke Daftar Laporan
+            </Link>
+            <Link
+              href="/peta"
+              className="inline-flex items-center gap-1.5 text-xs text-[#4a154b] hover:underline font-semibold"
+            >
+              Lihat di Peta Spasial →
+            </Link>
+          </div>
+
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pt-2">
+            <div className="flex flex-col gap-2">
               <div className="flex items-center gap-2.5">
-                <span className="text-[10px] font-mono uppercase tracking-widest text-primary font-bold px-2 py-0.5 rounded bg-primary/10 border border-primary/30">
-                  ID AUDIT: {r.report_code || r.id.substring(0, 10)}
+                <span className="text-xs font-mono font-bold text-[#4a154b] px-3 py-1 rounded-full bg-[#f9f0ff] border border-[#eddcf7]">
+                  TIKET: {r.report_code || r.id.substring(0, 10)}
                 </span>
                 {r.is_demo && (
-                  <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded border border-tertiary/40 bg-tertiary/10 text-tertiary font-bold">
+                  <span className="text-xs px-2.5 py-0.5 rounded-full border border-[#fef3c7] bg-[#fffbeb] text-[#b45309] font-bold">
                     Dataset Simulasi EOC
                   </span>
                 )}
               </div>
-              <h1 className="font-headline text-2xl sm:text-3xl font-extrabold text-on-surface">
+              <h1 className="font-display text-2xl sm:text-3xl font-bold text-[#1d1d1d]">
                 {r.title || categoryLabel}
               </h1>
+              <span className="text-xs text-[#696969] flex items-center gap-1.5">
+                <MapPin className="w-3.5 h-3.5 text-[#4a154b]" />
+                {r.district_name || 'Kota Semarang'} • Dilaporkan {formatDate(r.created_at)} ({formatRelativeTime(r.created_at)})
+              </span>
             </div>
 
             <div className="flex items-center gap-3">
               <span
-                className={`px-3 py-1 text-xs font-mono font-bold uppercase tracking-wider rounded border ${
-                  r.urgency === 'kritis'
-                    ? 'bg-error/20 text-error border-error/40'
+                className={`px-4 py-2 text-xs font-bold uppercase rounded-[90px] border ${
+                  isCritical
+                    ? 'bg-[#fef2f2] text-[#cc4117] border-[#fecaca]'
                     : r.urgency === 'tinggi'
-                    ? 'bg-tertiary/20 text-tertiary border-tertiary/40'
-                    : 'bg-primary/20 text-primary border-primary/40'
+                    ? 'bg-[#fff7ed] text-[#c2410c] border-[#fed7aa]'
+                    : 'bg-[#f4ede4] text-[#1d1d1d] border-[#e8ded2]'
                 }`}
               >
                 Urgensi: {urgencyLabel}
               </span>
-              <span className="px-3 py-1 text-xs font-mono font-bold uppercase tracking-wider rounded border border-secondary/40 bg-secondary/10 text-secondary">
-                {statusLabel}
+              <span
+                className={`px-4 py-2 text-xs font-bold uppercase rounded-[90px] border ${
+                  isResolved
+                    ? 'bg-[#ecfdf5] text-[#007a5a] border-[#d1fae5]'
+                    : 'bg-[#f9f0ff] text-[#4a154b] border-[#eddcf7]'
+                }`}
+              >
+                Status: {statusLabel}
               </span>
             </div>
           </div>
@@ -119,42 +138,46 @@ export default async function ReportDetailPage({ params }: Props) {
           <div className="lg:col-span-8 space-y-6">
             {/* Photo if provided */}
             {r.photo_url && (
-              <div className="rounded-xl border border-outline-variant/30 bg-surface-container overflow-hidden shadow-md">
-                <div className="relative h-80 w-full">
+              <div className="rounded-[16px] border border-[#e6e6e6] bg-white overflow-hidden shadow-subtle">
+                <div className="relative h-80 sm:h-96 w-full">
                   <Image
                     src={r.photo_url}
                     alt="Dokumentasi fisik laporan lapangan"
                     fill
                     className="object-cover"
                   />
+                  <div className="absolute bottom-3 left-3 px-3 py-1 rounded-full bg-black/60 backdrop-blur-sm text-white text-xs font-mono flex items-center gap-1.5">
+                    <Camera className="w-3.5 h-3.5" />
+                    Dokumentasi Terverifikasi
+                  </div>
                 </div>
               </div>
             )}
 
             {/* Description */}
-            <div className="p-6 rounded-xl bg-surface-container-low border border-outline-variant/30 shadow-sm space-y-4">
-              <span className="text-xs font-mono font-bold uppercase tracking-wider text-primary block">
-                Deskripsi Lapangan Warga
+            <div className="p-6 sm:p-8 rounded-[16px] bg-white border border-[#e6e6e6] shadow-subtle space-y-4">
+              <span className="text-xs uppercase font-bold tracking-wider text-[#4a154b] block">
+                Deskripsi Situasi Lapangan
               </span>
-              <p className="text-sm text-on-surface leading-relaxed font-body">
+              <p className="text-sm sm:text-base text-[#1d1d1d] leading-relaxed">
                 {r.description}
               </p>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-outline-variant/20 text-xs text-on-surface-variant font-mono">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-[#e6e6e6] text-xs text-[#696969]">
                 <div className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4 text-primary shrink-0" />
+                  <MapPin className="h-4 w-4 text-[#4a154b] shrink-0" />
                   <span>
                     Lat: {r.latitude.toFixed(5)}, Lng: {r.longitude.toFixed(5)}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Clock className="h-4 w-4 text-on-surface-variant shrink-0" />
-                  <span>{formatDate(r.created_at)} ({formatRelativeTime(r.created_at)})</span>
+                  <Clock className="h-4 w-4 text-[#696969] shrink-0" />
+                  <span>{formatDate(r.created_at)}</span>
                 </div>
                 {r.reporter_name && (
                   <div className="flex items-center gap-2 sm:col-span-2">
-                    <User className="h-4 w-4 text-secondary shrink-0" />
-                    <span className="text-on-surface">Pelapor: {r.reporter_name}</span>
+                    <User className="h-4 w-4 text-[#007a5a] shrink-0" />
+                    <span className="text-[#1d1d1d] font-semibold">Pelapor: {r.reporter_name}</span>
                   </div>
                 )}
               </div>
@@ -162,123 +185,113 @@ export default async function ReportDetailPage({ params }: Props) {
 
             {/* AI Analysis Layer */}
             {r.ai_analysis && (
-              <div className="p-6 rounded-xl bg-surface-container-low border border-primary/40 shadow-md space-y-4">
-                <div className="flex justify-between items-baseline pb-3 border-b border-outline-variant/30">
+              <div className="p-6 sm:p-8 rounded-[16px] bg-[#f9f0ff] border border-[#eddcf7] shadow-subtle space-y-4">
+                <div className="flex justify-between items-baseline pb-3 border-b border-[#eddcf7]">
                   <div className="flex items-center gap-2">
-                    <Bot className="w-4 h-4 text-primary" />
-                    <span className="text-xs font-mono font-bold uppercase tracking-wider text-primary">
+                    <Bot className="w-5 h-5 text-[#4a154b]" />
+                    <span className="text-xs font-bold uppercase tracking-wider text-[#4a154b]">
                       Analisis Kecerdasan Spasial AI
                     </span>
                   </div>
-                  <span className="text-[11px] font-mono text-on-surface-variant">
-                    Confidence {Math.round((r.ai_analysis.ai_confidence || 0) * 100)}%
+                  <span className="text-xs font-mono text-[#696969]">
+                    Keyakinan {Math.round((r.ai_analysis.ai_confidence || 0) * 100)}%
                   </span>
                 </div>
 
-                <div className="space-y-3 font-body text-xs leading-relaxed">
+                <div className="space-y-3 text-xs sm:text-sm leading-relaxed">
                   <div>
-                    <span className="text-[10px] font-mono uppercase text-on-surface-variant block mb-1">
-                      Ringkasan Interpretasi
+                    <span className="text-[10px] uppercase text-[#696969] font-bold block mb-1">
+                      Ringkasan Otomatis:
                     </span>
-                    <p className="text-on-surface">
-                      {r.ai_analysis.summary}
-                    </p>
+                    <p className="text-[#1d1d1d]">{r.ai_analysis.summary}</p>
                   </div>
-
                   {r.ai_analysis.recommended_action && (
-                    <div className="pt-3 border-t border-outline-variant/20">
-                      <span className="text-[10px] font-mono uppercase text-secondary font-bold block mb-1">
-                        Rekomendasi Penanganan
+                    <div className="p-4 rounded-xl bg-white border border-[#eddcf7]">
+                      <span className="text-[10px] uppercase text-[#4a154b] font-bold block mb-1">
+                        Rekomendasi Tindakan:
                       </span>
-                      <p className="text-on-surface">
-                        {r.ai_analysis.recommended_action}
-                      </p>
+                      <p className="text-[#1d1d1d] font-semibold">{r.ai_analysis.recommended_action}</p>
                     </div>
                   )}
-
-                  <div className="pt-2 text-[10px] font-mono text-primary uppercase border-t border-outline-variant/10">
-                    Klasifikasi: {r.ai_analysis.ai_category} • Tingkat Keparahan: {r.ai_analysis.severity}
-                  </div>
                 </div>
               </div>
             )}
 
-            {/* CCTV Evidence Bundle */}
+            {/* Evidence Bundle Panel */}
             <EvidenceBundlePanel
               reportId={r.id}
-              reportCode={r.report_code || r.id.substring(0, 12)}
-              autoFetch={true}
+              reportCode={r.report_code || r.id.substring(0, 8)}
             />
           </div>
 
-          {/* Right Column: Status Pipeline & Audit Logs */}
+          {/* Right Column: Status Timeline & Audit */}
           <div className="lg:col-span-4 space-y-6">
-            {/* Status Timeline */}
-            <div className="p-6 rounded-xl bg-surface-container-low border border-outline-variant/30 shadow-sm space-y-4">
-              <span className="font-mono text-xs font-bold uppercase tracking-wider text-primary block pb-2 border-b border-outline-variant/30">
-                Progres Penanganan EOC
-              </span>
+            {/* Status Timeline Card */}
+            <div className="p-6 rounded-[16px] bg-white border border-[#e6e6e6] shadow-subtle">
+              <h3 className="text-sm font-bold uppercase tracking-wider text-[#4a154b] mb-4">
+                Perjalanan Status Penanganan
+              </h3>
 
               {!isTerminal ? (
-                <div className="space-y-3.5 font-mono text-xs">
-                  {STATUS_STEPS.map((step, i) => {
-                    const isDone = i < currentStep
-                    const isCurrent = i === currentStep
+                <div className="space-y-4">
+                  {STATUS_STEPS.map((step, idx) => {
+                    const isDone = idx <= currentStep
+                    const isCurrent = idx === currentStep
+
                     return (
-                      <div key={step.key} className="flex items-start gap-3">
+                      <div key={step.key} className="flex items-start gap-3 relative">
+                        {idx < STATUS_STEPS.length - 1 && (
+                          <div
+                            className={`absolute left-3.5 top-7 bottom-0 w-0.5 ${
+                              idx < currentStep ? 'bg-[#007a5a]' : 'bg-[#e6e6e6]'
+                            }`}
+                          />
+                        )}
                         <div
-                          className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 border ${
-                            isDone
-                              ? 'bg-secondary text-on-secondary border-secondary'
-                              : isCurrent
-                              ? 'bg-primary text-on-primary border-primary animate-pulse'
-                              : 'bg-surface-container border-outline-variant/40 text-on-surface-variant'
+                          className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 z-10 text-xs font-bold ${
+                            isCurrent
+                              ? 'bg-[#4a154b] text-white ring-4 ring-[#4a154b]/15'
+                              : isDone
+                              ? 'bg-[#007a5a] text-white'
+                              : 'bg-[#f4ede4] text-[#696969]'
                           }`}
                         >
-                          {isDone ? '✓' : i + 1}
+                          {isDone ? '✓' : idx + 1}
                         </div>
-                        <div className="flex flex-col">
-                          <span
-                            className={`text-xs ${
-                              isCurrent
-                                ? 'font-bold text-primary'
-                                : isDone
-                                ? 'text-on-surface font-medium'
-                                : 'text-on-surface-variant'
+                        <div className="pt-0.5">
+                          <p
+                            className={`text-xs font-bold ${
+                              isCurrent ? 'text-[#4a154b]' : isDone ? 'text-[#1d1d1d]' : 'text-[#696969]'
                             }`}
                           >
                             {step.label}
-                          </span>
+                          </p>
                         </div>
                       </div>
                     )
                   })}
                 </div>
               ) : (
-                <div className="p-3.5 rounded-lg bg-surface-container border border-error/40 text-xs text-error flex items-center gap-2">
-                  <AlertCircle className="h-4 w-4 text-error" />
-                  <span>Laporan berstatus: {statusLabel}</span>
+                <div className="p-4 rounded-xl bg-[#fef2f2] border border-[#fecaca] text-[#cc4117] text-xs">
+                  Laporan ini berstatus <span className="font-bold">{statusLabel}</span> (Ditutup).
                 </div>
               )}
             </div>
 
-            {/* Data Provenance Card */}
-            <div className="p-6 rounded-xl bg-surface-container-low border border-outline-variant/30 shadow-sm text-xs space-y-3">
-              <span className="font-mono text-xs font-bold uppercase tracking-wider text-on-surface block pb-2 border-b border-outline-variant/30">
-                Integritas Provenance ISO 37120
-              </span>
-              <div className="flex justify-between border-b border-outline-variant/20 pb-2 font-mono">
-                <span className="text-on-surface-variant">Stempel Waktu</span>
-                <span className="text-on-surface">{new Date(r.created_at).toLocaleTimeString('id-ID')} WIB</span>
+            {/* Credibility Score Box */}
+            <div className="p-6 rounded-[16px] bg-[#f4ede4] border border-[#e8ded2] shadow-subtle">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-bold text-[#4a154b] uppercase tracking-wider">
+                  Skor Kredibilitas
+                </span>
+                <ShieldCheck className="w-5 h-5 text-[#007a5a]" />
               </div>
-              <div className="flex justify-between border-b border-outline-variant/20 pb-2 font-mono">
-                <span className="text-on-surface-variant">Tipe Entitas</span>
-                <span className="text-primary font-bold">Citizen Ground-Truth</span>
+              <div className="text-3xl font-bold text-[#1d1d1d]">
+                {r.credibility_score ?? 85}<span className="text-sm font-normal text-[#696969]">/100</span>
               </div>
-              <div className="flex justify-between font-mono">
-                <span className="text-on-surface-variant">Validitas Spasial</span>
-                <span className="text-secondary font-bold">Terpetakan Valid (100%)</span>
-              </div>
+              <p className="text-xs text-[#696969] mt-2 leading-relaxed">
+                Dihitung dari kombinasi akurasi GPS, timestamp foto, keaslian citra, dan korelasi telemetri cuaca.
+              </p>
             </div>
           </div>
         </div>

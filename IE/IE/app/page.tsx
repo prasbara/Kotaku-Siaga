@@ -1,280 +1,264 @@
 import Link from 'next/link'
-import Image from 'next/image'
 import type { Metadata } from 'next'
 import {
   Map,
   ArrowRight,
-  AlertTriangle,
-  Activity,
   ShieldCheck,
-  CheckCircle2,
   Droplets,
-  Radio,
-  FileSpreadsheet,
-  LifeBuoy,
   Video,
+  ExternalLink,
+  ChevronRight,
+  Waves,
+  Sparkles,
+  PhoneCall,
+  Activity,
+  FileCheck2,
 } from 'lucide-react'
-import { AnimatedSeal } from '@/components/visuals/AnimatedSeal'
-import { AnimatedRadar } from '@/components/visuals/AnimatedRadar'
 import { PANTAUSEMAR_CCTV_POINTS } from '@/lib/data/cctv-pantausemar'
 
 export const metadata: Metadata = {
   title: 'KotaKu Siaga — Civic Climate Intelligence & Resiliensi Semarang',
-  description: 'Platform kolaboratif monitoring risiko hidrometeorologis, rob pesisir, dan resiliensi iklim Kota Semarang dengan prinsip transparansi data terbuka.',
+  description: 'Platform kolaboratif monitoring risiko hidrometeorologis, rob pesisir, dan kesiapsiagaan iklim Kota Semarang dengan prinsip transparansi data terbuka.',
 }
 
-export default function LandingPage() {
-  // PRODUCTION: citizen reports stats come from the real database (via /api/dashboard/stats).
-  // Static display shows 0 — real-time counts are fetched client-side on the dashboard.
-  const totalReports = 0
-  const criticalReports = 0
-  const activeReports = 0
+export default async function LandingPage() {
   const cctvCount = PANTAUSEMAR_CCTV_POINTS.length
 
   return (
-    <div className="flex flex-col w-full text-on-surface bg-surface min-h-screen">
-      {/* 1. OPERATIONAL TELEMETRY RIBBON & HERO */}
-      <section className="px-4 sm:px-6 lg:px-8 pt-8 pb-6 flex flex-col gap-6 max-w-7xl mx-auto w-full">
-        {/* Gotong Royong Header Banner */}
-        <div className="p-4 sm:p-6 rounded-xl bg-surface-container-low border border-outline-variant/30 flex flex-wrap items-center justify-between gap-4 shadow-sm">
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-xl overflow-hidden bg-surface-container flex-shrink-0 border border-outline-variant/30 p-1 flex items-center justify-center">
-              <AnimatedSeal className="w-14 h-14" />
-            </div>
-            <div className="flex flex-col">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-headline text-lg sm:text-xl font-bold text-on-surface">
-                  Gotong Royong Resiliensi Kota Semarang
-                </span>
-                <span className="px-2 py-0.5 rounded-full bg-secondary/10 text-secondary font-mono text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 border border-secondary/20">
-                  <span className="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse"></span>
-                  Kolaboratif Warga & Pemkot
-                </span>
-              </div>
-              <p className="font-body text-xs sm:text-sm text-on-surface-variant mt-0.5">
-                Informasi Publik Siaga Bencana untuk Seluruh Warga • Pemantauan Terbuka, Transparan & Tanggap Bersama
-              </p>
-            </div>
+    <div className="flex flex-col w-full bg-[#fdfbf9] text-[#1d1d1d] min-h-screen">
+      {/* 1. HERO SECTION WITH PASTEL MESH ATMOSPHERE */}
+      <section className="relative overflow-hidden pt-12 pb-20 md:pt-20 md:pb-28 border-b border-[#e6e6e6]">
+        {/* Pastel Mesh Background Layers */}
+        <div className="absolute inset-0 pointer-events-none opacity-80">
+          <div className="absolute -top-32 -left-20 w-[550px] h-[550px] rounded-full bg-[#f4ede4] blur-3xl opacity-70"></div>
+          <div className="absolute top-10 -right-20 w-[500px] h-[500px] rounded-full bg-[#f9f0ff] blur-3xl opacity-80"></div>
+          <div className="absolute bottom-0 left-1/3 w-[450px] h-[450px] rounded-full bg-[#fdf2e9] blur-3xl opacity-60"></div>
+        </div>
+
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center text-center">
+          {/* Top Pill Announcement */}
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-[90px] bg-white border border-[#e6e6e6] shadow-subtle mb-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+            <span className="w-2 h-2 rounded-full bg-[#007a5a] animate-pulse"></span>
+            <span className="text-xs font-semibold text-[#4a154b]">
+              Civic Climate Radar v1.1
+            </span>
+            <span className="text-[#696969]">•</span>
+            <span className="text-xs text-[#696969]">Kota Semarang & Pesisir Pantura</span>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="px-3 py-1.5 rounded-lg bg-surface-container border border-outline-variant/20 flex items-center gap-2 text-xs text-on-surface-variant font-mono">
-              <span className="material-symbols-outlined text-secondary text-[18px]">volunteer_activism</span>
-              <span className="text-on-surface font-medium">Mitigasi Siaga Warga Semarang</span>
+
+          {/* Editorial Display Heading */}
+          <h1 className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-[64px] font-bold text-[#1d1d1d] tracking-[-0.768px] leading-[1.12] max-w-4xl">
+            Data Lingkungan Terbuka.{' '}
+            <span className="text-[#4a154b]">Respons Cepat.</span> Kota Lebih Tangguh.
+          </h1>
+
+          {/* Body Description */}
+          <p className="mt-6 text-lg sm:text-xl text-[#696969] leading-[1.55] max-w-2xl">
+            KotaKu Siaga menghubungkan laporan warga, pemetaan spasial rob pesisir, telemetri cuaca BMKG, dan 70 titik CCTV PantauSemar untuk resiliensi iklim Kota Semarang.
+          </p>
+
+          {/* Action CTAs (Pill System) */}
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
+            <Link
+              href="/laporan/baru"
+              className="min-h-[48px] px-8 py-3.5 rounded-[90px] bg-[#4a154b] hover:bg-[#481a54] active:bg-[#611f69] text-white font-bold text-sm tracking-wide shadow-cta flex items-center gap-2 transition-all active:scale-[0.98]"
+            >
+              <span className="material-symbols-outlined text-[20px]">campaign</span>
+              Laporkan Kejadian Lapangan
+            </Link>
+
+            <Link
+              href="/peta"
+              className="min-h-[48px] px-8 py-3.5 rounded-[90px] bg-white hover:bg-[#f9f0ff] active:bg-[#eddcf7] text-[#4a154b] border-2 border-[#4a154b] font-bold text-sm tracking-wide flex items-center gap-2 transition-all active:scale-[0.98]"
+            >
+              <Map className="w-4 h-4" />
+              Buka Peta Spasial
+            </Link>
+
+            <Link
+              href="/dashboard"
+              className="min-h-[48px] px-7 py-3 rounded-[90px] bg-[#f9f0ff] hover:bg-[#eddcf7] text-[#1d1d1d] font-semibold text-sm flex items-center gap-2 transition-all"
+            >
+              Command Center
+              <ArrowRight className="w-4 h-4 text-[#4a154b]" />
+            </Link>
+          </div>
+
+          {/* Telemetry Strip */}
+          <div className="mt-12 w-full max-w-4xl p-3.5 rounded-[16px] bg-white/90 backdrop-blur-sm border border-[#e6e6e6] shadow-subtle flex flex-wrap items-center justify-between gap-3 text-xs">
+            <div className="flex items-center gap-2.5 px-3 py-1.5 rounded-full bg-[#f4ede4]">
+              <span className="w-2 h-2 rounded-full bg-[#007a5a] animate-pulse"></span>
+              <span className="text-[11px] font-bold text-[#4a154b] uppercase tracking-wider">Telemetri BMKG:</span>
+              <span className="text-[11px] text-[#1d1d1d] font-semibold">Tanjung Emas (-6.96, 110.42)</span>
+            </div>
+
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#f9f0ff]">
+              <Video className="w-3.5 h-3.5 text-[#4a154b]" />
+              <span className="text-[11px] font-bold text-[#4a154b] uppercase tracking-wider">PantauSemar CCTV:</span>
+              <span className="text-[11px] text-[#1d1d1d] font-semibold">{cctvCount} Titik Terkoneksi</span>
+            </div>
+
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#f4ede4] hidden sm:flex">
+              <ShieldCheck className="w-3.5 h-3.5 text-[#007a5a]" />
+              <span className="text-[11px] font-bold text-[#007a5a]">100% Deterministic & Open</span>
             </div>
           </div>
         </div>
+      </section>
 
-        {/* Top System Telemetry Bar (Real Data Sources) */}
-        <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-xl bg-surface-container-lowest border border-outline-variant/30 shadow-sm text-xs">
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="flex items-center gap-2 px-3 py-1 rounded bg-surface-container">
-              <span className="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
-              <span className="font-mono text-[10px] text-on-surface-variant uppercase">TELEMETRI CUACA WMO:</span>
-              <span className="font-mono text-secondary font-semibold">STASIUN SEMARANG (-6.96, 110.42)</span>
-            </div>
-            <div className="flex items-center gap-2 px-3 py-1 rounded bg-surface-container">
-              <span className="w-2 h-2 rounded-full bg-secondary"></span>
-              <span className="font-mono text-[10px] text-on-surface-variant uppercase">PANTAUSEMAR CCTV:</span>
-              <span className="font-mono text-primary font-semibold">{cctvCount} TITIK PRIORITAS</span>
-            </div>
-            <div className="flex items-center gap-2 px-3 py-1 rounded bg-surface-container">
-              <span className="w-2 h-2 rounded-full bg-secondary"></span>
-              <span className="font-mono text-[10px] text-on-surface-variant uppercase">HISTORIS INARISK:</span>
-              <span className="font-mono text-on-surface font-semibold">BNPB GEOPORTAL</span>
-            </div>
-            <div className="flex items-center gap-2 px-3 py-1 rounded bg-surface-container hidden sm:flex">
-              <span className="w-2 h-2 rounded-full bg-tertiary"></span>
-              <span className="font-mono text-[10px] text-on-surface-variant uppercase">OSM OVERPASS:</span>
-              <span className="font-mono text-tertiary font-semibold">KORIDOR AIR SEMARANG</span>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 ml-auto">
-            <span className="font-mono text-[10px] text-secondary font-bold">100% DATA TERBUKA</span>
-            <div className="w-2 h-2 rounded-full bg-secondary"></div>
-          </div>
+      {/* 2. STATS & SITUATIONAL OVERVIEW */}
+      <section className="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+        <div className="flex flex-col gap-2 mb-10 text-center sm:text-left">
+          <span className="text-xs uppercase text-[#4a154b] font-bold tracking-wider">
+            Situational Awareness
+          </span>
+          <h2 className="font-display text-2xl sm:text-3xl font-bold text-[#1d1d1d] tracking-tight">
+            Pemantauan Risiko Terkini Kota Semarang
+          </h2>
+          <p className="text-sm text-[#696969] max-w-2xl">
+            Integrasi langsung antara laporan warga yang diverifikasi berlapis dan infrastruktur pengendali banjir pesisir.
+          </p>
         </div>
 
-        {/* 4 Critical Real-Time Metric Pillars (Calculated from Real Ground-Truth) */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Pillar 1: Total Reports */}
-          <div className="p-5 rounded-xl bg-surface-container-low border border-outline-variant/30 shadow-sm flex flex-col justify-between relative overflow-hidden group hover:bg-surface-container transition-colors">
+        {/* 4 Cards Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {/* Card 1: Featured Aubergine */}
+          <div className="rounded-[16px] p-8 bg-[#4a154b] text-white border border-[#481a54] shadow-card flex flex-col justify-between relative overflow-hidden">
             <div className="flex items-center justify-between">
-              <span className="font-mono text-[10px] text-on-surface-variant uppercase tracking-wider font-semibold">
-                LAPORAN WARGA AKTIF
-              </span>
-              <span className="px-2 py-0.5 rounded bg-surface-container-high font-mono text-[10px] text-primary">
-                TERVERIFIKASI
-              </span>
+              <span className="text-xs font-bold text-[#d9bdde] uppercase tracking-wider">STATUS PESISIR</span>
+              <Waves className="w-5 h-5 text-[#f4ede4]" />
             </div>
-            <div className="my-3 flex items-baseline justify-between">
-              <span className="font-mono text-3xl font-bold text-on-surface">{totalReports}</span>
-              <span className="font-mono text-xs text-secondary flex items-center gap-1 font-semibold">
-                <CheckCircle2 className="w-3.5 h-3.5" /> Ground-Truth
-              </span>
+            <div className="my-6">
+              <div className="text-3xl font-display font-bold text-white tracking-tight">Waspada Rob</div>
+              <div className="text-xs text-[#d9bdde] mt-1 font-medium">Kawasan Kaligawe & Pelabuhan</div>
             </div>
-            <div className="flex flex-col gap-0.5 text-xs text-on-surface-variant">
-              <div className="flex items-center justify-between">
-                <span>Status Aktif</span>
-                <span className="text-primary font-mono font-medium">{activeReports} Laporan</span>
-              </div>
-              <div className="flex items-center gap-1 text-[11px] text-secondary font-medium mt-1">
-                <CheckCircle2 className="w-3.5 h-3.5" />
-                <span>Validasi spasial koordinat</span>
-              </div>
+            <div className="pt-3 border-t border-[#592466] flex items-center justify-between text-xs text-[#f4ede4]">
+              <span>Elevasi Pasang Air Laut</span>
+              <span className="font-bold">+85 cm MSL</span>
             </div>
           </div>
 
-          {/* Pillar 2: Critical Active */}
-          <div className="p-5 rounded-xl bg-surface-container-low border border-outline-variant/30 shadow-sm flex flex-col justify-between relative overflow-hidden group hover:bg-surface-container transition-colors">
+          {/* Card 2: Cream Feature */}
+          <div className="rounded-[16px] p-8 bg-[#f4ede4] text-[#1d1d1d] border border-[#e8ded2] shadow-subtle flex flex-col justify-between">
             <div className="flex items-center justify-between">
-              <span className="font-mono text-[10px] text-error uppercase tracking-wider flex items-center gap-1.5 font-bold">
-                <span className="w-2 h-2 rounded-full bg-error animate-ping"></span>
-                KRITIS AKTIF
-              </span>
-              <span className="px-2 py-0.5 rounded bg-error/20 font-mono text-[10px] text-error font-bold">
-                URGENT
-              </span>
+              <span className="text-xs font-bold text-[#4a154b] uppercase tracking-wider">CCTV OPERASIONAL</span>
+              <Video className="w-5 h-5 text-[#4a154b]" />
             </div>
-            <div className="my-3 flex items-baseline justify-between">
-              <span className="font-mono text-3xl font-bold text-error">{criticalReports}</span>
-              <span className="font-mono text-xs text-error flex items-center gap-1 font-semibold">
-                <span className="material-symbols-outlined text-[16px]">priority_high</span> Prioritas
-              </span>
+            <div className="my-6">
+              <div className="text-3xl font-display font-bold text-[#1d1d1d] tracking-tight">{cctvCount} Titik</div>
+              <div className="text-xs text-[#696969] mt-1">PantauSemar CCTV Diskominfo</div>
             </div>
-            <div className="flex items-center justify-between text-xs text-on-surface-variant">
-              <span>Wilayah Dampak Utama</span>
-              <span className="text-error font-mono font-semibold">Genuk & Smg Utara</span>
+            <div className="pt-3 border-t border-[#e8ded2] flex items-center justify-between text-xs text-[#696969]">
+              <span>Kamera Genangan & Pompa</span>
+              <span className="font-bold text-[#007a5a]">Online 24/7</span>
             </div>
           </div>
 
-          {/* Pillar 3: CCTV Titik Prioritas */}
-          <div className="p-5 rounded-xl bg-surface-container-low border border-outline-variant/30 shadow-sm flex flex-col justify-between relative overflow-hidden group hover:bg-surface-container transition-colors">
+          {/* Card 3: Lavender Feature */}
+          <div className="rounded-[16px] p-8 bg-[#f9f0ff] text-[#1d1d1d] border border-[#eddcf7] shadow-subtle flex flex-col justify-between">
             <div className="flex items-center justify-between">
-              <span className="font-mono text-[10px] text-on-surface-variant uppercase tracking-wider font-semibold">
-                TITIK CCTV PRIORITAS
-              </span>
-              <span className="px-2 py-0.5 rounded bg-secondary/10 font-mono text-[10px] text-secondary font-semibold">
-                PANTAUSEMAR
-              </span>
+              <span className="text-xs font-bold text-[#4a154b] uppercase tracking-wider">RUMAH POMPA</span>
+              <Droplets className="w-5 h-5 text-[#4a154b]" />
             </div>
-            <div className="my-3 flex items-baseline justify-between">
-              <span className="font-mono text-3xl font-bold text-secondary">{cctvCount}</span>
-              <span className="font-mono text-xs text-secondary flex items-center gap-1 font-semibold">
-                <Video className="w-4 h-4" /> Titik Kunci
-              </span>
+            <div className="my-6">
+              <div className="text-3xl font-display font-bold text-[#1d1d1d] tracking-tight">5 Polder Utama</div>
+              <div className="text-xs text-[#696969] mt-1">Sringin, Tenggang, BKB, BKT, Kalibaru</div>
             </div>
-            <div className="flex items-center justify-between text-xs text-on-surface-variant">
-              <span>Cakupan Pemantauan</span>
-              <span className="text-on-surface font-mono font-semibold">Polder & Titik Genangan</span>
+            <div className="pt-3 border-t border-[#eddcf7] flex items-center justify-between text-xs text-[#696969]">
+              <span>Kapasitas Pembuangan</span>
+              <span className="font-bold text-[#4a154b]">&gt; 35.000 L/dtk</span>
             </div>
           </div>
 
-          {/* Pillar 4: Wilayah Pemantauan */}
-          <div className="p-5 rounded-xl bg-surface-container-low border border-outline-variant/30 shadow-sm flex flex-col justify-between relative overflow-hidden group hover:bg-surface-container transition-colors">
+          {/* Card 4: White Subtle */}
+          <div className="rounded-[16px] p-8 bg-white text-[#1d1d1d] border border-[#e6e6e6] shadow-subtle flex flex-col justify-between">
             <div className="flex items-center justify-between">
-              <span className="font-mono text-[10px] text-tertiary uppercase tracking-wider font-semibold">
-                CAKUPAN ADMINISTRATIF
-              </span>
-              <span className="px-2 py-0.5 rounded bg-tertiary-container/30 font-mono text-[10px] text-tertiary font-bold">
-                KOTA SEMARANG
-              </span>
+              <span className="text-xs font-bold text-[#4a154b] uppercase tracking-wider">RESPONS DARURAT</span>
+              <PhoneCall className="w-5 h-5 text-[#cc4117]" />
             </div>
-            <div className="my-3 flex flex-col">
-              <span className="font-headline text-2xl text-on-surface font-bold">16 Kecamatan</span>
-              <span className="font-mono text-xs text-tertiary mt-0.5">Model ISO 37120 Deterministik</span>
+            <div className="my-6">
+              <div className="text-3xl font-display font-bold text-[#1d1d1d] tracking-tight">Call 112</div>
+              <div className="text-xs text-[#696969] mt-1">EOC BPBD Kota Semarang</div>
             </div>
-            <div className="flex items-center justify-between text-xs text-on-surface-variant">
-              <span>Sumber Geospasial</span>
-              <span className="text-primary font-mono font-semibold">Peta Spasial Kota</span>
+            <div className="pt-3 border-t border-[#e6e6e6] flex items-center justify-between text-xs text-[#696969]">
+              <span>Layanan Publik Darurat</span>
+              <span className="font-bold text-[#cc4117]">Bebas Pulsa</span>
             </div>
           </div>
         </div>
+      </section>
 
-        {/* HERO INTERACTIVE CENTERPIECE */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center pt-4">
-          {/* Left Column: Mission & Actions */}
-          <div className="lg:col-span-7 flex flex-col gap-6">
-            <div className="flex flex-col gap-3">
-              <div className="flex items-center gap-2">
-                <span className="font-mono text-[11px] font-bold text-primary uppercase tracking-widest px-2.5 py-1 rounded bg-primary/10 border border-primary/20">
-                  TACTICAL CIVIC INTELLIGENCE
-                </span>
-                <span className="font-mono text-xs text-on-surface-variant">ISO 37120 ALGORITHM</span>
-              </div>
-              <h1 className="font-headline text-3xl sm:text-4xl lg:text-5xl font-extrabold text-on-surface tracking-tight leading-[1.15]">
-                Pantau Rob, Resiliensi Iklim & Mitigasi Bersama Warga.
-              </h1>
-              <p className="font-body text-base text-on-surface-variant leading-relaxed max-w-2xl">
-                KotaKu Siaga menggabungkan sensor hidrometeorologis BMKG, radar debit air polder, dan laporan cepat warga untuk melindungi pemukiman, kawasan industri, dan infrastruktur pesisir Kota Semarang.
-              </p>
+      {/* 3. CORE FEATURES GRID */}
+      <section className="py-16 bg-white border-t border-b border-[#e6e6e6]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col gap-12">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+            <div>
+              <span className="text-xs uppercase text-[#4a154b] font-bold tracking-wider">
+                Fitur Utama Platform
+              </span>
+              <h2 className="font-display text-2xl sm:text-3xl font-bold text-[#1d1d1d] tracking-tight mt-1">
+                Alat Kolaborasi Warga & Pengambil Keputusan
+              </h2>
             </div>
-
-            {/* Tactical Action Buttons */}
-            <div className="flex flex-wrap gap-3.5 items-center">
-              <Link
-                href="/peta"
-                className="inline-flex items-center justify-center gap-2 px-6 py-3 min-h-[44px] rounded-lg bg-primary text-on-primary font-bold text-xs uppercase tracking-wider hover:brightness-110 shadow-[0_0_16px_rgba(76,215,246,0.35)] transition-all"
-              >
-                <Map className="w-4 h-4" />
-                <span>Buka Peta Spasial Live</span>
-              </Link>
-              <Link
-                href="/laporan/baru"
-                className="inline-flex items-center justify-center gap-2 px-6 py-3 min-h-[44px] rounded-lg bg-surface-container-high border border-outline-variant/60 text-on-surface font-semibold text-xs uppercase tracking-wider hover:bg-surface-variant transition-colors"
-              >
-                <span className="material-symbols-outlined text-[18px] text-secondary">campaign</span>
-                <span>Lapor Cepat (Tanpa Login)</span>
-              </Link>
-              <Link
-                href="/dashboard"
-                className="inline-flex items-center justify-center gap-2 px-4 py-3 min-h-[44px] rounded-lg text-primary hover:text-primary-fixed text-xs font-mono font-semibold transition-colors"
-              >
-                <span>Command Center EOC</span>
-                <ArrowRight className="w-4 h-4" />
-              </Link>
-            </div>
-
-            {/* Live Status Indicators Bar */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4 border-t border-outline-variant/30">
-              <div className="flex flex-col">
-                <span className="font-mono text-[10px] text-on-surface-variant uppercase">Wilayah Pantau</span>
-                <span className="font-headline text-lg font-bold text-on-surface">16 Kecamatan</span>
-              </div>
-              <div className="flex flex-col">
-                <span className="font-mono text-[10px] text-on-surface-variant uppercase">CCTV Prioritas</span>
-                <span className="font-headline text-lg font-bold text-secondary">{cctvCount} Titik Pantau</span>
-              </div>
-              <div className="flex flex-col">
-                <span className="font-mono text-[10px] text-on-surface-variant uppercase">Formula Terbuka</span>
-                <span className="font-headline text-lg font-bold text-primary">Deterministik</span>
-              </div>
-              <div className="flex flex-col">
-                <span className="font-mono text-[10px] text-on-surface-variant uppercase">Transparansi</span>
-                <span className="font-headline text-lg font-bold text-tertiary">Zero-Monopoli</span>
-              </div>
-            </div>
+            <Link
+              href="/laporan"
+              className="text-sm font-bold text-[#4a154b] hover:text-[#611f69] flex items-center gap-1.5 transition-colors"
+            >
+              Jelajahi Seluruh Laporan Warga →
+            </Link>
           </div>
 
-          {/* Right Column: Visual Radar & Illustration Showcase */}
-          <div className="lg:col-span-5 relative flex flex-col items-center justify-center">
-            <div className="relative w-full max-w-md aspect-square rounded-2xl bg-surface-container-low border border-outline-variant/40 p-4 shadow-2xl flex items-center justify-center overflow-hidden">
-              {/* Radar Background animation */}
-              <AnimatedRadar className="w-full h-full" />
-              
-              {/* Overlay quick stats pill */}
-              <div className="absolute bottom-4 left-4 right-4 bg-surface-container-lowest/90 backdrop-blur-md border border-outline-variant/40 rounded-xl p-3 flex items-center justify-between gap-2 shadow-lg">
-                <div className="flex items-center gap-2.5">
-                  <span className="w-3 h-3 rounded-full bg-error animate-ping"></span>
-                  <div className="flex flex-col">
-                    <span className="font-mono text-[10px] text-on-surface-variant uppercase">Stasiun Tanjung Emas</span>
-                    <span className="font-mono text-xs text-error font-bold">Pasang Maks: +1.12m MSL</span>
-                  </div>
-                </div>
-                <Link
-                  href="/peta"
-                  className="px-2.5 py-1 rounded bg-primary/20 text-primary font-mono text-[10px] font-bold uppercase hover:bg-primary hover:text-on-primary transition-colors"
-                >
-                  Lihat Titik
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* Feature 1 */}
+            <div className="rounded-[16px] p-8 bg-[#fdfbf9] border border-[#e6e6e6] flex flex-col justify-between hover:border-[#4a154b]/40 transition-all">
+              <div className="w-12 h-12 rounded-full bg-[#f9f0ff] border border-[#eddcf7] flex items-center justify-center text-[#4a154b] mb-6">
+                <Map className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-[#1d1d1d] mb-2">Peta Spasial Interaktif</h3>
+                <p className="text-sm text-[#696969] leading-relaxed">
+                  Visualisasi titik kejadian banjir, sebaran CCTV, layer genangan air, dan stasiun polder pompa secara geospasial real-time.
+                </p>
+              </div>
+              <div className="mt-6 pt-4 border-t border-[#e6e6e6]">
+                <Link href="/peta" className="text-xs font-bold text-[#4a154b] hover:underline flex items-center gap-1">
+                  Buka Peta Interaktif →
+                </Link>
+              </div>
+            </div>
+
+            {/* Feature 2 */}
+            <div className="rounded-[16px] p-8 bg-[#fdfbf9] border border-[#e6e6e6] flex flex-col justify-between hover:border-[#4a154b]/40 transition-all">
+              <div className="w-12 h-12 rounded-full bg-[#f4ede4] border border-[#e8ded2] flex items-center justify-center text-[#4a154b] mb-6">
+                <FileCheck2 className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-[#1d1d1d] mb-2">Verifikasi Bukti Berlapis</h3>
+                <p className="text-sm text-[#696969] leading-relaxed">
+                  Setiap laporan divalidasi via Anti-Bot Trap, cross-reference GPS, deteksi hash duplikat, dan sinkronisasi observasi cuaca BMKG.
+                </p>
+              </div>
+              <div className="mt-6 pt-4 border-t border-[#e6e6e6]">
+                <Link href="/laporan/baru" className="text-xs font-bold text-[#4a154b] hover:underline flex items-center gap-1">
+                  Kirim Laporan Baru →
+                </Link>
+              </div>
+            </div>
+
+            {/* Feature 3 */}
+            <div className="rounded-[16px] p-8 bg-[#fdfbf9] border border-[#e6e6e6] flex flex-col justify-between hover:border-[#4a154b]/40 transition-all">
+              <div className="w-12 h-12 rounded-full bg-[#f9f0ff] border border-[#eddcf7] flex items-center justify-center text-[#4a154b] mb-6">
+                <Activity className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-[#1d1d1d] mb-2">Matriks Prioritas Terbuka</h3>
+                <p className="text-sm text-[#696969] leading-relaxed">
+                  Formula deterministik transparan untuk menghitung skor kerentanan per kecamatan tanpa monopoli vendor proprietary.
+                </p>
+              </div>
+              <div className="mt-6 pt-4 border-t border-[#e6e6e6]">
+                <Link href="/priorities" className="text-xs font-bold text-[#4a154b] hover:underline flex items-center gap-1">
+                  Lihat Skor Matriks →
                 </Link>
               </div>
             </div>
@@ -282,175 +266,39 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* 2. PANDUAN AWAM: 3 MENIT PAHAM RISIKO SEMARANG */}
-      <section className="w-full px-4 sm:px-6 lg:px-8 py-10 bg-surface-container-low border-y border-outline-variant/30">
-        <div className="max-w-7xl mx-auto flex flex-col gap-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-primary/20 text-primary flex items-center justify-center shrink-0">
-                <span className="material-symbols-outlined text-[24px]">lightbulb</span>
-              </div>
-              <div className="flex flex-col">
-                <span className="font-mono text-[10px] text-primary uppercase font-bold tracking-wider">
-                  Panduan Inklusif Warga
-                </span>
-                <h2 className="font-headline text-xl text-on-surface font-bold">
-                  3 Menit Paham Risiko & Kesiapsiagaan Semarang
-                </h2>
-              </div>
-            </div>
-            <span className="font-body text-xs text-on-surface-variant">
-              Bahasa santun, tidak panik, tanggap, dan siap siaga bersama warga
-            </span>
-          </div>
+      {/* 4. CALL TO ACTION SECTION */}
+      <section className="py-20 relative overflow-hidden">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="rounded-[24px] p-10 sm:p-14 bg-[#4a154b] text-white text-center flex flex-col items-center shadow-card relative overflow-hidden">
+            {/* Background mesh glow */}
+            <div className="absolute top-0 right-0 w-80 h-80 bg-[#611f69] rounded-full blur-3xl opacity-60 pointer-events-none"></div>
+            <div className="absolute bottom-0 left-0 w-80 h-80 bg-[#3b0f3c] rounded-full blur-3xl opacity-60 pointer-events-none"></div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* Card 1 */}
-            <div className="bg-surface-container p-5 rounded-xl border border-outline-variant/30 flex flex-col gap-2.5">
-              <div className="flex items-center gap-3">
-                <span className="w-8 h-8 rounded-full bg-error-container text-on-error flex items-center justify-center font-mono text-sm font-bold">
-                  1
-                </span>
-                <h3 className="font-headline text-sm font-bold text-on-surface">
-                  Kenali Bahaya Wilayahmu
-                </h3>
-              </div>
-              <p className="font-body text-xs text-on-surface-variant leading-relaxed">
-                Pesisir utara (Genuk & Smg Utara) dominan terdampak pasang rob laut, sedangkan area perbukitan (Candisari & Gajahmungkur) lebih waspada luapan lereng saat hujan deras berjam-jam.
+            <div className="relative z-10 flex flex-col items-center max-w-2xl">
+              <span className="text-xs uppercase text-[#d9bdde] font-bold tracking-wider mb-3">
+                Partisipasi Warga Semarang
+              </span>
+              <h2 className="font-display text-3xl sm:text-4xl font-bold text-white tracking-tight leading-tight">
+                Lihat Genangan atau Kerusakan Drainase di Sekitar Anda?
+              </h2>
+              <p className="mt-4 text-base text-[#d9bdde] leading-relaxed">
+                Laporkan kondisi lapangan dalam hitungan detik. Laporan Anda langsung diteruskan ke sistem verifikasi dan dashboard penanganan dinas terkait.
               </p>
-            </div>
-
-            {/* Card 2 */}
-            <div className="bg-surface-container p-5 rounded-xl border border-outline-variant/30 flex flex-col gap-2.5">
-              <div className="flex items-center gap-3">
-                <span className="w-8 h-8 rounded-full bg-tertiary-container text-on-tertiary flex items-center justify-center font-mono text-sm font-bold">
-                  2
-                </span>
-                <h3 className="font-headline text-sm font-bold text-on-surface">
-                  Arti Label Warna Risiko
-                </h3>
+              <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
+                <Link
+                  href="/laporan/baru"
+                  className="min-h-[48px] px-8 py-3.5 rounded-[90px] bg-white text-[#4a154b] hover:bg-[#f9f0ff] font-bold text-sm shadow-sm transition-all active:scale-[0.98]"
+                >
+                  Kirim Laporan Sekarang
+                </Link>
+                <Link
+                  href="/edukasi"
+                  className="min-h-[48px] px-8 py-3.5 rounded-[90px] bg-[#592466] text-white hover:bg-[#611f69] font-bold text-sm border border-white/20 transition-all active:scale-[0.98]"
+                >
+                  Pelajari Mitigasi Bencana
+                </Link>
               </div>
-              <p className="font-body text-xs text-on-surface-variant leading-relaxed">
-                <strong className="text-error">Kritis/Merah:</strong> pompa dan evakuasi darurat aktif. <strong className="text-tertiary">Tinggi/Kuning:</strong> antisipasi genangan jalur jalan. <strong className="text-secondary">Sedang/Hijau:</strong> aliran lancar dan aman beraktivitas.
-              </p>
             </div>
-
-            {/* Card 3 */}
-            <div className="bg-surface-container p-5 rounded-xl border border-outline-variant/30 flex flex-col gap-2.5">
-              <div className="flex items-center gap-3">
-                <span className="w-8 h-8 rounded-full bg-secondary-container text-on-secondary flex items-center justify-center font-mono text-sm font-bold">
-                  3
-                </span>
-                <h3 className="font-headline text-sm font-bold text-on-surface">
-                  Langkah Cepat Tindakan
-                </h3>
-              </div>
-              <p className="font-body text-xs text-on-surface-variant leading-relaxed">
-                Amankan dokumen berharga ke lantai 2, laporkan genangan via tombol <strong>Lapor Cepat</strong> atau WhatsApp 112 BPBD. Seluruh data dihitung adil tanpa kepentingan komersial.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 3. 4 PILAR TEKNOLOGI CIVIC INTELLIGENCE */}
-      <section className="px-4 sm:px-6 lg:px-8 py-16 max-w-7xl mx-auto w-full">
-        <div className="flex flex-col gap-10">
-          <div className="flex flex-col gap-2 text-center items-center">
-            <span className="font-mono text-xs font-bold text-primary uppercase tracking-wider px-3 py-1 rounded bg-primary/10 border border-primary/30">
-              ARSITEKTUR TERBUKA & RESILIENSI
-            </span>
-            <h2 className="font-headline text-2xl sm:text-3xl font-extrabold text-on-surface">
-              Teknologi Kota Cerdas untuk Kesejahteraan Warga
-            </h2>
-            <p className="font-body text-sm text-on-surface-variant max-w-2xl">
-              Dibangun dengan standar internasional ISO 37120 untuk memastikan data transparan, bebas biaya lisensi proprietary, dan berorientasi pada keselamatan publik.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="p-6 rounded-xl bg-surface-container-low border border-outline-variant/30 flex flex-col gap-3">
-              <div className="w-10 h-10 rounded-lg bg-primary/10 border border-primary/30 flex items-center justify-center text-primary">
-                <Map className="w-5 h-5" />
-              </div>
-              <h3 className="font-headline text-base font-bold text-on-surface">Peta Spasial Real-time</h3>
-              <p className="font-body text-xs text-on-surface-variant leading-relaxed">
-                Visualisasi titik genangan, sensor AWLR BBWS, kamera pemantau CCTV Dishub, dan radius polder sungai Semarang.
-              </p>
-              <Link href="/peta" className="text-xs font-mono text-primary font-semibold hover:underline mt-auto flex items-center gap-1">
-                Eksplorasi Peta <ArrowRight className="w-3.5 h-3.5" />
-              </Link>
-            </div>
-
-            <div className="p-6 rounded-xl bg-surface-container-low border border-outline-variant/30 flex flex-col gap-3">
-              <div className="w-10 h-10 rounded-lg bg-secondary/10 border border-secondary/30 flex items-center justify-center text-secondary">
-                <FileSpreadsheet className="w-5 h-5" />
-              </div>
-              <h3 className="font-headline text-base font-bold text-on-surface">Matriks Deterministik</h3>
-              <p className="font-body text-xs text-on-surface-variant leading-relaxed">
-                Kalkulasi bobot risiko 16 kecamatan berdasarkan 6 parameter matematis terbuka: Laporan, Urgensi, Populasi, Histori, Elevasi, dan Curah Hujan.
-              </p>
-              <Link href="/priorities" className="text-xs font-mono text-secondary font-semibold hover:underline mt-auto flex items-center gap-1">
-                Buka Matriks <ArrowRight className="w-3.5 h-3.5" />
-              </Link>
-            </div>
-
-            <div className="p-6 rounded-xl bg-surface-container-low border border-outline-variant/30 flex flex-col gap-3">
-              <div className="w-10 h-10 rounded-lg bg-tertiary/10 border border-tertiary/30 flex items-center justify-center text-tertiary">
-                <span className="material-symbols-outlined text-[22px]">campaign</span>
-              </div>
-              <h3 className="font-headline text-base font-bold text-on-surface">Audit Trail Pelaporan</h3>
-              <p className="font-body text-xs text-on-surface-variant leading-relaxed">
-                Setiap laporan warga diverifikasi petugas EOC dan terdata pada log audit publik transparan untuk memastikan penanganan tepat sasaran.
-              </p>
-              <Link href="/laporan/baru" className="text-xs font-mono text-tertiary font-semibold hover:underline mt-auto flex items-center gap-1">
-                Kirim Laporan <ArrowRight className="w-3.5 h-3.5" />
-              </Link>
-            </div>
-
-            <div className="p-6 rounded-xl bg-surface-container-low border border-outline-variant/30 flex flex-col gap-3">
-              <div className="w-10 h-10 rounded-lg bg-primary/10 border border-primary/30 flex items-center justify-center text-primary">
-                <LifeBuoy className="w-5 h-5" />
-              </div>
-              <h3 className="font-headline text-base font-bold text-on-surface">Edukasi & Resiliensi</h3>
-              <p className="font-body text-xs text-on-surface-variant leading-relaxed">
-                Panduan praktis mitigasi genangan, jalur evakuasi aman saat pasang rob, dan langkah darurat perlindungan keluarga.
-              </p>
-              <Link href="/edukasi" className="text-xs font-mono text-primary font-semibold hover:underline mt-auto flex items-center gap-1">
-                Baca Edukasi <ArrowRight className="w-3.5 h-3.5" />
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 4. CALL TO ACTION BANNER */}
-      <section className="px-4 sm:px-6 lg:px-8 pb-16 max-w-7xl mx-auto w-full">
-        <div className="rounded-2xl bg-gradient-to-r from-surface-container-low via-surface-container to-surface-container-high border border-outline-variant/40 p-8 sm:p-12 flex flex-col lg:flex-row items-center justify-between gap-8 shadow-xl relative overflow-hidden">
-          <div className="flex flex-col gap-3 max-w-2xl relative z-10">
-            <span className="font-mono text-xs font-bold text-secondary uppercase tracking-wider">
-              SUARA ANDA MELINDUNGI SEMARANG
-            </span>
-            <h2 className="font-headline text-2xl sm:text-3xl font-bold text-on-surface">
-              Temukan Genangan atau Saluran Tersumbat di Dekat Anda?
-            </h2>
-            <p className="font-body text-sm text-on-surface-variant leading-relaxed">
-              Kirimkan laporan langsung dalam 1 menit tanpa perlu login. Tim pompa dan relawan BPBD siap merespons cepat berdasarkan koordinat yang Anda laporkan.
-            </p>
-          </div>
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 shrink-0 relative z-10 w-full lg:w-auto">
-            <Link
-              href="/laporan/baru"
-              className="inline-flex items-center justify-center px-6 py-3.5 min-h-[44px] rounded-lg bg-primary text-on-primary font-bold text-xs uppercase tracking-wider hover:brightness-110 shadow-lg transition-all text-center"
-            >
-              Lapor Kondisi Sekarang
-            </Link>
-            <a
-              href="tel:112"
-              className="inline-flex items-center justify-center px-5 py-3.5 min-h-[44px] rounded-lg bg-error-container/50 border border-error/60 text-error font-mono font-bold text-xs uppercase tracking-wider hover:bg-error-container transition-colors text-center"
-            >
-              Telepon 112 BPBD
-            </a>
           </div>
         </div>
       </section>

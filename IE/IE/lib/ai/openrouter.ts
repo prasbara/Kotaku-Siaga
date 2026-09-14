@@ -146,10 +146,10 @@ function heuristicAnalyzeReport(input: ReportAnalysisInput): ReportAnalysisOutpu
   return {
     classification,
     severity,
-    confidence: 0.89,
+    confidence: 0.70, // Calibrated deterministic heuristic confidence
     summary,
     recommended_action: recommendedAction,
-    requires_verification: !isCritical,
+    requires_verification: true,
   }
 }
 

@@ -3,16 +3,17 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
-import { Menu, X, PhoneCall, Bot, ShieldAlert, ShieldCheck } from 'lucide-react'
+import { Menu, X, PhoneCall, ShieldAlert, ShieldCheck } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const navItems = [
   { label: 'Beranda', href: '/' },
   { label: 'Peta Spasial', href: '/peta', badgeDot: true },
+  { label: 'Laporan Warga', href: '/laporan' },
   { label: 'Lapor Cepat', href: '/laporan/baru', isHighlight: true },
   { label: 'Matriks Risiko', href: '/priorities' },
   { label: 'Data & Audit', href: '/data' },
-  { label: 'Edukasi Iklim', href: '/edukasi' },
+  { label: 'Edukasi', href: '/edukasi' },
   { label: 'Command Center', href: '/dashboard' },
 ]
 
@@ -39,30 +40,26 @@ export function Navbar() {
   }, [])
 
   return (
-    <header className="sticky top-0 w-full z-50 bg-surface/90 backdrop-blur-xl border-b border-outline-variant/30 shadow-[0_4px_24px_rgba(0,0,0,0.5)]">
-      <div className="w-full px-3 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-2 sm:gap-4">
+    <header className="sticky top-0 w-full z-50 bg-white/95 backdrop-blur-md border-b border-[#e6e6e6] shadow-[0_2px_12px_rgba(74,21,75,0.04)]">
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-3">
         {/* Brand & Badge */}
-        <div className="flex items-center gap-2 sm:gap-3 shrink-0 min-w-0">
-          <Link href="/" className="flex items-center gap-2.5 sm:gap-3 group min-w-0">
-            <div className="relative flex items-center justify-center shrink-0">
-              <span className="absolute w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-primary/20 animate-ping"></span>
-              <span className="absolute w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-primary/40 animate-pulse"></span>
-              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-primary/10 border border-primary/40 flex items-center justify-center relative z-10 text-primary group-hover:bg-primary group-hover:text-on-primary transition-colors">
-                <ShieldAlert className="w-4 h-4 sm:w-5 sm:h-5" />
-              </div>
+        <div className="flex items-center gap-3 shrink-0 min-w-0">
+          <Link href="/" className="flex items-center gap-3 group min-w-0">
+            <div className="w-10 h-10 rounded-[12px] bg-[#4a154b] flex items-center justify-center text-white shadow-sm group-hover:bg-[#481a54] transition-colors shrink-0">
+              <ShieldAlert className="w-5 h-5 text-[#f4ede4]" />
             </div>
             <div className="flex flex-col min-w-0">
-              <div className="flex items-center gap-1.5 sm:gap-2">
-                <span className="font-headline text-base sm:text-xl text-on-surface font-bold tracking-tight truncate">
+              <div className="flex items-center gap-2">
+                <span className="font-display text-lg sm:text-xl text-[#1d1d1d] font-bold tracking-tight truncate">
                   KotaKu Siaga
                 </span>
-                <span className="font-mono text-[9px] sm:text-[10px] uppercase px-1.5 sm:px-2 py-0.5 rounded bg-surface-container-highest text-primary border border-outline-variant/50 flex items-center gap-1 font-semibold whitespace-nowrap shrink-0">
-                  <span className="w-1.5 h-1.5 rounded-full bg-primary animate-ping"></span>
-                  <span className="hidden sm:inline">Civic Radar </span>v1.1
+                <span className="text-[10px] uppercase px-2 py-0.5 rounded-full bg-[#f9f0ff] text-[#4a154b] border border-[#eddcf7] font-bold hidden sm:inline-flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#007a5a] animate-pulse"></span>
+                  Semarang
                 </span>
               </div>
-              <span className="font-mono text-[10px] text-on-surface-variant tracking-wider uppercase hidden sm:inline truncate">
-                Civic Climate Intelligence Semarang
+              <span className="text-[11px] text-[#696969] tracking-normal hidden md:inline truncate font-medium">
+                Civic Climate Intelligence & Resiliensi Pesisir
               </span>
             </div>
           </Link>
@@ -81,7 +78,7 @@ export function Navbar() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="font-body text-xs bg-gradient-to-r from-primary to-primary-container text-on-primary font-bold px-3.5 py-1.5 rounded shadow-sm hover:brightness-110 transition-all ml-1 mr-1 flex items-center gap-1.5"
+                  className="min-h-[42px] px-5 py-2 rounded-[90px] bg-[#4a154b] text-white hover:bg-[#481a54] active:bg-[#611f69] font-bold text-xs shadow-sm flex items-center gap-1.5 transition-all ml-1.5 mr-1 active:scale-[0.98]"
                 >
                   <span className="material-symbols-outlined text-[16px]">campaign</span>
                   {item.label}
@@ -94,15 +91,15 @@ export function Navbar() {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  'font-body text-xs px-3 py-1.5 transition-colors rounded relative flex items-center gap-1.5',
+                  'min-h-[40px] px-3.5 py-2 text-xs font-semibold rounded-[90px] transition-colors flex items-center gap-1.5',
                   isActive
-                    ? 'bg-surface-container-highest text-primary border-b-2 border-primary font-bold'
-                    : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container'
+                    ? 'bg-[#f4ede4] text-[#4a154b] font-bold shadow-subtle'
+                    : 'text-[#1d1d1d] hover:text-[#4a154b] hover:bg-[#f9f0ff]'
                 )}
               >
                 {item.label}
                 {item.badgeDot && (
-                  <span className="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
+                  <span className="w-2 h-2 rounded-full bg-[#007a5a] animate-pulse"></span>
                 )}
               </Link>
             )
@@ -110,59 +107,46 @@ export function Navbar() {
         </nav>
 
         {/* Header Right Actions */}
-        <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
-          {/* Live Rob Marine Telemetry Pill */}
-          <div className="hidden 2xl:flex items-center gap-2 bg-surface-container-low px-2.5 py-1 rounded border border-outline-variant/40">
-            <span className="w-2 h-2 rounded-full bg-tertiary animate-ping"></span>
-            <div className="flex flex-col">
-              <span className="font-mono text-[9px] text-tertiary uppercase font-bold tracking-wider">
-                Tanjung Emas Rob
-              </span>
-              <span className="font-mono text-xs text-on-surface font-semibold">
-                +85cm Waspada
-              </span>
-            </div>
-          </div>
-
-          {/* Real-time Clock */}
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          {/* EOC Clock */}
           <div className="hidden 2xl:flex flex-col text-right pr-2">
-            <span className="font-mono text-[9px] text-on-surface-variant uppercase">Waktu EOC</span>
-            <span className="font-mono text-xs text-on-surface font-semibold">{currentTime || 'WIB'}</span>
+            <span className="text-[9px] font-mono text-[#696969] uppercase font-bold tracking-wider">EOC TIME</span>
+            <span className="text-xs font-mono text-[#1d1d1d] font-semibold">{currentTime || 'WIB'}</span>
           </div>
 
           {/* Emergency 112 Dispatch Button */}
           <a
             href="tel:112"
-            className="min-h-[38px] sm:min-h-0 flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded bg-error-container/40 border border-error/50 text-error hover:bg-error-container font-mono text-xs font-bold tracking-wider transition-colors"
+            className="min-h-[48px] px-4 py-2.5 rounded-[90px] bg-[#cc4117] text-white hover:bg-[#b03713] active:bg-[#992e0e] text-xs font-bold tracking-wide flex items-center gap-2 shadow-sm transition-all active:scale-[0.98]"
             title="Call BPBD EOC 112"
           >
-            <PhoneCall className="w-3.5 h-3.5" />
+            <PhoneCall className="w-4 h-4" />
             <span className="hidden sm:inline">112 BPBD</span>
           </a>
 
           {/* Operator / Profile Icon */}
           <Link
             href="/dashboard"
-            className="w-9 h-9 sm:w-8 sm:h-8 shrink-0 overflow-hidden rounded-full bg-primary/20 border border-primary/40 flex items-center justify-center text-primary hover:bg-primary hover:text-on-primary transition-colors"
-            title="Control Center"
+            className="w-12 h-12 shrink-0 rounded-[90px] bg-[#f9f0ff] border border-[#eddcf7] flex items-center justify-center text-[#4a154b] hover:bg-[#4a154b] hover:text-white transition-all shadow-subtle"
+            title="Command Center"
           >
-            <ShieldCheck className="w-4 h-4 text-primary" />
+            <ShieldCheck className="w-5 h-5" />
           </Link>
 
           {/* Mobile Menu Button */}
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
-            className="xl:hidden w-9 h-9 flex items-center justify-center rounded bg-surface-container text-on-surface-variant hover:text-on-surface focus:outline-none"
+            className="xl:hidden w-12 h-12 flex items-center justify-center rounded-[90px] bg-[#f4ede4] text-[#1d1d1d] hover:bg-[#f9f0ff] focus:outline-none"
             aria-label="Toggle menu"
           >
-            {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            {mobileOpen ? <X className="h-5 w-5 text-[#4a154b]" /> : <Menu className="h-5 w-5" />}
           </button>
         </div>
       </div>
 
       {/* Mobile Drawer Navigation */}
       {mobileOpen && (
-        <div className="xl:hidden border-t border-outline-variant/30 bg-surface-container-low/98 backdrop-blur-2xl px-4 py-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] flex flex-col gap-2 animate-in slide-in-from-top-2 duration-150">
+        <div className="xl:hidden border-t border-[#e6e6e6] bg-white px-4 py-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] flex flex-col gap-2 shadow-card animate-in slide-in-from-top-2 duration-150">
           {navItems.map((item) => {
             const isActive =
               item.href === '/'
@@ -174,28 +158,28 @@ export function Navbar() {
                 href={item.href}
                 onClick={() => setMobileOpen(false)}
                 className={cn(
-                  'min-h-[44px] px-3.5 py-2.5 rounded-lg text-sm font-medium transition-colors flex items-center justify-between',
+                  'min-h-[48px] px-4 py-3 rounded-[90px] text-sm font-semibold transition-colors flex items-center justify-between',
                   isActive
-                    ? 'bg-primary-container text-on-primary-container font-bold'
-                    : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container'
+                    ? 'bg-[#4a154b] text-white font-bold'
+                    : item.isHighlight
+                    ? 'bg-[#f9f0ff] text-[#4a154b] border border-[#eddcf7]'
+                    : 'text-[#1d1d1d] hover:bg-[#f4ede4]'
                 )}
               >
                 <span>{item.label}</span>
                 {item.badgeDot && (
-                  <span className="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
+                  <span className="w-2 h-2 rounded-full bg-[#007a5a] animate-pulse"></span>
                 )}
               </Link>
             )
           })}
-          <div className="pt-3 border-t border-outline-variant/30 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-tertiary animate-pulse"></span>
-              <span className="font-mono text-xs text-tertiary">Rob Tg Emas: +85cm</span>
-            </div>
+          <div className="pt-3 mt-1 border-t border-[#e6e6e6] flex items-center justify-between">
+            <span className="text-xs font-mono text-[#696969]">Waktu Operasional: {currentTime}</span>
             <a
               href="tel:112"
-              className="min-h-[40px] px-3.5 py-1.5 rounded-lg bg-error/20 text-error border border-error/40 font-mono text-xs font-bold flex items-center justify-center"
+              className="min-h-[48px] px-5 py-2.5 rounded-[90px] bg-[#cc4117] text-white font-bold text-xs flex items-center gap-1.5"
             >
+              <PhoneCall className="w-3.5 h-3.5" />
               112 DARURAT
             </a>
           </div>

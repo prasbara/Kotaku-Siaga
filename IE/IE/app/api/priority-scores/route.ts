@@ -1,33 +1,72 @@
 import { NextResponse } from 'next/server'
 import { SEMARANG_KECAMATAN } from '@/lib/ingestion/semarang-admin'
 import { calculateDeterministicPriority, PRIORITY_FORMULA_VERSION } from '@/lib/priority/calculator'
+import { createAdminClient, isSupabaseConfigured } from '@/lib/supabase/server'
 
 export async function GET() {
   try {
-    const reportDistribution: Record<string, { freq: number; urgency: number }> = {
-      '337401': { freq: 28, urgency: 88 }, // Semarang Utara
-      '337402': { freq: 24, urgency: 84 }, // Genuk
-      '337403': { freq: 17, urgency: 72 }, // Gayamsari
-      '337404': { freq: 19, urgency: 75 }, // Tembalang
-      '337405': { freq: 10, urgency: 60 }, // Pedurungan
-      '337406': { freq: 13, urgency: 65 }, // Ngaliyan
-      '337407': { freq: 8,  urgency: 50 }, // Banyumanik
-      '337408': { freq: 15, urgency: 70 }, // Semarang Barat
-      '337409': { freq: 12, urgency: 68 }, // Semarang Timur
-      '337410': { freq: 11, urgency: 62 }, // Semarang Tengah
-      '337411': { freq: 9,  urgency: 55 }, // Semarang Selatan
-      '337412': { freq: 7,  urgency: 48 }, // Candisari
-      '337413': { freq: 6,  urgency: 45 }, // Gajahmungkur
-      '337414': { freq: 14, urgency: 74 }, // Tugu
-      '337415': { freq: 5,  urgency: 40 }, // Mijen
-      '337416': { freq: 4,  urgency: 35 }, // Gunungpati
+    const reportDistribution: Record<string, { freq: number; urgency: number }> = {}
+
+    // Initialize all kecamatan to 0
+    for (const kec of SEMARANG_KECAMATAN) {
+      reportDistribution[kec.id] = { freq: 0, urgency: 0 }
+    }
+
+    // If Supabase is configured, aggregate real reports from the database (past 7 days)
+    if (isSupabaseConfigured()) {
+      try {
+        const supabase = await createAdminClient()
+        const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+        const { data: reports } = await supabase
+          .from('reports')
+          .select('district_name, urgency, created_at')
+          .gte('created_at', sevenDaysAgo)
+          .neq('status', 'rejected')
+          .neq('status', 'duplicate')
+
+        if (reports && reports.length > 0) {
+          const urgencyWeight: Record<string, number> = {
+            rendah: 25,
+            sedang: 50,
+            tinggi: 75,
+            kritis: 100,
+          }
+
+          const counts: Record<string, { sumUrgency: number; count: number }> = {}
+
+          for (const rep of reports) {
+            const dName = (rep.district_name || '').toLowerCase()
+            const matchingKec = SEMARANG_KECAMATAN.find(
+              (k) =>
+                dName.includes(k.slug.replace('-', ' ')) ||
+                dName.includes(k.name.toLowerCase()) ||
+                k.name.toLowerCase().includes(dName)
+            )
+
+            if (matchingKec) {
+              if (!counts[matchingKec.id]) counts[matchingKec.id] = { sumUrgency: 0, count: 0 }
+              counts[matchingKec.id].count++
+              counts[matchingKec.id].sumUrgency += urgencyWeight[rep.urgency] || 50
+            }
+          }
+
+          for (const [id, val] of Object.entries(counts)) {
+            reportDistribution[id] = {
+              freq: val.count,
+              urgency: val.count > 0 ? Math.round(val.sumUrgency / val.count) : 0,
+            }
+          }
+        }
+      } catch (dbErr) {
+        console.warn('Could not aggregate reports from database:', dbErr)
+      }
     }
 
     const priorityScores = SEMARANG_KECAMATAN.map((kec) => {
-      const rep = reportDistribution[kec.id] || { freq: 5, urgency: 50 }
+      const rep = reportDistribution[kec.id] || { freq: 0, urgency: 0 }
       const isCoastal = ['semarang-utara', 'genuk', 'tugu', 'gayamsari'].includes(kec.slug)
       const disasters = isCoastal ? 12 : ['tembalang', 'banyumanik'].includes(kec.slug) ? 8 : 3
-      const rainProb = isCoastal ? 82 : 55
+      const rainProb = isCoastal ? 75 : 50
 
       const result = calculateDeterministicPriority({
         areaId: kec.id,
