@@ -12,6 +12,17 @@ export interface CameraCalibrationProfile {
   category: 'rob_banjir' | 'polder_sungai' | 'lalin_protokol'
   /** Normalized polygon coordinates [[x, y], ...] in range [0..1] */
   roiPolygon: [number, number][]
+  /** Optional dual-lane separation for divided roadways with central median/separator */
+  dualLaneConfig?: {
+    isDividedRoad: boolean
+    /** Left-hand carriageway polygon (e.g. traffic heading away / northbound) */
+    leftLanePolygon: [number, number][]
+    /** Right-hand carriageway polygon (e.g. traffic heading towards / southbound) */
+    rightLanePolygon: [number, number][]
+    /** Exclude central concrete median barrier from water detection to prevent false alarms */
+    medianSeparatorExcluded: boolean
+    notes?: string
+  }
   /** Normal baseline water coverage ratio (0.0 to 1.0) under dry weather */
   baselineWaterRatio: number
   /** Minimum water coverage ratio above baseline to trigger anomaly */
@@ -65,6 +76,7 @@ export const DEFAULT_POLDER_PROFILE: Omit<CameraCalibrationProfile, 'cameraId' |
 // Dedicated profiles for Semarang High-Risk Monitoring Points
 export const CAMERA_CALIBRATION_REGISTRY: Record<string, CameraCalibrationProfile> = {
   // 1. SUPRIYADI (Pedurungan) - Roadway & Drainage intersection
+  // Calibrated for divided carriageway with concrete separator median
   'cctv-ps-414-321': {
     cameraId: 'cctv-ps-414-321',
     cameraCode: 'PS-GEN-321',
@@ -72,16 +84,35 @@ export const CAMERA_CALIBRATION_REGISTRY: Record<string, CameraCalibrationProfil
     district: 'Pedurungan',
     category: 'rob_banjir',
     roiPolygon: [
-      [0.05, 0.50],
-      [0.95, 0.50],
-      [1.00, 0.98],
-      [0.00, 0.98],
+      [0.08, 0.46],
+      [0.94, 0.46],
+      [0.98, 0.96],
+      [0.04, 0.96],
     ],
-    baselineWaterRatio: 0.02,
-    waterThresholdRatio: 0.18,
-    expectedEdgeDensity: 0.20,
+    dualLaneConfig: {
+      isDividedRoad: true,
+      // Jalur Kiri (Arah Utara / Pedurungan Timur - menjauhi kamera)
+      leftLanePolygon: [
+        [0.24, 0.22],
+        [0.44, 0.22],
+        [0.44, 0.54],
+        [0.16, 0.54],
+      ],
+      // Jalur Kanan (Arah Selatan / Majapahit - mendekati kamera)
+      rightLanePolygon: [
+        [0.48, 0.36],
+        [0.72, 0.36],
+        [0.96, 0.94],
+        [0.12, 0.94],
+      ],
+      medianSeparatorExcluded: true,
+      notes: 'Pemisahan dua arah jalur Supriyadi untuk mencegah alarm palsu silau matahari melintasi pembatas jalan.',
+    },
+    baselineWaterRatio: 0.01,
+    waterThresholdRatio: 0.25, // Ambang batas dinaikkan agar kilap aspal kering sore hari tidak memicu false positive
+    expectedEdgeDensity: 0.22,
     slidingWindowSize: 15,
-    minPositiveFrames: 5,
+    minPositiveFrames: 6,
     recoveryCleanFrames: 4,
     nightSensitivityMultiplier: 1.20,
   },
