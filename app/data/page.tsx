@@ -2,8 +2,54 @@ import type { Metadata } from 'next'
 import { Database, CheckCircle2, AlertTriangle, Clock, RefreshCw, Layers, ShieldCheck, ExternalLink } from 'lucide-react'
 
 export const metadata: Metadata = {
-  title: 'Integritas & Kualitas Data — KotaKu Siaga',
-  description: 'Audit transparansi dan status sumber data terbuka tanpa dependensi privat berstandar ISO 37120.',
+  title: 'Integritas & Lineage Data Bencana Semarang | KotaKu Siaga',
+  description:
+    'Transparansi dan integritas sumber data kebencanaan terbuka Kota Semarang berstandar ISO 37120. Audit telemetri BMKG, Open-Meteo, CCTV PantauSemar, dan Ina-Geoportal.',
+  alternates: {
+    canonical: 'https://kotaku-siaga.vercel.app/data',
+  },
+  openGraph: {
+    title: 'Integritas & Lineage Data Bencana Semarang | KotaKu Siaga',
+    description:
+      'Transparansi dan integritas sumber data kebencanaan terbuka Kota Semarang berstandar ISO 37120. Audit telemetri BMKG, Open-Meteo, CCTV PantauSemar, dan Ina-Geoportal.',
+    url: 'https://kotaku-siaga.vercel.app/data',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Integritas & Lineage Data Bencana Semarang | KotaKu Siaga',
+    description:
+      'Transparansi dan integritas sumber data kebencanaan terbuka Kota Semarang berstandar ISO 37120. Audit telemetri BMKG, Open-Meteo, CCTV PantauSemar, dan Ina-Geoportal.',
+  },
+}
+
+const dataCatalogJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'DataCatalog',
+  name: 'Katalog Data Terbuka Kebencanaan KotaKu Siaga',
+  description:
+    'Katalog sumber data terbuka parameter hidrometeorologis, gelombang laut pasang, dan pemantauan CCTV Kota Semarang.',
+  url: 'https://kotaku-siaga.vercel.app/data',
+  publisher: {
+    '@type': 'Organization',
+    name: 'KotaKu Siaga',
+  },
+  dataset: [
+    {
+      '@type': 'Dataset',
+      name: 'Telemetri Cuaca & Curah Hujan BMKG Stasiun Semarang',
+      description: 'Parameter curah hujan riil, suhu, kelembapan, dan kecepatan angin stasiun Tanjung Emas Semarang.',
+      license: 'https://creativecommons.org/licenses/by/4.0/',
+      spatialCoverage: 'Kota Semarang, Jawa Tengah, Indonesia',
+    },
+    {
+      '@type': 'Dataset',
+      name: 'Data Spasial Administrasi & Elevasi 16 Kecamatan Semarang',
+      description: 'Data batas wilayah, populasi, elevasi digital rata-rata DPL, dan indeks kerentanan bencana BPS Kota Semarang.',
+      license: 'https://data.semarangkota.go.id',
+      spatialCoverage: 'Kota Semarang',
+    },
+  ],
 }
 
 interface DataSourceItem {
@@ -97,6 +143,10 @@ const DATA_SOURCES: DataSourceItem[] = [
 export default function DataPage() {
   return (
     <div className="flex flex-col w-full bg-[#fdfbf9] text-[#1d1d1d] min-h-screen pb-24">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(dataCatalogJsonLd) }}
+      />
       {/* Header */}
       <section className="pt-10 pb-8 bg-white border-b border-[#e6e6e6] px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto flex flex-col gap-2">

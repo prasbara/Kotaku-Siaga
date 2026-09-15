@@ -19,26 +19,39 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   metadataBase: new URL('https://kotaku-siaga.vercel.app'),
   title: {
-    default: 'KotaKu Siaga — Civic Climate Intelligence Semarang',
-    template: '%s | KotaKu Siaga',
+    default: 'KotaKu Siaga | Pemantauan Banjir & Rob Kota Semarang',
+    template: '%s',
   },
   description:
-    'Platform civic-tech monitoring risiko hidrometeorologis, rob pesisir, dan kesiapsiagaan cuaca Kota Semarang berbasis data terbuka, CCTV AI, dan partisipasi warga.',
+    'KotaKu Siaga menyediakan informasi pemantauan banjir dan rob Kota Semarang melalui peta risiko, laporan warga, CCTV, data cuaca, dan pusat kendali.',
   keywords: [
-    'bencana iklim',
-    'banjir semarang',
-    'rob pesisir semarang',
-    'laporan warga semarang',
-    'peta risiko bencana',
-    'cctv banjir semarang',
-    'pantausemar',
-    'SDG 11',
-    'SDG 13',
-    'civic tech',
+    'KotaKu Siaga',
+    'pemantauan banjir Semarang',
+    'informasi banjir Semarang',
+    'banjir Kota Semarang',
+    'banjir Semarang hari ini',
+    'rob Semarang',
+    'rob Kota Semarang',
+    'pemantauan rob Semarang',
+    'peta banjir Semarang',
+    'peta risiko banjir Semarang',
+    'CCTV banjir Semarang',
+    'laporan banjir Semarang',
+    'kondisi banjir Semarang',
+    'risiko banjir Kota Semarang',
+    'informasi bencana Semarang',
+    'pusat informasi banjir Semarang',
+    'Genuk',
+    'Kaligawe',
+    'Semarang Utara',
+    'Semarang Timur',
+    'Tembalang',
+    'wilayah pesisir Semarang',
+    'kawasan rob Semarang',
   ],
-  authors: [{ name: 'Pemerintah Kota Semarang & Komunitas Resiliensi Pesisir' }],
+  authors: [{ name: 'Inisiatif Ketahanan Bencana Kota Semarang' }],
   creator: 'KotaKu Siaga Team',
-  publisher: 'Pemerintah Kota Semarang',
+  publisher: 'Pemerintah Kota Semarang & BPBD Kota Semarang',
   robots: {
     index: true,
     follow: true,
@@ -57,50 +70,92 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'id_ID',
     url: 'https://kotaku-siaga.vercel.app',
-    title: 'KotaKu Siaga — Civic Climate Intelligence Semarang',
+    title: 'KotaKu Siaga | Pemantauan Banjir & Rob Kota Semarang',
     description:
-      'Platform kolaboratif pemantauan risiko banjir, rob pesisir, dan kesiapsiagaan cuaca Kota Semarang dengan integrasi sensor dan AI.',
+      'KotaKu Siaga menyediakan informasi pemantauan banjir dan rob Kota Semarang melalui peta risiko, laporan warga, CCTV, data cuaca, dan pusat kendali.',
     siteName: 'KotaKu Siaga',
     images: [
       {
-        url: '/images/civic-illustration.png',
+        url: '/opengraph-image',
         width: 1200,
         height: 630,
-        alt: 'KotaKu Siaga - Civic Climate Intelligence Platform Semarang',
+        alt: 'KotaKu Siaga — Pemantauan Banjir & Rob Kota Semarang',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'KotaKu Siaga — Civic Climate Intelligence Semarang',
+    title: 'KotaKu Siaga | Pemantauan Banjir & Rob Kota Semarang',
     description:
-      'Platform kolaboratif pemantauan risiko hidrometeorologis dan rob pesisir Kota Semarang.',
-    images: ['/images/civic-illustration.png'],
+      'KotaKu Siaga menyediakan informasi pemantauan banjir dan rob Kota Semarang melalui peta risiko, laporan warga, CCTV, data cuaca, dan pusat kendali.',
+    images: ['/opengraph-image'],
   },
   verification: {
     google: 'googled7bfe530ff714952',
   },
 }
 
-// JSON-LD structured data for search engine rich results
+// Rich Schema.org JSON-LD Graph for AI & Search Engine Rich Results
 const jsonLd = {
   '@context': 'https://schema.org',
-  '@type': 'EmergencyService',
-  name: 'KotaKu Siaga',
-  url: 'https://kotaku-siaga.vercel.app',
-  logo: 'https://kotaku-siaga.vercel.app/images/civic-illustration.png',
-  description:
-    'Sistem cerdas pemantauan risiko banjir, rob, dan kesiapsiagaan cuaca Kota Semarang.',
-  address: {
-    '@type': 'PostalAddress',
-    addressLocality: 'Semarang',
-    addressRegion: 'Jawa Tengah',
-    addressCountry: 'ID',
-  },
-  areaServed: {
-    '@type': 'City',
-    name: 'Kota Semarang',
-  },
+  '@graph': [
+    {
+      '@type': 'WebSite',
+      '@id': 'https://kotaku-siaga.vercel.app/#website',
+      url: 'https://kotaku-siaga.vercel.app',
+      name: 'KotaKu Siaga',
+      description:
+        'Platform pemantauan risiko banjir dan rob Kota Semarang secara real-time berbasis peta risiko, laporan warga, dan CCTV.',
+      inLanguage: 'id-ID',
+      publisher: {
+        '@id': 'https://kotaku-siaga.vercel.app/#organization',
+      },
+    },
+    {
+      '@type': 'WebApplication',
+      '@id': 'https://kotaku-siaga.vercel.app/#webapp',
+      name: 'KotaKu Siaga Platform',
+      url: 'https://kotaku-siaga.vercel.app',
+      applicationCategory: 'PublicSafetyApplication',
+      operatingSystem: 'All',
+      browserRequirements: 'Requires modern browser with JavaScript enabled',
+      description:
+        'Aplikasi web pemantauan risiko bencana hidrometeorologis, banjir pesisir rob, dan pelaporan genangan warga di Kota Semarang.',
+    },
+    {
+      '@type': 'EmergencyService',
+      '@id': 'https://kotaku-siaga.vercel.app/#organization',
+      name: 'KotaKu Siaga — Pusat Informasi Bencana Semarang',
+      url: 'https://kotaku-siaga.vercel.app',
+      logo: 'https://kotaku-siaga.vercel.app/opengraph-image',
+      telephone: '112',
+      contactPoint: {
+        '@type': 'ContactPoint',
+        telephone: '112',
+        contactType: 'emergency',
+        areaServed: 'Kota Semarang',
+        availableLanguage: ['Indonesian', 'Javanese'],
+      },
+      address: {
+        '@type': 'PostalAddress',
+        addressLocality: 'Semarang',
+        addressRegion: 'Jawa Tengah',
+        addressCountry: 'ID',
+      },
+      areaServed: {
+        '@type': 'AdministrativeArea',
+        name: 'Kota Semarang',
+        containsPlace: [
+          { '@type': 'Place', name: 'Kecamatan Semarang Utara' },
+          { '@type': 'Place', name: 'Kecamatan Genuk' },
+          { '@type': 'Place', name: 'Kecamatan Gayamsari' },
+          { '@type': 'Place', name: 'Kecamatan Tembalang' },
+          { '@type': 'Place', name: 'Kecamatan Pedurungan' },
+          { '@type': 'Place', name: 'Kecamatan Tugu' },
+        ],
+      },
+    },
+  ],
 }
 
 export default function RootLayout({

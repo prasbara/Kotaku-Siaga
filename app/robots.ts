@@ -6,12 +6,24 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: '*',
         allow: '/',
-        disallow: ['/api/', '/dashboard/'],
+        disallow: [
+          '/api/',
+          '/admin/',
+          '/login',
+          '/register',
+          '/supabase-demo',
+        ],
       },
       {
         userAgent: 'Googlebot',
         allow: '/',
-        disallow: ['/api/', '/dashboard/'],
+        disallow: [
+          '/api/',
+          '/admin/',
+          '/login',
+          '/register',
+          '/supabase-demo',
+        ],
       },
     ],
     sitemap: 'https://kotaku-siaga.vercel.app/sitemap.xml',

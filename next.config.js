@@ -16,6 +16,14 @@ const nextConfig = {
       },
     ],
   },
+  async rewrites() {
+    return [
+      { source: '/lapor-genangan', destination: '/laporan/baru' },
+      { source: '/matriks-risiko', destination: '/dashboard/prioritas' },
+      { source: '/integritas-data', destination: '/data' },
+      { source: '/pusat-kendali', destination: '/dashboard' },
+    ]
+  },
   async headers() {
     return [
       {
