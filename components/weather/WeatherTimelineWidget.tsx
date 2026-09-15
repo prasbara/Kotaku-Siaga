@@ -6,9 +6,10 @@ import type { WeatherTimelineStep } from '@/lib/weather/weather-intelligence'
 
 interface WeatherTimelineWidgetProps {
   timeline?: WeatherTimelineStep[]
+  timestamp?: string
 }
 
-export function WeatherTimelineWidget({ timeline }: WeatherTimelineWidgetProps) {
+export function WeatherTimelineWidget({ timeline, timestamp }: WeatherTimelineWidgetProps) {
   const [selectedIdx, setSelectedIdx] = useState<number>(0)
 
   if (!timeline || timeline.length === 0) return null

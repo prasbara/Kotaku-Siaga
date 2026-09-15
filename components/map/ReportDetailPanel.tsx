@@ -155,7 +155,7 @@ export function ReportDetailPanel({ report, onClose }: ReportDetailPanelProps) {
           latitude={reportLat}
           longitude={reportLng}
           reportCreatedAt={report.created_at}
-          districtName={report.district_name}
+          districtName={report.district_name || undefined}
         />
 
         {/* Education & Resilience Context (Requirement #7 & #9) */}

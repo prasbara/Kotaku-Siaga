@@ -32,15 +32,24 @@ export function WeatherLayerSelector({
   const [isOpen, setIsOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
-  // Close dropdown on outside click
+  // Close dropdown on outside click or Escape key
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
         setIsOpen(false)
       }
     }
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        setIsOpen(false)
+      }
+    }
     document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('keydown', handleKeyDown)
+    }
   }, [])
 
   const LAYER_NAMES: Record<WeatherLayerKey, { title: string; category: string; icon: ComponentType<{ className?: string }> }> = {
@@ -90,163 +99,241 @@ export function WeatherLayerSelector({
 
       {/* Progressive Disclosure Popover Menu */}
       {isOpen && (
-        <div className="absolute top-full mt-2 left-0 sm:right-0 sm:left-auto z-50 w-72 bg-white/98 backdrop-blur-md rounded-2xl border border-[#e6e6e6] shadow-card p-3 font-sans text-xs flex flex-col gap-3 animate-in fade-in slide-in-from-top-1 duration-150">
-          <div className="flex items-center justify-between border-b border-[#e6e6e6] pb-2">
-            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#4a154b]">
-              Katalog Lapisan Spasial & Cuaca
+        <div
+          role="menu"
+          aria-label="Katalog Lapisan Spasial dan Cuaca"
+          style={{ backgroundColor: '#ffffff' }}
+          className="absolute top-full mt-2 left-0 sm:right-0 sm:left-auto z-[1000] w-80 sm:w-84 bg-white rounded-2xl border-2 border-[#4a154b]/30 shadow-[0_16px_48px_rgba(0,0,0,0.28)] p-3.5 font-sans text-xs flex flex-col gap-3.5 animate-in fade-in slide-in-from-top-1 duration-150 max-w-[calc(100vw-1.5rem)]"
+        >
+          {/* Header */}
+          <div className="flex items-center justify-between border-b-2 border-[#f0e6f5] pb-2.5">
+            <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-[#4a154b] flex items-center gap-1.5">
+              <Layers className="w-3.5 h-3.5 text-[#4a154b]" />
+              Katalog Lapisan Peta
             </span>
-            <span className="text-[9px] text-[#696969] font-mono">
-              Progressive Multi-Layer
+            <span className="text-[9px] bg-[#f4ede4] text-[#4a154b] px-2 py-0.5 rounded font-mono font-bold border border-[#e8ded2]">
+              Realtime Multi-Layer
             </span>
           </div>
 
           {/* GROUP 1: RISIKO LINGKUNGAN */}
-          <div className="space-y-1">
-            <span className="text-[9px] font-bold font-mono uppercase text-[#696969] px-2 block">
+          <div className="space-y-1.5">
+            <div className="bg-[#f8f5f0] border border-[#e8ded2] px-2.5 py-1 rounded-md text-[10px] font-bold font-mono uppercase text-[#37003c] tracking-wide">
               1. RISIKO LINGKUNGAN
-            </span>
+            </div>
             <button
               type="button"
+              role="menuitem"
               onClick={() => {
                 onSelectLayer('gis')
                 setIsOpen(false)
               }}
-              className={`w-full flex items-center justify-between p-2 rounded-xl text-left transition-colors cursor-pointer ${
+              className={`w-full flex items-center justify-between p-2.5 rounded-xl text-left transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-[#4a154b] focus:outline-none ${
                 currentLayer === 'gis'
-                  ? 'bg-[#f9f0ff] text-[#4a154b] font-bold border border-[#eddcf7]'
-                  : 'hover:bg-[#f4ede4] text-[#1d1d1d]'
+                  ? 'bg-[#4a154b] text-white font-bold shadow-md border-2 border-[#37003c]'
+                  : 'bg-[#faf8f5] hover:bg-[#f3e8f8] text-[#1a1a1a] border border-[#e5dfd5] hover:border-[#4a154b]/40 shadow-xs'
               }`}
             >
-              <div className="flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-[#4a154b]" />
+              <div className="flex items-center gap-2.5">
+                <div className={`p-1.5 rounded-lg flex items-center justify-center shrink-0 ${currentLayer === 'gis' ? 'bg-white/20 text-white' : 'bg-white text-[#4a154b] border border-[#e5dfd5]'}`}>
+                  <MapPin className="w-4 h-4" />
+                </div>
                 <div>
-                  <span className="block text-xs">Peta Spasial GIS</span>
-                  <span className="text-[10px] text-[#696969]">Laporan kejadian, CCTV, & polder</span>
+                  <span className={`block text-xs font-bold leading-snug ${currentLayer === 'gis' ? 'text-white' : 'text-[#1a1a1a]'}`}>
+                    Peta Spasial GIS
+                  </span>
+                  <span className={`text-[10px] block leading-tight ${currentLayer === 'gis' ? 'text-[#f3e8f8]' : 'text-[#4b5563]'}`}>
+                    Laporan kejadian, CCTV, & polder
+                  </span>
                 </div>
               </div>
-              {currentLayer === 'gis' && <Check className="w-4 h-4 text-[#4a154b]" />}
+              {currentLayer === 'gis' && (
+                <div className="w-5 h-5 rounded-full bg-white text-[#4a154b] flex items-center justify-center shrink-0 shadow-xs ml-2">
+                  <Check className="w-3.5 h-3.5 stroke-[3]" />
+                </div>
+              )}
             </button>
           </div>
 
           {/* GROUP 2: ATMOSFER */}
-          <div className="space-y-1">
-            <span className="text-[9px] font-bold font-mono uppercase text-[#696969] px-2 block">
+          <div className="space-y-1.5">
+            <div className="bg-[#f8f5f0] border border-[#e8ded2] px-2.5 py-1 rounded-md text-[10px] font-bold font-mono uppercase text-[#37003c] tracking-wide">
               2. ATMOSFER & CUACA
-            </span>
+            </div>
+
+            {/* Angin */}
             <button
               type="button"
+              role="menuitem"
               onClick={() => {
                 onSelectLayer('wind')
                 setIsOpen(false)
               }}
-              className={`w-full flex items-center justify-between p-2 rounded-xl text-left transition-colors cursor-pointer ${
+              className={`w-full flex items-center justify-between p-2.5 rounded-xl text-left transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-[#4a154b] focus:outline-none ${
                 currentLayer === 'wind'
-                  ? 'bg-[#f9f0ff] text-[#4a154b] font-bold border border-[#eddcf7]'
-                  : 'hover:bg-[#f4ede4] text-[#1d1d1d]'
+                  ? 'bg-[#4a154b] text-white font-bold shadow-md border-2 border-[#37003c]'
+                  : 'bg-[#faf8f5] hover:bg-[#f3e8f8] text-[#1a1a1a] border border-[#e5dfd5] hover:border-[#4a154b]/40 shadow-xs'
               }`}
             >
-              <div className="flex items-center gap-2">
-                <Wind className="w-4 h-4 text-[#4a154b]" />
+              <div className="flex items-center gap-2.5">
+                <div className={`p-1.5 rounded-lg flex items-center justify-center shrink-0 ${currentLayer === 'wind' ? 'bg-white/20 text-white' : 'bg-white text-[#4a154b] border border-[#e5dfd5]'}`}>
+                  <Wind className="w-4 h-4" />
+                </div>
                 <div>
-                  <span className="block text-xs">Aliran Angin Permukaan</span>
-                  <span className="text-[10px] text-[#696969]">Partikel angin & gust 10m</span>
+                  <span className={`block text-xs font-bold leading-snug ${currentLayer === 'wind' ? 'text-white' : 'text-[#1a1a1a]'}`}>
+                    Aliran Angin Permukaan
+                  </span>
+                  <span className={`text-[10px] block leading-tight ${currentLayer === 'wind' ? 'text-[#f3e8f8]' : 'text-[#4b5563]'}`}>
+                    Partikel angin & gust 10m
+                  </span>
                 </div>
               </div>
-              {currentLayer === 'wind' && <Check className="w-4 h-4 text-[#4a154b]" />}
+              {currentLayer === 'wind' && (
+                <div className="w-5 h-5 rounded-full bg-white text-[#4a154b] flex items-center justify-center shrink-0 shadow-xs ml-2">
+                  <Check className="w-3.5 h-3.5 stroke-[3]" />
+                </div>
+              )}
             </button>
 
+            {/* Radar Presipitasi */}
             <button
               type="button"
+              role="menuitem"
               onClick={() => {
                 onSelectLayer('radar')
                 setIsOpen(false)
               }}
-              className={`w-full flex items-center justify-between p-2 rounded-xl text-left transition-colors cursor-pointer ${
+              className={`w-full flex items-center justify-between p-2.5 rounded-xl text-left transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-[#4a154b] focus:outline-none ${
                 currentLayer === 'radar'
-                  ? 'bg-[#f9f0ff] text-[#4a154b] font-bold border border-[#eddcf7]'
-                  : 'hover:bg-[#f4ede4] text-[#1d1d1d]'
+                  ? 'bg-[#4a154b] text-white font-bold shadow-md border-2 border-[#37003c]'
+                  : 'bg-[#faf8f5] hover:bg-[#f3e8f8] text-[#1a1a1a] border border-[#e5dfd5] hover:border-[#4a154b]/40 shadow-xs'
               }`}
             >
-              <div className="flex items-center gap-2">
-                <CloudRain className="w-4 h-4 text-[#4a154b]" />
+              <div className="flex items-center gap-2.5">
+                <div className={`p-1.5 rounded-lg flex items-center justify-center shrink-0 ${currentLayer === 'radar' ? 'bg-white/20 text-white' : 'bg-white text-[#4a154b] border border-[#e5dfd5]'}`}>
+                  <CloudRain className="w-4 h-4" />
+                </div>
                 <div>
-                  <span className="block text-xs">Radar Presipitasi Hujan</span>
-                  <span className="text-[10px] text-[#696969]">Intensitas hujan & awan konvektif</span>
+                  <span className={`block text-xs font-bold leading-snug ${currentLayer === 'radar' ? 'text-white' : 'text-[#1a1a1a]'}`}>
+                    Radar Presipitasi Hujan
+                  </span>
+                  <span className={`text-[10px] block leading-tight ${currentLayer === 'radar' ? 'text-[#f3e8f8]' : 'text-[#4b5563]'}`}>
+                    Intensitas hujan & awan konvektif
+                  </span>
                 </div>
               </div>
-              {currentLayer === 'radar' && <Check className="w-4 h-4 text-[#4a154b]" />}
+              {currentLayer === 'radar' && (
+                <div className="w-5 h-5 rounded-full bg-white text-[#4a154b] flex items-center justify-center shrink-0 shadow-xs ml-2">
+                  <Check className="w-3.5 h-3.5 stroke-[3]" />
+                </div>
+              )}
             </button>
 
+            {/* Awan */}
             <button
               type="button"
+              role="menuitem"
               onClick={() => {
                 onSelectLayer('clouds')
                 setIsOpen(false)
               }}
-              className={`w-full flex items-center justify-between p-2 rounded-xl text-left transition-colors cursor-pointer ${
+              className={`w-full flex items-center justify-between p-2.5 rounded-xl text-left transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-[#4a154b] focus:outline-none ${
                 currentLayer === 'clouds'
-                  ? 'bg-[#f9f0ff] text-[#4a154b] font-bold border border-[#eddcf7]'
-                  : 'hover:bg-[#f4ede4] text-[#1d1d1d]'
+                  ? 'bg-[#4a154b] text-white font-bold shadow-md border-2 border-[#37003c]'
+                  : 'bg-[#faf8f5] hover:bg-[#f3e8f8] text-[#1a1a1a] border border-[#e5dfd5] hover:border-[#4a154b]/40 shadow-xs'
               }`}
             >
-              <div className="flex items-center gap-2">
-                <Cloud className="w-4 h-4 text-[#4a154b]" />
+              <div className="flex items-center gap-2.5">
+                <div className={`p-1.5 rounded-lg flex items-center justify-center shrink-0 ${currentLayer === 'clouds' ? 'bg-white/20 text-white' : 'bg-white text-[#4a154b] border border-[#e5dfd5]'}`}>
+                  <Cloud className="w-4 h-4" />
+                </div>
                 <div>
-                  <span className="block text-xs">Tutupan & Pergerakan Awan</span>
-                  <span className="text-[10px] text-[#696969]">Fraksi awan satelit optik</span>
+                  <span className={`block text-xs font-bold leading-snug ${currentLayer === 'clouds' ? 'text-white' : 'text-[#1a1a1a]'}`}>
+                    Tutupan & Pergerakan Awan
+                  </span>
+                  <span className={`text-[10px] block leading-tight ${currentLayer === 'clouds' ? 'text-[#f3e8f8]' : 'text-[#4b5563]'}`}>
+                    Fraksi awan satelit optik
+                  </span>
                 </div>
               </div>
-              {currentLayer === 'clouds' && <Check className="w-4 h-4 text-[#4a154b]" />}
+              {currentLayer === 'clouds' && (
+                <div className="w-5 h-5 rounded-full bg-white text-[#4a154b] flex items-center justify-center shrink-0 shadow-xs ml-2">
+                  <Check className="w-3.5 h-3.5 stroke-[3]" />
+                </div>
+              )}
             </button>
 
+            {/* Tekanan Barometrik */}
             <button
               type="button"
+              role="menuitem"
               onClick={() => {
                 onSelectLayer('pressure')
                 setIsOpen(false)
               }}
-              className={`w-full flex items-center justify-between p-2 rounded-xl text-left transition-colors cursor-pointer ${
+              className={`w-full flex items-center justify-between p-2.5 rounded-xl text-left transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-[#4a154b] focus:outline-none ${
                 currentLayer === 'pressure'
-                  ? 'bg-[#f9f0ff] text-[#4a154b] font-bold border border-[#eddcf7]'
-                  : 'hover:bg-[#f4ede4] text-[#1d1d1d]'
+                  ? 'bg-[#4a154b] text-white font-bold shadow-md border-2 border-[#37003c]'
+                  : 'bg-[#faf8f5] hover:bg-[#f3e8f8] text-[#1a1a1a] border border-[#e5dfd5] hover:border-[#4a154b]/40 shadow-xs'
               }`}
             >
-              <div className="flex items-center gap-2">
-                <Gauge className="w-4 h-4 text-[#4a154b]" />
+              <div className="flex items-center gap-2.5">
+                <div className={`p-1.5 rounded-lg flex items-center justify-center shrink-0 ${currentLayer === 'pressure' ? 'bg-white/20 text-white' : 'bg-white text-[#4a154b] border border-[#e5dfd5]'}`}>
+                  <Gauge className="w-4 h-4" />
+                </div>
                 <div>
-                  <span className="block text-xs">Tekanan Barometrik</span>
-                  <span className="text-[10px] text-[#696969]">Isobar pusat tekanan rendah</span>
+                  <span className={`block text-xs font-bold leading-snug ${currentLayer === 'pressure' ? 'text-white' : 'text-[#1a1a1a]'}`}>
+                    Tekanan Barometrik
+                  </span>
+                  <span className={`text-[10px] block leading-tight ${currentLayer === 'pressure' ? 'text-[#f3e8f8]' : 'text-[#4b5563]'}`}>
+                    Isobar pusat tekanan rendah
+                  </span>
                 </div>
               </div>
-              {currentLayer === 'pressure' && <Check className="w-4 h-4 text-[#4a154b]" />}
+              {currentLayer === 'pressure' && (
+                <div className="w-5 h-5 rounded-full bg-white text-[#4a154b] flex items-center justify-center shrink-0 shadow-xs ml-2">
+                  <Check className="w-3.5 h-3.5 stroke-[3]" />
+                </div>
+              )}
             </button>
           </div>
 
           {/* GROUP 3: PESISIR */}
-          <div className="space-y-1">
-            <span className="text-[9px] font-bold font-mono uppercase text-[#696969] px-2 block">
+          <div className="space-y-1.5">
+            <div className="bg-[#f8f5f0] border border-[#e8ded2] px-2.5 py-1 rounded-md text-[10px] font-bold font-mono uppercase text-[#37003c] tracking-wide">
               3. PESISIR & KELAUTAN
-            </span>
+            </div>
             <button
               type="button"
+              role="menuitem"
               onClick={() => {
                 onSelectLayer('waves')
                 setIsOpen(false)
               }}
-              className={`w-full flex items-center justify-between p-2 rounded-xl text-left transition-colors cursor-pointer ${
+              className={`w-full flex items-center justify-between p-2.5 rounded-xl text-left transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-[#4a154b] focus:outline-none ${
                 currentLayer === 'waves'
-                  ? 'bg-[#f9f0ff] text-[#4a154b] font-bold border border-[#eddcf7]'
-                  : 'hover:bg-[#f4ede4] text-[#1d1d1d]'
+                  ? 'bg-[#4a154b] text-white font-bold shadow-md border-2 border-[#37003c]'
+                  : 'bg-[#faf8f5] hover:bg-[#f3e8f8] text-[#1a1a1a] border border-[#e5dfd5] hover:border-[#4a154b]/40 shadow-xs'
               }`}
             >
-              <div className="flex items-center gap-2">
-                <Waves className="w-4 h-4 text-[#0284c7]" />
+              <div className="flex items-center gap-2.5">
+                <div className={`p-1.5 rounded-lg flex items-center justify-center shrink-0 ${currentLayer === 'waves' ? 'bg-white/20 text-white' : 'bg-white text-[#0284c7] border border-[#e5dfd5]'}`}>
+                  <Waves className="w-4 h-4" />
+                </div>
                 <div>
-                  <span className="block text-xs">Gelombang & Ombak Laut</span>
-                  <span className="text-[10px] text-[#696969]">Tinggi gelombang Laut Jawa</span>
+                  <span className={`block text-xs font-bold leading-snug ${currentLayer === 'waves' ? 'text-white' : 'text-[#1a1a1a]'}`}>
+                    Gelombang & Ombak Laut
+                  </span>
+                  <span className={`text-[10px] block leading-tight ${currentLayer === 'waves' ? 'text-[#f3e8f8]' : 'text-[#4b5563]'}`}>
+                    Tinggi gelombang Laut Jawa
+                  </span>
                 </div>
               </div>
-              {currentLayer === 'waves' && <Check className="w-4 h-4 text-[#4a154b]" />}
+              {currentLayer === 'waves' && (
+                <div className="w-5 h-5 rounded-full bg-white text-[#4a154b] flex items-center justify-center shrink-0 shadow-xs ml-2">
+                  <Check className="w-3.5 h-3.5 stroke-[3]" />
+                </div>
+              )}
             </button>
           </div>
         </div>

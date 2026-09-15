@@ -77,6 +77,7 @@ export function DataConnectivityView() {
     overallHealthPercent: 100,
   })
 
+  const [isLoading, setIsLoading] = useState(false)
   const [isPingingAll, setIsPingingAll] = useState(false)
   const [pingingSourceId, setPingingSourceId] = useState<string | null>(null)
   const [testingAi, setTestingAi] = useState(false)

@@ -26,19 +26,40 @@ export function PublicDisasterRiskWidget({
   const [selectedSlug, setSelectedSlug] = useState<string>(initialAreaSlug)
   const [summary, setSummary] = useState<PublicDisasterSummary | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const abortControllerRef = React.useRef<AbortController | null>(null)
 
   const fetchSummary = useCallback(async (slug: string) => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort()
+    }
+    const controller = new AbortController()
+    abortControllerRef.current = controller
+
     setIsLoading(true)
+    setError(null)
     try {
-      const res = await fetch(`/api/disaster-intelligence?area=${slug}`)
+      const res = await fetch(`/api/disaster-intelligence?area=${slug}`, {
+        signal: controller.signal,
+      })
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`)
+      }
       const data = await res.json()
       if (data.summary) {
         setSummary(data.summary)
+      } else {
+        setError('Data belum tersedia untuk wilayah ini.')
       }
-    } catch (err) {
-      console.error('Failed to load public disaster summary:', err)
+    } catch (err: any) {
+      if (err.name !== 'AbortError') {
+        console.error('Failed to load public disaster summary:', err)
+        setError('Gagal memuat data wilayah. Silakan periksa koneksi.')
+      }
     } finally {
-      setIsLoading(false)
+      if (abortControllerRef.current === controller) {
+        setIsLoading(false)
+      }
     }
   }, [])
 
@@ -123,20 +144,41 @@ export function PublicDisasterRiskWidget({
         {/* District Selector */}
         <div className="flex items-center gap-2">
           <MapPin className="w-4 h-4 text-[#4a154b]" />
-          <select
-            value={selectedSlug}
-            disabled={isLoading}
-            onChange={(e) => setSelectedSlug(e.target.value)}
-            className="min-h-[40px] px-3 py-1.5 rounded-xl bg-[#f9f8f6] border border-[#dcdcdc] font-bold text-xs text-[#1d1d1d] focus:outline-none focus:ring-2 focus:ring-[#4a154b] disabled:opacity-50"
-          >
-            {SEMARANG_KECAMATAN.map((k) => (
-              <option key={k.id} value={k.slug}>
-                {k.name}
-              </option>
-            ))}
-          </select>
+          <div className="relative">
+            <select
+              value={selectedSlug}
+              onChange={(e) => setSelectedSlug(e.target.value)}
+              className="min-h-[40px] px-3 py-1.5 pr-8 rounded-xl bg-[#f9f8f6] border border-[#dcdcdc] font-bold text-xs text-[#1d1d1d] focus:outline-none focus:ring-2 focus:ring-[#4a154b] cursor-pointer"
+            >
+              {SEMARANG_KECAMATAN.map((k) => (
+                <option key={k.id} value={k.slug}>
+                  {k.name}
+                </option>
+              ))}
+            </select>
+            {isLoading && (
+              <span className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 border-2 border-[#4a154b] border-t-transparent rounded-full animate-spin pointer-events-none" />
+            )}
+          </div>
         </div>
       </div>
+
+      {/* Error Alert if any */}
+      {error && (
+        <div className="p-3.5 rounded-xl bg-[#fef2f2] border border-[#fecaca] text-[#cc4117] flex items-center justify-between text-xs gap-3">
+          <div className="flex items-center gap-2 font-medium">
+            <AlertTriangle className="w-4 h-4 shrink-0" />
+            <span>{error}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => fetchSummary(selectedSlug)}
+            className="px-3 py-1 bg-white text-[#cc4117] font-bold rounded-lg border border-[#fecaca] hover:bg-[#fee2e2] transition-colors shrink-0 cursor-pointer"
+          >
+            Coba Lagi
+          </button>
+        </div>
+      )}
 
       {/* 2. Main Current Risk Banner (Requirement #12) */}
       <div className={cn('p-5 rounded-xl border flex flex-wrap items-center justify-between gap-4', riskInfo.bg, riskInfo.border)}>
@@ -183,7 +225,7 @@ export function PublicDisasterRiskWidget({
           </div>
           <div className="flex items-baseline gap-2">
             <span className="text-2xl font-bold font-display text-[#1d1d1d]">
-              {summary?.rainfallSummary.rateMmH || 0}
+              {summary?.rainfallSummary.rateMmH ?? 0}
             </span>
             <span className="text-[#696969]">mm/jam</span>
             <span className="ml-auto text-xs font-bold text-[#4a154b]">
@@ -199,17 +241,27 @@ export function PublicDisasterRiskWidget({
               <Waves className="w-4 h-4 text-[#1264a3]" />
               <span>Kondisi Pesisir & Rob</span>
             </div>
-            {summary?.coastalRiskSummary.tideWarning && (
+            {summary?.coastalRiskSummary.tideWarning ? (
               <span className="font-mono text-[10px] font-bold text-[#e01e5a] bg-[#e01e5a]/10 px-2 py-0.5 rounded border border-[#e01e5a]/30">
-                Pesisir Rendah
+                Pesisir Rendah (Waspada)
+              </span>
+            ) : summary?.coastalRiskSummary.waveHeightM != null ? (
+              <span className="font-mono text-[10px] font-bold text-[#007a5a] bg-[#007a5a]/10 px-2 py-0.5 rounded border border-[#007a5a]/30">
+                Pesisir (Laut Tenang)
+              </span>
+            ) : (
+              <span className="font-mono text-[10px] font-bold text-[#4a154b] bg-[#f4ede4] px-2 py-0.5 rounded border border-[#e8ded2]">
+                Bukan Pesisir
               </span>
             )}
           </div>
           <div className="flex items-baseline gap-2">
             <span className="text-xl font-bold font-display text-[#1d1d1d]">
-              {summary?.coastalRiskSummary.waveHeightM ? `${summary.coastalRiskSummary.waveHeightM} m` : 'Stabil'}
+              {summary?.coastalRiskSummary.waveHeightM != null
+                ? `${summary.coastalRiskSummary.waveHeightM} m`
+                : 'Bebas Rob'}
             </span>
-            <span className="text-[#696969] text-[11px] truncate">
+            <span className="text-[#696969] text-[11px] truncate" title={summary?.coastalRiskSummary.status}>
               {summary?.coastalRiskSummary.status || 'Normal'}
             </span>
           </div>

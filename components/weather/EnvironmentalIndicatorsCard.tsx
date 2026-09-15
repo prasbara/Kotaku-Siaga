@@ -17,27 +17,27 @@ export function EnvironmentalIndicatorsCard({
 
   const { rainfall, wind, coastal, slope } = indicators
 
-  const getBadge = (level: RiskLevel | 'Attention') => {
+  const getBadge = (level: RiskLevel | 'Attention', label?: string) => {
     switch (level) {
       case 'High':
         return (
           <span className="flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#fef2f2] text-[#cc4117] border border-[#fecaca]">
             <span className="w-1.5 h-1.5 rounded-full bg-[#cc4117] animate-pulse"></span>
-            HIGH
+            {label ? label.toUpperCase() : 'HIGH'}
           </span>
         )
       case 'Elevated':
         return (
           <span className="flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#fffbeb] text-[#d97706] border border-[#fde68a]">
             <span className="w-1.5 h-1.5 rounded-full bg-[#d97706]"></span>
-            ELEVATED
+            {label ? label.toUpperCase() : 'ELEVATED'}
           </span>
         )
       case 'Attention':
         return (
           <span className="flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#fffbeb] text-[#b45309] border border-[#fde68a]">
             <span className="w-1.5 h-1.5 rounded-full bg-[#b45309] animate-pulse"></span>
-            ATTENTION
+            {label ? label.toUpperCase() : 'ATTENTION'}
           </span>
         )
       case 'Normal':
@@ -45,7 +45,7 @@ export function EnvironmentalIndicatorsCard({
         return (
           <span className="flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#f0fdf4] text-[#007a5a] border border-[#bbf7d0]">
             <span className="w-1.5 h-1.5 rounded-full bg-[#007a5a]"></span>
-            NORMAL
+            {label ? label.toUpperCase() : 'NORMAL'}
           </span>
         )
     }

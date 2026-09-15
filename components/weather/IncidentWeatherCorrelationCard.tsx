@@ -33,6 +33,7 @@ export function IncidentWeatherCorrelationCard({
   reportCreatedAt,
 }: IncidentWeatherCorrelationCardProps) {
   const [localWeather, setLocalWeather] = useState<RealWeatherData | null>(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     let isMounted = true
