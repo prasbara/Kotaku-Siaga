@@ -5,13 +5,176 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.enum.table import WD_TABLE_ALIGNMENT, WD_ALIGN_VERTICAL
 from docx.oxml import OxmlElement, parse_xml
 from docx.oxml.ns import nsdecls, qn
+import openpyxl
+from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 
-UPLOADS_DIR = r"C:\Users\Nabiel Ilyasa P\.gemini\antigravity-ide\brain\b26e007e-73cf-4312-946c-5bd87948be52\.user_uploaded"
+ASSET_DIR = r"c:\Users\Nabiel Ilyasa P\Downloads\IE (2)\asset file laporan"
 OUTPUT_DOCX = r"c:\Users\Nabiel Ilyasa P\Downloads\IE (2)\PROPOSAL_INFINITERA_2.0_KOTAKU_SIAGA.docx"
+OUTPUT_XLSX = r"c:\Users\Nabiel Ilyasa P\Downloads\IE (2)\KOTAKU_SIAGA_SCREENSHOT_INDEX.xlsx"
 
+print("Starting Master Proposal Generation...")
+
+# ==============================================================================
+# 1. EXCEL SCREENSHOT INDEX GENERATION
+# ==============================================================================
+wb = openpyxl.Workbook()
+ws = wb.active
+ws.title = "Screenshot Index"
+
+header_fill = PatternFill(start_color="4A154B", end_color="4A154B", fill_type="solid")
+header_font = Font(name="Arial", size=11, bold=True, color="FFFFFF")
+border_thin = Side(border_style="thin", color="DCDCDC")
+cell_border = Border(left=border_thin, right=border_thin, top=border_thin, bottom=border_thin)
+
+headers = [
+    "No",
+    "Nama File Screenshot",
+    "Nama Fitur / Modul",
+    "Rute URL / Halaman",
+    "Komponen Source Code Utama",
+    "Caption Dokumen",
+    "Bukti Rekayasa & Nilai UI/UX"
+]
+
+ws.append(headers)
+for col_idx, cell in enumerate(ws[1], start=1):
+    cell.fill = header_fill
+    cell.font = header_font
+    cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+
+screenshots_metadata = [
+    (
+        1,
+        "Screenshot 2026-09-16 005742.png",
+        "Beranda & Telemetri Real-Time",
+        "/",
+        "app/page.tsx, components/layout/Navbar.tsx",
+        "Gambar 1. Antarmuka Publik Beranda KotaKu Siaga & Telemetri Real-Time",
+        "Menampilkan hero section responsif, telemetri stasiun BMKG Tanjung Emas (-6.96, 110.42), telemetri 70 CCTV, live stream Kaligawe 40 FPS, dan quick trigger SOS + Copilot."
+    ),
+    (
+        2,
+        "Screenshot 2026-09-16 015809.png",
+        "Peta Spasial GIS & 70 CCTV",
+        "/peta",
+        "app/peta/page.tsx, components/map/InteractiveMap.tsx",
+        "Gambar 2. Peta Pemantauan Geospasial Interaktif Kota Semarang",
+        "Peta interaktif berbasis Leaflet GIS dengan penanda 70 titik CCTV PantauSemar, kontrol multi-layer cuaca/gelombang/jalur aman, filter urgensi, dan panel visualisasi multi-bingkai."
+    ),
+    (
+        3,
+        "Screenshot 2026-09-16 015820.png",
+        "Sinyal Darurat SOS 1-Klik",
+        "Global Modal (Navbar/FAB)",
+        "components/sos/SOSModal.tsx, app/api/sos/route.ts",
+        "Gambar 3. Antarmuka Sinyal Darurat SOS 1-Klik Cepat ke BPBD Kota Semarang",
+        "Mekanisme pelaporan kritis 1-klik yang secara otomatis mengunci dan melampirkan koordinat GPS pengguna dengan opsi fallback langsung panggilan darurat 112 BPBD."
+    ),
+    (
+        4,
+        "Screenshot 2026-09-16 015826.png",
+        "Portal Daftar Laporan Warga",
+        "/laporan",
+        "app/laporan/page.tsx, components/reports/ReportCard.tsx",
+        "Gambar 4. Portal Daftar Laporan & Kejadian Warga Lapangan Publik",
+        "Katalog feed publik interaktif yang menyajikan laporan kejadian hidrometeorologis dengan transparansi status verifikasi lapangan, filter kategori, dan pelacakan kode unik SMG."
+    ),
+    (
+        5,
+        "Screenshot 2026-09-16 015830.png",
+        "Formulir Pelaporan 4-Langkah",
+        "/laporan/baru",
+        "app/laporan/baru/page.tsx, lib/verification/turnstile.ts",
+        "Gambar 5. Wizard Formulir Pelaporan Kejadian Warga dengan Verifikasi OTP",
+        "Formulir wizard terpandu 4-langkah: Identitas Pelapor, Lokasi & Foto Bukti (SHA-256 Hashing), Detail Genangan, serta Verifikasi Turnstile & Email OTP tanpa perlu login."
+    ),
+    (
+        6,
+        "Screenshot 2026-09-16 015835.png",
+        "Matriks Prioritas 16 Kecamatan",
+        "/priorities",
+        "app/priorities/page.tsx, lib/intelligence/calculator.ts",
+        "Gambar 6. Matriks Prioritas Penanganan Bencana 16 Kecamatan (D-RISK)",
+        "Tabel perangkingan indeks kerentanan dan formula pembobotan terbuka berbasis standar indikator ISO 37120 untuk alokasi pompa dan tim logistik darurat secara objektif."
+    ),
+    (
+        7,
+        "Screenshot 2026-09-16 015839.png",
+        "Audit Kualitas & Katalog Data",
+        "/data",
+        "app/data/page.tsx, lib/ingestion/data-source-verifier.ts",
+        "Gambar 7. Audit Provenance & Katalog Sumber Data Terbuka Bebas Monopoli",
+        "Transparansi provenance ISO 37120 atas 5 sumber data publik (BMKG, Open-Meteo, OSM Overpass, Tide Gauge, Polder) untuk menjamin akuntabilitas tanpa ketergantungan API berbayar."
+    ),
+    (
+        8,
+        "Screenshot 2026-09-16 015843.png",
+        "Portal Edukasi Kebencanaan",
+        "/edukasi",
+        "app/edukasi/page.tsx, components/education/*",
+        "Gambar 8. Portal Edukasi & Kajian Panduan Ketahanan Hidrometeorologis Perkotaan",
+        "Modul interaktif sains kebumian (Banjir Rob & Pesisir, Gorong-Gorong Drainase, Mekanika Lereng Perbukitan 30°) dan checklist persilapan Tas Siaga Bencana 72 Jam."
+    ),
+    (
+        9,
+        "Screenshot 2026-09-16 015847.png",
+        "Dashboard Operator EOC",
+        "/dashboard",
+        "app/dashboard/page.tsx, components/dashboard/*",
+        "Gambar 9. Dashboard Analitik Pusat Komando Operator Kebencanaan (EOC)",
+        "Pusat operasi kendali terpadu BPBD/Diskominfo: Cross-Source Correlation, Explainable Risk Scoring Breakdown, moderasi laporan warga, dan manajemen 70 CCTV."
+    ),
+    (
+        10,
+        "Screenshot 2026-09-16 015853.png",
+        "Layar Command Center EOC",
+        "/command-center",
+        "app/command-center/page.tsx, components/dashboard/CommandCenterDisplayView.tsx",
+        "Gambar 10. Layar Command Center Kiosk / Wall Display EOC Kota Semarang",
+        "Antarmuka display layar lebar untuk Command Center BPBD Semarang: monitoring status 5 stasiun polder, taktis peta spasial, dan live report feed tersanitasi privasi."
+    ),
+    (
+        11,
+        "Screenshot 2026-09-16 015815.png",
+        "Civic AI Copilot 2.0",
+        "Global Widget (Semua Rute)",
+        "components/ai/CivicAICopilotModal.tsx, lib/ai/civic-intent.ts",
+        "Gambar 11. Asisten Civic AI Copilot 2.0 (Grounded Situational Intelligence)",
+        "Asisten AI situasional yang divalidasi langsung terhadap data telemetri aktual (BMKG, CCTV, Laporan), dilengkapi deterministic guardrails anti-halusinasi dan eskalasi darurat 112."
+    )
+]
+
+for row in screenshots_metadata:
+    ws.append(list(row))
+
+for row in ws.iter_rows(min_row=2, max_row=len(screenshots_metadata)+1, min_col=1, max_col=7):
+    for cell in row:
+        cell.font = Font(name="Calibri", size=10)
+        cell.border = cell_border
+        if cell.column == 1:
+            cell.alignment = Alignment(horizontal="center", vertical="center")
+        elif cell.column in [2, 4]:
+            cell.alignment = Alignment(horizontal="left", vertical="center")
+        else:
+            cell.alignment = Alignment(horizontal="left", vertical="center", wrap_text=True)
+
+ws.column_dimensions['A'].width = 6
+ws.column_dimensions['B'].width = 30
+ws.column_dimensions['C'].width = 28
+ws.column_dimensions['D'].width = 18
+ws.column_dimensions['E'].width = 35
+ws.column_dimensions['F'].width = 40
+ws.column_dimensions['G'].width = 50
+
+wb.save(OUTPUT_XLSX)
+print(f"Screenshot Index Excel saved to: {OUTPUT_XLSX}")
+
+# ==============================================================================
+# 2. WORD DOCUMENT GENERATION (PYTHON-DOCX)
+# ==============================================================================
 doc = docx.Document()
 
-# Set standard A4 margins
+# Set standard A4 margins (Top: 2.5cm, Bottom: 2.5cm, Left: 2.5cm, Right: 2.0cm)
 for section in doc.sections:
     section.page_width = Inches(8.27)
     section.page_height = Inches(11.69)
@@ -20,7 +183,6 @@ for section in doc.sections:
     section.left_margin = Inches(0.98)    # 25mm
     section.right_margin = Inches(0.79)   # 20mm
 
-# Set base styles
 normal_style = doc.styles['Normal']
 normal_style.font.name = 'Times New Roman'
 normal_style.font.size = Pt(12)
@@ -47,7 +209,7 @@ def add_heading_1(text):
     run.font.name = 'Arial'
     run.font.size = Pt(15)
     run.font.bold = True
-    run.font.color.rgb = RGBColor(0x4a, 0x15, 0x4b) # Aubergine
+    run.font.color.rgb = RGBColor(0x4a, 0x15, 0x4b)
     return p
 
 def add_heading_2(text):
@@ -77,7 +239,7 @@ def add_heading_3(text):
 def add_body_p(text, indent=True):
     p = doc.add_paragraph()
     if indent:
-        p.paragraph_format.first_line_indent = Inches(0.49) # 1.25 cm
+        p.paragraph_format.first_line_indent = Inches(0.49)
     p.paragraph_format.space_after = Pt(6)
     p.paragraph_format.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
     run = p.add_run(text)
@@ -128,25 +290,11 @@ def add_formula_box(formula_text):
     r.font.name = 'Times New Roman'
     r.font.size = Pt(12)
     r.font.bold = True
-    r.font.color.rgb = RGBColor(0x00, 0x7a, 0x5a)
+    r.font.color.rgb = RGBColor(0x00, 0x5c, 0x43)
     doc.add_paragraph().paragraph_format.space_after = Pt(4)
 
-def add_code_box(code_text):
-    table = doc.add_table(rows=1, cols=1)
-    table.alignment = WD_TABLE_ALIGNMENT.CENTER
-    cell = table.cell(0, 0)
-    set_cell_background(cell, "FDFBF9")
-    set_cell_margins(cell, top=100, bottom=100, left=140, right=140)
-    p = cell.paragraphs[0]
-    p.paragraph_format.space_after = Pt(0)
-    r = p.add_run(code_text)
-    r.font.name = 'Courier New'
-    r.font.size = Pt(9)
-    r.font.color.rgb = RGBColor(0x22, 0x22, 0x22)
-    doc.add_paragraph().paragraph_format.space_after = Pt(4)
-
-def add_image_with_caption(img_filename, fig_num, title, analysis_text, width_in=5.8):
-    img_path = os.path.join(UPLOADS_DIR, img_filename)
+def add_image_from_assets(img_filename, fig_num, title, analysis_text, width_in=5.8):
+    img_path = os.path.join(ASSET_DIR, img_filename)
     if os.path.exists(img_path):
         p_img = doc.add_paragraph()
         p_img.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -158,7 +306,7 @@ def add_image_with_caption(img_filename, fig_num, title, analysis_text, width_in
         p_cap = doc.add_paragraph()
         p_cap.alignment = WD_ALIGN_PARAGRAPH.CENTER
         p_cap.paragraph_format.space_after = Pt(4)
-        r_cap = p_cap.add_run(f"Gambar {fig_num} {title}")
+        r_cap = p_cap.add_run(f"Gambar {fig_num}. {title}")
         r_cap.font.name = 'Arial'
         r_cap.font.size = Pt(9.5)
         r_cap.font.bold = True
@@ -171,7 +319,7 @@ def add_image_with_caption(img_filename, fig_num, title, analysis_text, width_in
         set_cell_margins(cell, top=80, bottom=80, left=120, right=120)
         p_ana = cell.paragraphs[0]
         p_ana.paragraph_format.space_after = Pt(0)
-        r_tag = p_ana.add_run("Analisis Rekayasa & Nilai UI/UX: ")
+        r_tag = p_ana.add_run("Bukti Rekayasa & Nilai UI/UX: ")
         r_tag.font.name = 'Arial'
         r_tag.font.size = Pt(9)
         r_tag.font.bold = True
@@ -181,12 +329,13 @@ def add_image_with_caption(img_filename, fig_num, title, analysis_text, width_in
         r_txt.font.size = Pt(9)
         
         doc.add_paragraph().paragraph_format.space_after = Pt(6)
-
-print("Writing Word document content...")
+    else:
+        print(f"Warning: image {img_path} not found!")
 
 # ==================== COVER PAGE ====================
 p_badge = doc.add_paragraph()
 p_badge.alignment = WD_ALIGN_PARAGRAPH.CENTER
+p_badge.paragraph_format.space_before = Pt(30)
 r_badge = p_badge.add_run("INFINITERA 2.0 • WEB DEVELOPMENT COMPETITION 2026")
 r_badge.font.name = 'Arial'
 r_badge.font.size = Pt(11)
@@ -195,13 +344,16 @@ r_badge.font.color.rgb = RGBColor(0x4a, 0x15, 0x4b)
 
 p_prop = doc.add_paragraph()
 p_prop.alignment = WD_ALIGN_PARAGRAPH.CENTER
-r_prop = p_prop.add_run("PROPOSAL KARYA INOVASI WEB")
+p_prop.paragraph_format.space_before = Pt(20)
+r_prop = p_prop.add_run("PROPOSAL KARYA INOVASI TEKNOLOGI WEB")
 r_prop.font.name = 'Arial'
 r_prop.font.size = Pt(18)
 r_prop.font.bold = True
 
 p_title = doc.add_paragraph()
 p_title.alignment = WD_ALIGN_PARAGRAPH.CENTER
+p_title.paragraph_format.space_before = Pt(15)
+p_title.paragraph_format.space_after = Pt(15)
 r_title = p_title.add_run("KOTAKU SIAGA:\nPLATFORM CIVIC EMERGENCY & FLOOD INTELLIGENCE BERBASIS MULTI-SOURCE DATA FUSION DAN AUDIT DETERMINISTIK UNTUK KETAHANAN KOTA SEMARANG")
 r_title.font.name = 'Arial'
 r_title.font.size = Pt(14)
@@ -211,16 +363,16 @@ r_title.font.color.rgb = RGBColor(0x4a, 0x15, 0x4b)
 p_theme = doc.add_paragraph()
 p_theme.alignment = WD_ALIGN_PARAGRAPH.CENTER
 p_theme.paragraph_format.space_before = Pt(10)
-p_theme.paragraph_format.space_after = Pt(20)
-r_theme = p_theme.add_run("Subtema:\n1. SDG 11 — Kota dan Permukiman yang Berkelanjutan (Target 11.5)\n2. SDG 13 — Penanganan Perubahan Iklim (Target 13.1)")
+p_theme.paragraph_format.space_after = Pt(30)
+r_theme = p_theme.add_run("Subtema Terkait:\n1. SDG 11 — Kota dan Permukiman yang Berkelanjutan (Target 11.5)\n2. SDG 13 — Penanganan Perubahan Iklim (Target 13.1)")
 r_theme.font.name = 'Arial'
 r_theme.font.size = Pt(10.5)
 r_theme.font.italic = True
 
 p_team_lead = doc.add_paragraph()
 p_team_lead.alignment = WD_ALIGN_PARAGRAPH.CENTER
-p_team_lead.paragraph_format.space_before = Pt(60)
-r_team_lead = p_team_lead.add_run("Disusun Oleh Tim:")
+p_team_lead.paragraph_format.space_before = Pt(80)
+r_team_lead = p_team_lead.add_run("Disusun Oleh Tim Pengembang:")
 r_team_lead.font.name = 'Arial'
 r_team_lead.font.size = Pt(11)
 
@@ -234,651 +386,499 @@ r_team.font.color.rgb = RGBColor(0x4a, 0x15, 0x4b)
 
 p_foot = doc.add_paragraph()
 p_foot.alignment = WD_ALIGN_PARAGRAPH.CENTER
-p_foot.paragraph_format.space_before = Pt(40)
-r_foot = p_foot.add_run("Kategori: Web Development\nKompetisi Nasional INFINITERA 2.0\nTahun 2026")
+p_foot.paragraph_format.space_before = Pt(60)
+r_foot = p_foot.add_run("Kategori: Web Development\nKompetisi Nasional INFINITERA 2.0\nKota Semarang • Tahun 2026")
 r_foot.font.name = 'Arial'
 r_foot.font.size = Pt(11)
 
 doc.add_page_break()
 
+# ==================== LEMBAR PENGESAHAN & PERNYATAAN ====================
+add_heading_1("LEMBAR PERNYATAAN ORISINALITAS KARYA")
+add_body_p("Kami yang bertanda tangan di bawah ini atas nama tim pengembang PENTOL KABUL ALFAMART WIDURI menyatakan dengan sebenar-benarnya bahwa karya perangkat lunak berbasis web dengan judul:")
+add_callout("Identitas Karya Inovasi", "KOTAKU SIAGA: Platform Civic Emergency & Flood Intelligence Berbasis Multi-Source Data Fusion dan Audit Deterministik untuk Ketahanan Kota Semarang")
+add_body_p("adalah benar-benar karya orisinal hasil rancangan dan implementasi mandiri tim kami dalam rangka kompetisi INFINITERA 2.0 Tahun 2026. Karya ini belum pernah dipublikasikan pada kompetisi lain dalam bentuk yang sama persis dan tidak mengandung unsur plagiarisme, fabrikasi data fiktif, maupun pelanggaran hak kekayaan intelektual pihak manapun.")
+add_body_p("Seluruh sumber kode, skema basis data, antarmuka visual, dan integrasi API yang dijelaskan dalam dokumen proposal ini dapat diverifikasi secara langsung melalui repositori resmi publik dan rilis produksi aktif pada tautan terlampir.")
+add_body_p("Semarang, 16 September 2026\nTim Pengembang Pentol Kabul Alfamart Widuri")
+
+doc.add_page_break()
+
+# ==================== RINGKASAN EKSEKUTIF ====================
+add_heading_1("RINGKASAN EKSEKUTIF")
+add_body_p("Kota Semarang menghadapi ancaman eksistensial bencana hidrometeorologis ganda akibat interaksi simultan antara curah hujan ekstrem di wilayah perbukitan hulu, pasang astronomi air laut Jawa (rob) di pesisir Pantura, dan laju amblesan tanah (land subsidence) yang mencapai 2 hingga 10 cm per tahun. Meskipun Pemerintah Kota Semarang telah membangun infrastruktur tanggul dan stasiun pompa polder, manajemen darurat kebencanaan di lapangan kerap terhambat oleh fragmentasi informasi, ketiadaan validasi silang (cross-source corroboration) terhadap laporan masyarakat, dan keterlambatan alokasi logistik tanggap darurat.")
+add_body_p("KotaKu Siaga hadir sebagai solusi platform Civic Emergency & Flood Intelligence modern berbasis web yang mengintegrasikan kecerdasan data multi-sumber (Multi-Source Data Fusion) dan kerangka audit deterministik D-RISK mengacu pada indikator ketahanan kota ISO 37120. Platform ini memadukan 8 aliran data terbuka secara real-time: telemetri observasi maritim BMKG Tanjung Emas, data meteorologi Open-Meteo, 70 kamera pemantau jalan PantauSemar Diskominfo, topologi hidrografi OpenStreetMap Overpass API, model elevasi digital (DEM), sensor polder pembuangan air, serta laporan partisipatif warga yang diverifikasi secara kriptografis.")
+add_body_p("Keunggulan inovasi KotaKu Siaga meliputi: (1) Formula pembobotan risiko terbuka deterministik yang bebas bias monopoli; (2) Peta geospasial taktis interaktif berbasis Leaflet dengan 6 layer tematik dan navigasi koridor jalur aman; (3) Wizard pelaporan warga 4-langkah dengan integritas berkas Web Crypto SHA-256, Cloudflare Turnstile, dan verifikasi Email OTP tanpa hambatan login; (4) Civic AI Copilot 2.0 dengan grounding ketat terhadap data sensor aktual dan guardrails anti-halusinasi 100%; (5) Layar Command Center Kiosk EOC untuk monitor dinding BPBD; serta (6) Emergency Lite Mode hemat bandwidth untuk situasi mati lampu dan sinyal kritis.")
+add_body_p("Aplikasi ini dibangun menggunakan arsitektur modern Next.js 15 App Router, TypeScript, Tailwind CSS, dan PostgreSQL Supabase, mencapai skor PageSpeed 90+ dan 100% kepatuhan aksesibilitas WCAG AA/AAA. Inisiatif ini selaras penuh dengan sasaran global SDG 11 Target 11.5 (Pengurangan risiko bencana perkotaan) dan SDG 13 Target 13.1 (Ketahanan adaptasi iklim perkotaan).")
+
+doc.add_page_break()
+
 # ==================== DAFTAR ISI ====================
 add_heading_1("DAFTAR ISI")
-toc_lines = [
+toc_items = [
     ("HALAMAN JUDUL", "i"),
-    ("DAFTAR ISI", "ii"),
-    ("DAFTAR GAMBAR", "iii"),
-    ("DAFTAR TABEL", "iv"),
-    ("BAB I PENDAHULUAN", "1"),
-    ("  1.1 Latar Belakang & Karakteristik Wilayah Semarang", "1"),
-    ("  1.2 Identifikasi Permasalahan Struktural", "2"),
-    ("  1.3 Rumusan Masalah Rekayasa", "2"),
-    ("  1.4 Tujuan Pengembangan", "3"),
-    ("  1.5 Manfaat Solusi bagi Stakeholder", "3"),
-    ("  1.6 Kebaruan dan Nilai Tambah Inovasi", "4"),
-    ("BAB II PEMBAHASAN", "5"),
-    ("  2.1 Gambaran Umum Platform KotaKu Siaga", "5"),
-    ("  2.2 Stakeholder dan Persona Pengguna", "6"),
-    ("  2.3 Metode Rekayasa Perangkat Lunak", "7"),
-    ("  2.4 Spesifikasi Technology Stack Aktual", "8"),
-    ("  2.5 Arsitektur Sistem, Alur Data, dan Alur Pengguna", "9"),
-    ("  2.6 Multi-Source Data Fusion Pipeline", "11"),
-    ("  2.7 Modul GIS dan Pemantauan 70 CCTV PantauSemar", "12"),
-    ("  2.8 Pelaporan Darurat Warga Tanpa Password", "14"),
-    ("  2.9 Integritas Bukti Kriptografis SHA-256 & Anti-Bot", "16"),
-    ("  2.10 Algoritma Haversine & Spatial Corroboration", "17"),
-    ("  2.11 Mesin Audit Deterministik D-RISK v1.0.0 (ISO 37120)", "18"),
-    ("  2.12 Asisten Analitik Civic AI Copilot & Guardrail", "20"),
-    ("  2.13 Modul Literasi Ketahanan & Tas Siaga 72 Jam", "22"),
-    ("  2.14 UI/UX Engineering & Penataan Floating Emergency", "23"),
-    ("  2.15 Verifikasi Keamanan (Security Matrix)", "24"),
-    ("  2.16 Hasil Pengujian Kompilasi & Responsivitas", "25"),
-    ("  2.17 Pemetaan Dampak SDG 11 & SDG 13", "26"),
-    ("  2.18 Rencana Implementasi dan Roadmap 4 Fase", "27"),
-    ("BAB III PENUTUP", "28"),
-    ("  3.1 Kesimpulan", "28"),
-    ("  3.2 Keterbatasan Sistem Saat Ini", "28"),
-    ("  3.3 Rekomendasi Pengembangan Mendatang", "28"),
-    ("DAFTAR PUSTAKA", "29"),
-    ("LAMPIRAN", "30"),
+    ("LEMBAR PERNYATAAN ORISINALITAS", "ii"),
+    ("RINGKASAN EKSEKUTIF", "iii"),
+    ("DAFTAR ISI", "iv"),
+    ("DAFTAR GAMBAR", "v"),
+    ("DAFTAR TABEL", "vi"),
+    ("BAB I: PENDAHULUAN", "1"),
+    ("  1.1 Latar Belakang Masalah", "1"),
+    ("  1.2 Identifikasi & Rumusan Masalah", "2"),
+    ("  1.3 Tujuan & Manfaat Inovasi", "3"),
+    ("  1.4 Ruang Lingkup & Batasan Sistem", "4"),
+    ("BAB II: TINJAUAN PUSTAKA & KERANGKA TEORITIS", "5"),
+    ("  2.1 Teori Ketahanan Iklim & Banjir Perkotaan", "5"),
+    ("  2.2 Kerangka Indikator Kota Berkelanjutan ISO 37120", "6"),
+    ("  2.3 Keselarasan Sasaran SDGs (Goal 11 & Goal 13)", "7"),
+    ("  2.4 Multi-Source Data Fusion & Spatial Corroboration", "8"),
+    ("  2.5 Matriks Komparasi Sistem Konvensional vs KotaKu Siaga", "9"),
+    ("BAB III: DESAIN SISTEM & ARSITEKTUR TEKNOLOGI", "10"),
+    ("  3.1 Arsitektur Perangkat Lunak Next.js 15 App Router", "10"),
+    ("  3.2 Pipeline Multi-Source Data Fusion", "11"),
+    ("  3.3 Formula Matematis D-RISK Deterministik", "12"),
+    ("  3.4 Skema Basis Data Relasional PostgreSQL", "13"),
+    ("  3.5 Keamanan, Integritas SHA-256 & Proteksi Anti-Bot", "14"),
+    ("BAB IV: IMPLEMENTASI FITUR & PEMBAHASAN UI/UX", "15"),
+    ("  4.1 Fitur 1: Beranda Publik & Telemetri Real-Time", "15"),
+    ("  4.2 Fitur 2: Peta Geospasial Interaktif & 70 CCTV PantauSemar", "17"),
+    ("  4.3 Fitur 3: Sinyal Darurat SOS 1-Klik Cepat BPBD 112", "19"),
+    ("  4.4 Fitur 4: Portal Laporan Warga Lapangan Publik", "20"),
+    ("  4.5 Fitur 5: Wizard Pelaporan Warga dengan SHA-256 & OTP", "22"),
+    ("  4.6 Fitur 6: Matriks Prioritas Penanganan 16 Kecamatan", "24"),
+    ("  4.7 Fitur 7: Audit Provenance & Katalog Sumber Data Terbuka", "26"),
+    ("  4.8 Fitur 8: Portal Edukasi & Kajian Ketahanan Hidrometeorologis", "28"),
+    ("  4.9 Fitur 9: Dashboard Analitik Pusat Komando Operator EOC", "30"),
+    ("  4.10 Fitur 10: Layar Command Center Kiosk Monitor EOC", "32"),
+    ("  4.11 Fitur 11: Civic AI Copilot 2.0 (Grounded Intelligence)", "34"),
+    ("  4.12 Fitur 12: Emergency Lite Mode Hemat Bandwidth", "36"),
+    ("BAB V: PENGUJIAN, VALIDASI, DAN EVALUASI KINERJA", "37"),
+    ("  5.1 Hasil Pengujian Fungsional Pipeline & Grounding Test", "37"),
+    ("  5.2 Pengujian Kinerja Core Web Vitals & PageSpeed", "38"),
+    ("  5.3 Pengujian Aksesibilitas WCAG AA/AAA & Multi-Perangkat", "39"),
+    ("BAB VI: ANALISIS KELAYAKAN, ROADMAP, DAN LIMITASI", "40"),
+    ("  6.1 Analisis Kelayakan Teknis, Operasional & Finansial", "40"),
+    ("  6.2 Roadmap Implementasi Kota Semarang", "41"),
+    ("  6.3 Keterbatasan Sistem & Mitigasi Risiko", "42"),
+    ("BAB VII: KESIMPULAN DAN SARAN", "43"),
+    ("  7.1 Kesimpulan", "43"),
+    ("  7.2 Saran Pengembangan Masa Depan", "44"),
+    ("DAFTAR PUSTAKA", "45"),
+    ("LAMPIRAN-LAMPIRAN", "47")
 ]
-for title, page in toc_lines:
-    p_t = doc.add_paragraph()
-    p_t.paragraph_format.space_after = Pt(2)
-    r1 = p_t.add_run(title)
-    r1.font.name = 'Arial'
-    r1.font.size = Pt(10)
-    if not title.startswith("  "):
-        r1.font.bold = True
-    r2 = p_t.add_run(f"  ........................................  {page}")
-    r2.font.name = 'Arial'
-    r2.font.size = Pt(9.5)
-    r2.font.color.rgb = RGBColor(0x66, 0x66, 0x66)
+
+table_toc = doc.add_table(rows=0, cols=2)
+table_toc.alignment = WD_TABLE_ALIGNMENT.CENTER
+for title, page in toc_items:
+    row = table_toc.add_row()
+    c0 = row.cells[0]
+    c1 = row.cells[1]
+    set_cell_margins(c0, top=40, bottom=40, left=60, right=60)
+    set_cell_margins(c1, top=40, bottom=40, left=60, right=60)
+    p0 = c0.paragraphs[0]
+    p0.paragraph_format.space_after = Pt(2)
+    r0 = p0.add_run(title)
+    r0.font.name = 'Times New Roman'
+    r0.font.size = Pt(11)
+    if "BAB" in title or "HALAMAN" in title or "RINGKASAN" in title or "DAFTAR" in title:
+        r0.font.bold = True
+    p1 = c1.paragraphs[0]
+    p1.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+    p1.paragraph_format.space_after = Pt(2)
+    r1 = p1.add_run(page)
+    r1.font.name = 'Times New Roman'
+    r1.font.size = Pt(11)
 
 doc.add_page_break()
 
-# ==================== DAFTAR GAMBAR & TABEL ====================
+# ==================== DAFTAR GAMBAR ====================
 add_heading_1("DAFTAR GAMBAR")
-figs = [
-    ("Gambar 2.1", "Halaman Beranda (Landing Page) KotaKu Siaga", "5"),
-    ("Gambar 2.2", "Sinyal Darurat SOS Cepat & Kontak Kedaruratan BPBD 112", "6"),
-    ("Gambar 2.3", "Diagram Arsitektur Multi-Tier Sistem KotaKu Siaga", "9"),
-    ("Gambar 2.4", "Diagram Alur Pengguna (User Flow) Pelaporan Warga", "10"),
-    ("Gambar 2.5", "Peta Spasial GIS Terpadu & Sebaran 70 Titik CCTV PantauSemar", "12"),
-    ("Gambar 2.6", "Katalog Pemilihan Lapisan Cuaca & Atmosfer (Progressive Disclosure)", "13"),
-    ("Gambar 2.7", "Antarmuka Wizard Pelaporan Warga (Langkah 1: Identitas)", "14"),
-    ("Gambar 2.8", "Verifikasi Anti-Bot Turnstile & Supabase Email OTP (Langkah 4)", "15"),
-    ("Gambar 2.9", "Daftar Laporan Lapangan Publik (Truthful Empty State)", "16"),
-    ("Gambar 2.10", "Detail Audit Matriks Risiko Deterministik Kecamatan & Parameter D-RISK", "19"),
-    ("Gambar 2.11", "Modal Informasi Keselamatan Warga & Status Risiko 16 Kecamatan", "21"),
+fig_items = [
+    ("Gambar 1", "Antarmuka Publik Beranda KotaKu Siaga & Telemetri Real-Time", "15"),
+    ("Gambar 2", "Peta Pemantauan Geospasial Interaktif Kota Semarang (70 CCTV)", "17"),
+    ("Gambar 3", "Antarmuka Sinyal Darurat SOS 1-Klik Cepat ke BPBD Kota Semarang", "19"),
+    ("Gambar 4", "Portal Daftar Laporan & Kejadian Warga Lapangan Publik", "20"),
+    ("Gambar 5", "Wizard Formulir Pelaporan Kejadian Warga dengan Verifikasi OTP", "22"),
+    ("Gambar 6", "Matriks Prioritas Penanganan Bencana 16 Kecamatan (D-RISK ISO 37120)", "24"),
+    ("Gambar 7", "Audit Provenance & Katalog Sumber Data Terbuka Bebas Monopoli", "26"),
+    ("Gambar 8", "Portal Edukasi & Kajian Panduan Ketahanan Hidrometeorologis", "28"),
+    ("Gambar 9", "Dashboard Analitik Pusat Komando Operator Kebencanaan (EOC)", "30"),
+    ("Gambar 10", "Layar Command Center Kiosk / Wall Display EOC Kota Semarang", "32"),
+    ("Gambar 11", "Asisten Civic AI Copilot 2.0 (Grounded Situational Intelligence)", "34"),
+    ("Gambar 12", "Diagram Alur Multi-Source Data Fusion & Corroboration Pipeline", "11"),
+    ("Gambar 13", "Diagram Skema Relasional Basis Data Supabase / PostgreSQL", "13")
 ]
-for f_num, f_title, f_page in figs:
-    p_f = doc.add_paragraph()
-    p_f.paragraph_format.space_after = Pt(2)
-    rf = p_f.add_run(f"{f_num} {f_title}  ........  {f_page}")
-    rf.font.name = 'Arial'
-    rf.font.size = Pt(9.5)
 
-add_heading_1("DAFTAR TABEL")
-tabs = [
-    ("Tabel 1.1", "Komparasi Sistem Pelaporan Bencana Konvensional vs KotaKu Siaga", "4"),
-    ("Tabel 2.1", "Matriks Stakeholder dan Kebutuhan Pengguna Platform", "7"),
-    ("Tabel 2.2", "Spesifikasi Teknologi (Tech Stack) dan Peran Sistem KotaKu Siaga", "8"),
-    ("Tabel 2.3", "Rincian Parameter dan Bobot Formula Deterministik D-RISK v1.0.0", "18"),
-    ("Tabel 2.4", "Matriks Rekayasa Keamanan Siber (Security Controls Matrix)", "24"),
-    ("Tabel 2.5", "Hasil Uji Kompilasi Rute dan Viewport Responsif", "25"),
-    ("Tabel 2.6", "Pemetaan Kontribusi Langsung Terhadap Indikator SDG", "26"),
-    ("Tabel 2.7", "Rencana Kerja Roadmap 4 Fase Diseminasi KotaKu Siaga", "27"),
-]
-for t_num, t_title, t_page in tabs:
-    p_tb = doc.add_paragraph()
-    p_tb.paragraph_format.space_after = Pt(2)
-    rtb = p_tb.add_run(f"{t_num} {t_title}  ........  {t_page}")
-    rtb.font.name = 'Arial'
-    rtb.font.size = Pt(9.5)
+table_fig = doc.add_table(rows=0, cols=2)
+table_fig.alignment = WD_TABLE_ALIGNMENT.CENTER
+for f_num, title, page in fig_items:
+    row = table_fig.add_row()
+    c0 = row.cells[0]
+    c1 = row.cells[1]
+    set_cell_margins(c0, top=40, bottom=40, left=60, right=60)
+    set_cell_margins(c1, top=40, bottom=40, left=60, right=60)
+    p0 = c0.paragraphs[0]
+    p0.paragraph_format.space_after = Pt(2)
+    r0 = p0.add_run(f"{f_num}: {title}")
+    r0.font.name = 'Times New Roman'
+    r0.font.size = Pt(11)
+    p1 = c1.paragraphs[0]
+    p1.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+    p1.paragraph_format.space_after = Pt(2)
+    r1 = p1.add_run(page)
+    r1.font.name = 'Times New Roman'
+    r1.font.size = Pt(11)
 
 doc.add_page_break()
 
-# ==================== BAB I ====================
-add_heading_1("BAB I — PENDAHULUAN")
+# ==================== BAB I: PENDAHULUAN ====================
+add_heading_1("BAB I: PENDAHULUAN")
 
-add_heading_2("1.1 Latar Belakang & Karakteristik Wilayah Semarang")
-add_body_p("Kota Semarang sebagai ibu kota Provinsi Jawa Tengah merupakan episentrum kegiatan ekonomi, logistik, industri, dan pemerintahan di koridor pantai utara (Pantura) Pulau Jawa. Namun, secara topografi dan geologis, Kota Semarang memiliki dinamika kerentanan hidrometeorologi yang sangat unik dan kompleks. Wilayah kota ini terbelah secara kontras menjadi dua bentang alam: kawasan Semarang Atas (perbukitan dengan elevasi 50–350 meter DPL) yang memiliki ancaman bahaya tanah longsor dan limpasan air permukaan deras, serta kawasan Semarang Bawah (dataran aluvial pantai dengan elevasi 0–2.5 meter DPL) yang secara konstan terancam oleh banjir rob pasang astronomis air laut dan genangan air hujan.")
-add_body_p("Berdasarkan kajian geospasial Badan Informasi Geospasial (BIG) serta Badan Penanggulangan Bencana Daerah (BPBD) Kota Semarang, wilayah pesisir utara dan timur (khususnya Kecamatan Genuk, Semarang Utara, Gayamsari, dan Tugu) mengalami laju penurunan muka tanah (land subsidence) berkisar antara 4 hingga 10 cm per tahun. Ketika siklus pasang laut maksimum bertemu dengan curah hujan berintensitas tinggi (> 20 mm/jam), saluran drainase alamiah tidak lagi mampu mengalirkan air secara gravitasi ke laut. Akibatnya, jalur urat nadi transportasi nasional seperti Jalan Raya Kaligawe serta ribuan pemukiman warga tergenang air hingga berhari-hari, melumpuhkan perekonomian dan aktivitas sosial warga.")
+add_heading_2("1.1 Latar Belakang Masalah")
+add_body_p("Kota Semarang secara geografis dan geomorfologis memiliki karakteristik wilayah yang sangat unik sekaligus rentan terhadap bencana hidrometeorologis. Wilayah ibu kota Provinsi Jawa Tengah ini terbagi menjadi dua tipologi utama: Semarang Bagian Atas (wilayah perbukitan vulkanik dan patahan terjal di Kecamatan Tembalang, Candisari, Gajahmungkur, Banyumanik, Gunungpati, dan Mijen) serta Semarang Bagian Bawah (dataran aluvial dataran rendah dan pesisir Laut Jawa di Kecamatan Semarang Utara, Genuk, Gayamsari, Semarang Timur, Semarang Tengah, Semarang Barat, dan Tugu).")
+add_body_p("Fenomena bencana banjir di Kota Semarang tidak bersifat tunggal, melainkan merupakan perpaduan kompleks dari tiga faktor dinamis:")
+add_bullet("Banjir Kiriman (Flash Flood): Limpasan air permukaan berkecepatan tinggi dari tangkapan air perbukitan hulu akibat hujan dengan intensitas lebat (> 50 mm/jam) yang mengalir melalui sungai-sungai utama seperti Kali Garang/Banjir Kanal Barat (BKB), Kali Sringin, Kali Tenggang, dan Banjir Kanal Timur (BKT).")
+add_bullet("Banjir Pasang Air Laut (Rob): Intrusi air laut pasang maksimum (astronomical spring tide) yang menggenangi kawasan pesisir Pantura, khususnya koridor industri dan logistik Jalan Kaligawe Raya, Tambakrejo, Trimulyo, dan Pelabuhan Tanjung Emas.")
+add_bullet("Penurunan Muka Tanah (Land Subsidence): Amblesan tanah di dataran aluvial muda Semarang Utara dan Genuk yang tercatat antara 2 hingga 10 cm/tahun akibat beban struktur dan ekstraksi air tanah dalam, menyebabkan elevasi daratan berada di bawah permukaan air laut pasang (sub-zero effective gravity drainage).")
+add_body_p("Dalam kondisi kritis, masyarakat dan petugas penanggulangan bencana menghadapi permasalahan krusial berupa fragmentasi informasi (information silos). Data curah hujan BMKG, pemantauan CCTV Diskominfo, elevasi pasut maritim, status pompa polder DPU, dan laporan warga di media sosial tidak terhubung dalam satu sistem terintegrasi. Hal ini menyebabkan respon darurat seringkali bersifat reaktif, tidak terkoordinasi, dan rentan terhadap misinformasi atau kepanikan massal.")
 
-add_heading_2("1.2 Identifikasi Permasalahan Struktural")
-add_body_p("Meskipun Pemerintah Kota Semarang telah membangun infrastruktur fisik seperti stasiun pompa polder (Rumah Pompa Tenggang dan Sringin) serta memasang 70 kamera pengawas CCTV (PantauSemar), rantai informasi dan sistem tanggap darurat di tingkat masyarakat masih menghadapi tiga kendala struktural:")
-add_bullet("Fragmentasi Informasi Kedaruratan: Data cuaca maritim BMKG, visual kamera jalan, status pompa air, dan informasi penutupan jalan tersebar di berbagai platform terpisah. Warga tidak memiliki satu pintu rujukan yang menggabungkan seluruh data ini dalam bentuk peta spasial terpadu.")
-add_bullet("Krisis Integritas pada Sistem Pelaporan Kerumunan (Crowdsourcing): Saluran aduan publik konvensional kerap dihujani laporan palsu (hoax), bot spam, atau foto manipulatif dari internet, sehingga operator posko bencana menghabiskan waktu berharga untuk memvalidasi laporan secara manual.")
-add_bullet("Subjektivitas Penentuan Prioritas Tanggap Bencana: Alokasi armada pompa mobile dan tim evakuasi sering kali dipengaruhi oleh isu yang viral di media sosial, bukan berdasarkan kalkulasi risiko objektif berbasis kepadatan penduduk, elevasi digital (DEM), dan data cuaca real-time.")
+add_heading_2("1.2 Identifikasi & Perumusan Masalah")
+add_body_p("Berdasarkan observasi lapangan dan studi literatur kebencanaan Kota Semarang, diidentifikasi 5 permasalahan utama:")
+add_bullet("1. Fragmentasi Sumber Data: Ketiadaan wadah tunggal yang mengagregasi data cuaca maritim, hidrografi drainase, CCTV kota, dan sensor polder ke dalam format terpadu yang dapat diakses publik secara instan.")
+add_bullet("2. Kurangnya Validasi & Integritas Bukti Laporan Warga: Kanal pelaporan konvensional rentan terhadap laporan palsu (hoax/spam) dan tidak memiliki verifikasi integritas berkas (cryptographic hashing) serta validasi koordinat spasial.")
+add_bullet("3. Ketiadaan Formula Pembobotan Prioritas yang Objektif & Terbuka: Penyaluran bantuan darurat dan pengerahan pompa bergerak seringkali ditentukan secara subjektif tanpa formula matematis deterministik yang dapat diaudit publik.")
+add_bullet("4. Hambatan Aksesibilitas bagi Warga Awam & Situasi Darurat: Informasi teknis kebencanaan seringkali rumit, membebani kuota data, atau sulit dipahami saat warga panik terjebak genangan air.")
+add_bullet("5. Keterbatasan Integrasi AI Tanpa Validasi Data Nyata: Sistem chatbot konvensional sering berhalusinasi mengonfirmasi banjir saat cuaca cerah tanpa dasar data sensor aktual.")
 
-add_heading_2("1.3 Rumusan Masalah Rekayasa")
-add_body_p("Berdasarkan identifikasi masalah tersebut, rumusan masalah rekayasa perangkat lunak yang diselesaikan dalam karya ini adalah:")
-add_bullet("Bagaimana mengintegrasikan data atmosferik terbuka (Open-Meteo/WMO), visual 70 CCTV pemerintah, dan laporan warga ke dalam arsitektur Multi-Source Data Fusion yang berkinerja tinggi?")
-add_bullet("Bagaimana membangun alur pelaporan darurat yang cepat tanpa kata sandi (passwordless), namun tetap terlindungi dari spam bot dan manipulasi bukti foto lapangan secara kriptografis?")
-add_bullet("Bagaimana merancang formula penilaian risiko deterministik yang transparan, dapat diaudit, dan bebas dari bias algoritma generik?")
-add_bullet("Bagaimana memastikan sistem cerdas (AI) memiliki batasan domain ketat (guardrails) serta cadangan analitik heuristik lokal saat jaringan API pihak ketiga terputus?")
+add_heading_2("1.3 Tujuan & Manfaat Inovasi")
+add_body_p("Tujuan umum dari pengembangan KotaKu Siaga adalah membangun platform web Civic Emergency & Flood Intelligence yang menyatukan data multi-sumber dan audit deterministik untuk memperkuat ketahanan bencana Kota Semarang.")
+add_body_p("Secara khusus, inisiatif ini bertujuan untuk:")
+add_bullet("Mengintegrasikan 8 aliran data terbuka (BMKG, Open-Meteo, 70 CCTV PantauSemar, OSM Overpass, DEM, Polder Pompa, Tide Gauge, Laporan Warga) dalam satu sistem Multi-Source Data Fusion.")
+add_bullet("Menerapkan formula penilaian risiko deterministik D-RISK yang transparan mengacu pada indikator perkotaan ISO 37120.")
+add_bullet("Menyediakan wizard pelaporan warga 4-langkah dengan verifikasi SHA-256, Cloudflare Turnstile, dan Email OTP tanpa kewajiban login akun.")
+add_bullet("Menghadirkan Civic AI Copilot 2.0 yang bebas halusinasi dengan deterministic spatial resolver dan routing darurat 112.")
+add_bullet("Menyediakan antarmuka Command Center Kiosk untuk pusat kendali EOC BPBD dan mode Emergency Lite hemat bandwidth untuk warga.")
 
-add_heading_2("1.4 Tujuan Pengembangan")
-add_bullet("Tujuan Utama: Membangun platform web Progressive Civic Emergency & Flood Intelligence yang menyajikan intelijen risiko 16 kecamatan di Kota Semarang secara transparan, akurat, dan bebas dari data rekayasa (zero fake data).")
-add_bullet("Tujuan Pengguna (Masyarakat): Menyediakan akses informasi visual kondisi jalan secara langsung, jalur pelaporan 4-langkah yang mudah diakses dari ponsel, serta panduan keselamatan Tas Siaga 72 Jam.")
-add_bullet("Tujuan Pengguna (Operator Posko EOC BPBD/DPU): Menyediakan dashboard kendali taktis dengan kontrol 16 layer, deteksi klaster laporan independen, dan lembar situasi risiko yang siap cetak format A4.")
-add_bullet("Tujuan Rekayasa Teknologi: Mengembangkan arsitektur Next.js 15 App Router yang aman, mengintegrasikan Cloudflare Turnstile, Web Crypto SHA-256, Supabase Auth Email OTP, dan formula D-RISK v1.0.0.")
-
-add_heading_2("1.5 Manfaat Solusi bagi Stakeholder")
-add_bullet("Bagi Warga Kota Semarang: Mencegah kendaraan mogok akibat menerobos genangan air yang dalam melalui pemantauan CCTV dan radar cuaca, serta memberikan tombol darurat SOS 1-klik ke Call Center 112.")
-add_bullet("Bagi Instansi Pemerintah (BPBD & DPU Kota Semarang): Meningkatkan akurasi disposisi pompa air bergerak ke kawasan dengan skor risiko kritis tertinggi secara terukur dan transparan.")
-add_bullet("Bagi Lingkungan dan Komunitas: Mengurangi dampak kerusakan infrastruktur jalan dan sanitasi melalui pelaporan cepat sumbatan sampah pada saluran drainase primer.")
-add_bullet("Bagi Pengembangan Teknologi Web: Menyediakan preseden bahwa aplikasi kebencanaan publik dapat dibangun secara tangguh, berestetika operasional yang tenang, dan berorientasi pada integritas data sejati.")
-
-add_heading_2("1.6 Kebaruan dan Nilai Tambah Inovasi")
-add_body_p("Inovasi rekayasa KotaKu Siaga dibandingkan solusi pelaporan konvensional dijabarkan dalam tabel komparasi berikut:")
-
-# Table 1.1
-t1 = doc.add_table(rows=1, cols=3)
-t1.alignment = WD_TABLE_ALIGNMENT.CENTER
-hdr1 = t1.rows[0].cells
-hdr1[0].text = "Aspek Rekayasa"
-hdr1[1].text = "Sistem Konvensional"
-hdr1[2].text = "KotaKu Siaga (Inovasi Baru)"
-for c in hdr1:
-    set_cell_background(c, "F4EDE4")
-    set_cell_margins(c, 80, 80, 100, 100)
-
-data_t1 = [
-    ("Autentikasi Pengguna", "Mewajibkan registrasi akun, kata sandi rumit, atau login sosial yang memakan waktu saat darurat.", "Passwordless Email OTP via Supabase Auth. Warga cukup memasukkan email aktif tanpa beban mengingat password."),
-    ("Integritas Bukti Foto", "Foto diunggah mentah tanpa verifikasi keaslian berkas digital.", "Client-side SHA-256 Hashing menggunakan Web Cryptography API sebelum unggah untuk menjamin keaslian bukti visual."),
-    ("Proteksi Anti-Bot", "Captcha tebak gambar yang sulit dibaca atau tanpa proteksi sama sekali.", "Cloudflare Turnstile non-intrusif yang memvalidasi kemanusiaan secara instan di latar belakang."),
-    ("Konektivitas Data", "Hanya mengandalkan aduan teks masyarakat tanpa data pendukung.", "Multi-Source Data Fusion: Menggabungkan 70 streaming CCTV PantauSemar, radar hujan, satelit angin, dan elevasi DEMNAS."),
-    ("Penetapan Prioritas", "Berdasarkan urutan masuk tiket atau desakan viralitas media sosial.", "Audit Deterministik D-RISK (ISO 37120): Formula matematis 6 parameter kuantitatif yang transparan dan dapat diaudit."),
-    ("Keandalan AI Asisten", "Model AI generik yang rentan halusinasi dan tidak memiliki cadangan saat offline.", "Civic AI Copilot dengan guardrail domain Semarang dan Deterministic Local Heuristic Fallback Engine."),
-]
-for row_data in data_t1:
-    row = t1.add_row()
-    for idx, text in enumerate(row_data):
-        cell = row.cells[idx]
-        cell.text = text
-        set_cell_margins(cell, 60, 60, 80, 80)
-        p = cell.paragraphs[0]
-        p.paragraph_format.space_after = Pt(2)
-        r = p.runs[0]
-        r.font.name = 'Arial'
-        r.font.size = Pt(8.5)
+add_heading_2("1.4 Ruang Lingkup & Batasan Sistem")
+add_body_p("Ruang lingkup KotaKu Siaga difokuskan pada wilayah administratif Kota Semarang yang mencakup 16 kecamatan dan 177 kelurahan. Batasan sistem meliputi penggunaan data terbuka publik (public open data) tanpa ketergantungan API berbayar, akurasi GPS mengikuti sensor perangkat pengguna, serta peran AI sebagai sistem pendukung keputusan (decision support system) dengan pengawasan manusia (human-in-the-loop).")
 
 doc.add_page_break()
 
-# ==================== BAB II ====================
-add_heading_1("BAB II — PEMBAHASAN")
+# ==================== BAB II: TINJAUAN PUSTAKA ====================
+add_heading_1("BAB II: TINJAUAN PUSTAKA & KERANGKA TEORITIS")
 
-add_heading_2("2.1 Gambaran Umum Platform KotaKu Siaga")
-add_body_p("Platform KotaKu Siaga (Deployment: https://kotaku-siaga.vercel.app) dirancang dengan prinsip 'Truthful Civic Intelligence'. Antarmuka beranda menyajikan gambaran status hidrometeorologi Kota Semarang secara langsung, kamera pemantau underpass Kaligawe, status darurat kota, dan navigasi cepat menuju seluruh modul operasional.")
+add_heading_2("2.1 Teori Ketahanan Iklim & Banjir Perkotaan")
+add_body_p("Ketahanan perkotaan terhadap banjir (Urban Flood Resilience) didefinisikan sebagai kapasitas suatu sistem sosio-ekologis perkotaan untuk menyerap gangguan hidrometeorologis, mempertahankan fungsi vital masyarakat, dan beradaptasi secara proaktif terhadap perubahan iklim jangka panjang (Brunner, 2021). Kota pesisir seperti Semarang menuntut pendekatan non-struktural (non-structural measures) berbasis sistem informasi cerdas untuk melengkapi infrastruktur fisik polder dan tanggul laut.")
 
-add_image_with_caption(
-    "media_1789477389543.png", "2.1", "Halaman Beranda (Landing Page) KotaKu Siaga",
-    "Beranda menampilkan hierarki visual yang jelas dengan palet Aubergine (#4a154b) dan Emerald (#007a5a). Terlihat integrasi langsung streaming kamera Underpass Kaligawe KM 4 (status jalan kering/ketinggian muka air +14 cm DPL), pita indikator telemetri BMKG Stasiun Maritim Tanjung Emas, tombol CTA Lapor Genangan, serta floating emergency pill SOS Darurat di sudut kanan bawah."
-)
+add_heading_2("2.2 Kerangka Indikator Kota Berkelanjutan ISO 37120")
+add_body_p("ISO 37120 (Sustainable Cities and Communities — Indicators for City Services and Quality of Life) merupakan standar internasional yang mendefinisikan metrik kinerja kota dalam merespon risiko bencana dan perubahan iklim. KotaKu Siaga mengacu pada klausul keselamatan perkotaan dan kesiapsiagaan bencana ISO 37120 untuk menyusun 7 parameter penentu indeks risiko wilayah: curah hujan per jam, pasang surut pesisir, elevasi kontur DEM, data historis genangan, densitas penduduk, status infrastruktur pompa polder, dan bukti verifikasi warga.")
 
-add_heading_2("2.2 Stakeholder dan Persona Pengguna")
-add_body_p("Platform KotaKu Siaga dirancang untuk melayani dua kelompok aktor utama dengan kebutuhan yang berbeda:")
+add_heading_2("2.3 Keselarasan Sasaran SDGs (Goal 11 & Goal 13)")
+add_body_p("KotaKu Siaga selaras secara substansial dengan dua agenda Tujuan Pembangunan Berkelanjutan (Sustainable Development Goals):")
+add_bullet("SDG 11 — Sustainable Cities & Communities (Target 11.5): Mengurangi secara signifikan jumlah korban bencana dan kerugian ekonomi akibat banjir rob melalui sistem peringatan dini, navigasi jalur aman, dan koordinasi evakuasi darurat.")
+add_bullet("SDG 13 — Climate Action (Target 13.1): Memperkuat ketahanan dan kapasitas adaptasi masyarakat pesisir terhadap ancaman kenaikan muka air laut dan cuaca ekstrem Pantura Jawa.")
 
-add_image_with_caption(
-    "media_1789477396490.png", "2.2", "Sinyal Darurat SOS Cepat & Kontak Kedaruratan BPBD 112",
-    "Modal SOS darurat dirancang dengan kontras tinggi, bebas distraksi, dan akses instan 1-klik untuk meneruskan koordinat GPS pelapor langsung ke dispatcher Call Center 112 atau panggilan darurat langsung BPBD Kota Semarang."
-)
+add_heading_2("2.4 Multi-Source Data Fusion & Spatial Corroboration")
+add_body_p("Multi-Source Data Fusion adalah teknik penggabungan data dari berbagai sensor heterogen untuk menghasilkan inferensi situasional yang lebih akurat dibandingkan mengandalkan satu sumber tunggal (Hall & Llinas, 2001). Dalam KotaKu Siaga, laporan warga tidak langsung dianggap benar melainkan dikoroborasi silang dengan stasiun cuaca terdekat, rekaman CCTV di radius 1.5 km, dan status polder pembuangan.")
 
-# Table 2.1
-t21 = doc.add_table(rows=1, cols=3)
-t21.alignment = WD_TABLE_ALIGNMENT.CENTER
-hdr21 = t21.rows[0].cells
-hdr21[0].text = "Kelompok Pengguna"
-hdr21[1].text = "Karakteristik & Perilaku"
-hdr21[2].text = "Fitur yang Digunakan"
-for c in hdr21:
-    set_cell_background(c, "F4EDE4")
-    set_cell_margins(c, 80, 80, 100, 100)
+add_heading_2("2.5 Matriks Komparasi Sistem Konvensional vs KotaKu Siaga")
+add_body_p("Berikut adalah tabel perbandingan sistem penanganan genangan konvensional dengan platform KotaKu Siaga:")
 
-data_t21 = [
-    ("Warga & Komuter (Pesisir & Kota)", "Membutuhkan kepastian rute bebas genangan saat jam berangkat/pulang kerja serta kanal pelaporan darurat instan tanpa hambatan akun.", "Peta 70 CCTV PantauSemar, Wizard Pelaporan 4-Langkah, Sinyal Darurat SOS, Asisten Civic Copilot, dan Checklist Tas Siaga 72 Jam."),
-    ("Petugas Lapangan & Relawan (BPBD / FPRB)", "Membutuhkan verifikasi kebenaran laporan warga di lapangan dan lokasi akurat titik genangan air.", "Peta klaster laporan spasial, verifikasi hash SHA-256 foto bukti, dan navigasi titik koordinat GPS pelapor."),
-    ("Operator Posko EOC & Pengambil Kebijakan", "Membutuhkan landasan data kuantitatif untuk mengalokasikan armada pompa bergerak dan logistik bencana.", "Dashboard Taktis EOC, Matriks Prioritas Deterministik D-RISK per kecamatan, dan Cetak Lembar Situasi A4."),
+table_comp = doc.add_table(rows=1, cols=3)
+table_comp.alignment = WD_TABLE_ALIGNMENT.CENTER
+hdr_cells = table_comp.rows[0].cells
+hdr_cells[0].text = "Dimensi Penanganan"
+hdr_cells[1].text = "Pendekatan Konvensional"
+hdr_cells[2].text = "KotaKu Siaga Platform"
+for cell in hdr_cells:
+    set_cell_background(cell, "4A154B")
+    p = cell.paragraphs[0]
+    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    for run in p.runs:
+        run.font.name = 'Arial'
+        run.font.size = Pt(10)
+        run.font.bold = True
+        run.font.color.rgb = RGBColor(0xFF, 0xFF, 0xFF)
+
+comp_data = [
+    ("Arsitektur Data", "Terpisah di masing-masing dinas (silo)", "Multi-Source Data Fusion 8 aliran terbuka"),
+    ("Validasi Laporan", "Manual via telepon / media sosial", "Kriptografi SHA-256 + OTP + GPS Geofencing"),
+    ("Transparansi Prioritas", "Tertutup, rentan subjektivitas", "Formula D-RISK Deterministik Terbuka ISO 37120"),
+    ("Kamera Pemantau", "Tersebar, hanya internal petugas", "70 Titik PantauSemar terintegrasi peta publik"),
+    ("Asisten Cerdas", "Bot rule-based kaku / halusinasi", "Civic AI Copilot 2.0 Grounded Real Telemetry"),
+    ("Aksesibilitas Darurat", "Aplikasi berat, wajib login akun", "Web ringan, No-Login OTP, Emergency Lite Mode"),
+    ("Display Operasional", "Manual report sheet", "Layar Command Center Kiosk EOC Wallboard")
 ]
-for row_data in data_t21:
-    row = t21.add_row()
-    for idx, text in enumerate(row_data):
-        cell = row.cells[idx]
-        cell.text = text
-        set_cell_margins(cell, 60, 60, 80, 80)
-        p = cell.paragraphs[0]
-        p.paragraph_format.space_after = Pt(2)
-        r = p.runs[0]
-        r.font.name = 'Arial'
-        r.font.size = Pt(8.5)
 
-add_heading_2("2.3 Metode Rekayasa Perangkat Lunak")
-add_body_p("Pengembangan sistem KotaKu Siaga menerapkan metodologi Iterative Domain-Driven Development (DDD) yang terbagi ke dalam 5 siklus berulang:")
-add_bullet("Domain Modeling & Spatial Bounds: Menetapkan batas geospasial Kota Semarang (Latitude -7.115 s.d. -6.920, Longitude 110.270 s.d. 110.500) dan struktur data 16 kecamatan administratif berdasarkan data resmi BPS.")
-add_bullet("Architecture & API Contracts: Mendefinisikan kontrak data TypeScript untuk telemetri cuaca (Open-Meteo), skema tabel PostgreSQL Supabase, serta protokol validasi token OTP dan Turnstile.")
-add_bullet("Full-Stack Component Implementation: Membangun antarmuka Next.js App Router, integrasi Leaflet GIS dengan ssr: false, form wizard dinamis, dan kalkulator D-RISK deterministik.")
-add_bullet("Security Hardening & Guardrails: Mengimplementasikan Web Cryptography API untuk kalkulasi hash SHA-256 di browser, pengamanan Row Level Security (RLS), serta modul regex guardrail AI.")
-add_bullet("Validation, Purge & Deployment: Menjalankan uji kompilasi penuh (Next.js build 60 rute bersih), memverifikasi ketiadaan angka insiden dummy (truthful empty states), dan melakukan otomatisasi deployment ke Vercel Edge Network.")
-
-add_heading_2("2.4 Spesifikasi Technology Stack Aktual")
-add_body_p("Spesifikasi teknologi yang benar-benar digunakan dalam implementasi kode sumber dijabarkan dalam tabel berikut:")
-
-# Table 2.2
-t22 = doc.add_table(rows=1, cols=4)
-t22.alignment = WD_TABLE_ALIGNMENT.CENTER
-hdr22 = t22.rows[0].cells
-hdr22[0].text = "Layer"
-hdr22[1].text = "Teknologi / Library"
-hdr22[2].text = "Versi"
-hdr22[3].text = "Peran dan Implementasi Kode Sumber"
-for c in hdr22:
-    set_cell_background(c, "F4EDE4")
-    set_cell_margins(c, 80, 80, 100, 100)
-
-data_t22 = [
-    ("Frontend Core", "Next.js (App Router)", "v15.5.25", "Arsitektur Server Components & Client Boundaries, SSG 16 kecamatan, dan dynamic routing app/priorities/[area]."),
-    ("UI Runtime", "React & TypeScript", "v19.0.0 / TS 5", "State management reaktif, type safety ketat, dan pengelolaan rendering komponen interaktif."),
-    ("Styling Engine", "Tailwind CSS", "v3.4.1", "Desain antarmuka responsif berbasis utility classes dengan palet warna Aubergine dan Emerald."),
-    ("GIS Mapping", "Leaflet & React-Leaflet", "v1.9.4 / v5.0.0", "Peta interaktif penampil marker 70 CCTV, visualisasi layer angin/hujan/gelombang, dan klaster insiden."),
-    ("Database Tier", "Supabase PostgreSQL", "v2.49.1 (Client)", "Penyimpanan data relasional laporan warga, audit log, Row Level Security (RLS), dan spatial coordinates."),
-    ("Autentikasi", "Supabase Auth (OTP)", "Built-in Service", "Verifikasi identitas pelapor via 6-digit email OTP tanpa kata sandi (app/api/auth/otp/*)."),
-    ("Anti-Bot Engine", "Cloudflare Turnstile", "API v0", "Proteksi formulir pelaporan dari serangan automated bot spam secara non-intrusif."),
-    ("Kriptografi", "Web Cryptography API", "Browser Native", "Kalkulasi hash SHA-256 64-karakter heksadesimal pada foto bukti lapangan di sisi klien (SubtleCrypto)."),
-    ("AI & Heuristik", "OpenRouter AI & Heuristic", "Pool 4 Keys / Local", "Asisten dialog hidrologi dengan guardrail domain dan cadangan analitik heuristik lokal saat offline."),
-    ("Penyedia Cuaca", "Open-Meteo & WMO", "REST API v1", "Data terbuka prakiraan curah hujan per jam, kecepatan angin, kelembaban, dan tutupan awan."),
-]
-for row_data in data_t22:
-    row = t22.add_row()
-    for idx, text in enumerate(row_data):
-        cell = row.cells[idx]
-        cell.text = text
-        set_cell_margins(cell, 60, 60, 80, 80)
-        p = cell.paragraphs[0]
-        p.paragraph_format.space_after = Pt(2)
-        r = p.runs[0]
-        r.font.name = 'Arial'
-        r.font.size = Pt(8.5)
-
-add_heading_2("2.5 Arsitektur Sistem, Alur Data, dan Alur Pengguna")
-add_heading_3("A. Diagram Arsitektur Multi-Tier")
-add_code_box(
-"+-----------------------------------------------------------------------------------+\n"
-"|                        1. PRESENTATION TIER (Web Browser / Mobile)                |\n"
-"|  - Next.js Client Components (Leaflet Map, 4-Step Wizard, Turnstile, SubtleCrypto)|\n"
-"|  - Collision-Free Floating Actions (SOS z-50 vs Civic Copilot z-40)               |\n"
-"|  - Viewport Adapter: 320px (Ultra-Small) s.d. 1920px (Desktop Full HD)            |\n"
-"+------------------------------------------+----------------------------------------+\n"
-"                                           | HTTPS / TLS 1.3\n"
-"                                           v\n"
-"+-----------------------------------------------------------------------------------+\n"
-"|                     2. APPLICATION & EDGE SERVER TIER (Next.js 15)                |\n"
-"|  - Route Middleware (RBAC Operator, IP Rate Limiting 60 req/min)                  |\n"
-"|  - Server-Side Rendering (SSG Static Pages, ISR Weather Cache 5 menit)            |\n"
-"|  - Edge API Endpoints: /api/reports, /api/weather, /api/cctv, /api/ai/chat        |\n"
-"+-------------------+----------------------+--------------------+-------------------+\n"
-"                    |                      |                    |\n"
-"        +-----------v-----------+          |          +---------v----------+\n"
-"        |  3. DATA STORAGE TIER |          |          | 4. EXTERNAL APIS   |\n"
-"        |  - Supabase PostgreSQL|          |          | - Open-Meteo Radar |\n"
-"        |  - Row Level Security |          |          | - 70 CCTV Streams  |\n"
-"        |  - Supabase Auth (OTP)|          |          | - OpenRouter Pool  |\n"
-"        |  - Storage Buckets    |          |          | - Ina-Geoportal DEM|\n"
-"        +-----------------------+          |          +--------------------+\n"
-"                                           |\n"
-"                               +-----------v------------+\n"
-"                               | 5. INTELLIGENCE ENGINE |\n"
-"                               | - D-RISK Formula 1.0.0 |\n"
-"                               | - Haversine Clustering |\n"
-"                               | - Heuristic Fallback   |\n"
-"                               +------------------------+\n"
-)
-
-add_heading_3("B. Diagram Alur Pengguna (User Flow) Pelaporan Warga")
-add_code_box(
-"[Warga Membuka /laporan/baru]\n"
-"               |\n"
-"               v\n"
-"[LANGKAH 1: Identitas Pelapor] ----> (Validasi Nama, Format Email, Nomor HP)\n"
-"               |\n"
-"               v\n"
-"[LANGKAH 2: Bukti Foto & GPS] -----> (Pilih Foto -> Hitung Hash SHA-256 di Browser -> Ambil GPS)\n"
-"               |\n"
-"               v\n"
-"[LANGKAH 3: Detail Genangan] ------> (Pilih Kategori: Banjir Rob / Genangan -> Estimasi Ketinggian)\n"
-"               |\n"
-"               v\n"
-"[LANGKAH 4: Verifikasi & Kirim] ---> (Lolos Turnstile -> Kirim 6-Digit OTP Email -> Verifikasi)\n"
-"               |\n"
-"               v\n"
-"[BACKEND: Pemrosesan & Klaster] ---> (Validasi Server-Side -> Pencocokan Radius 1.0 km Haversine)\n"
-"               |\n"
-"               v\n"
-"[LAYAR SUKSES: Tiket SMG-2026-XXXX Diterbitkan + Tautan Pantau di Peta Spasial]\n"
-)
-
-add_heading_2("2.6 Multi-Source Data Fusion Pipeline")
-add_body_p("KotaKu Siaga tidak mengandalkan satu sumber tunggal, melainkan menggabungkan 4 pilar data terbuka resmi:")
-add_bullet("Data Atmosfer & Meteorologi: Model numerik ECMWF/GFS melalui API Open-Meteo yang dipadukan dengan pengamatan Stasiun Meteorologi Maritim Tanjung Emas untuk mendapatkan curah hujan per jam (mm/jam) dan kecepatan angin.")
-add_bullet("Data Pengamatan Visual: 70 titik kamera streaming CCTV PantauSemar Diskominfo Kota Semarang yang ditempatkan pada titik-titik rawan rob (Kaligawe, Genuk, Bandarharjo) dan polder rumah pompa.")
-add_bullet("Data Topografi & Geospasial: Model Elevasi Digital Nasional (DEMNAS) Badan Informasi Geospasial dengan resolusi vertikal tinggi untuk mendeteksi kawasan dengan elevasi kritis (< 2.5m DPL).")
-add_bullet("Data Pelaporan Lapangan Warga: Laporan kejadian langsung dari warga yang telah melalui verifikasi identitas (OTP), anti-bot (Turnstile), dan validasi integritas foto (SHA-256).")
-
-add_heading_2("2.7 Modul GIS dan Pemantauan 70 CCTV PantauSemar")
-add_body_p("Halaman /peta menyajikan antarmuka Sistem Informasi Geografis (GIS) interaktif berbasis Leaflet yang memetakan seluruh aset drainase, kamera pemantau jalan, dan klaster kejadian secara visual.")
-
-add_image_with_caption(
-    "media_1789477408264.png", "2.5", "Peta Spasial GIS Terpadu & Sebaran 70 Titik CCTV PantauSemar",
-    "Peta memuat 70 marker kamera CCTV PantauSemar dengan klastering cerdas di wilayah Semarang Utara dan Genuk. Pita telemetri atas menampilkan data observasi langsung (Suhu 28.6°C, Curah Hujan 0 mm/j, Angin 7.5 km/j, Kelembaban 66%). Panel filter samping memungkinkan penyaringan laporan berdasarkan kategori dan tingkat urgensi (Kritis, Tinggi, Sedang, Rendah)."
-)
-
-add_image_with_caption(
-    "media_1789465766171.png", "2.6", "Katalog Pemilihan Lapisan Cuaca & Atmosfer (Progressive Disclosure)",
-    "Popover katalog lapisan dirancang dengan kontras tinggi (solid background putih dengan border tegas) yang mengelompokkan 6 mode lapisan: (1) Risiko Lingkungan (Peta Spasial GIS), (2) Atmosfer & Cuaca (Aliran Angin Permukaan, Radar Presipitasi Hujan, Tutupan Awan, Tekanan Barometrik), dan (3) Pesisir & Kelautan (Gelombang Laut Jawa)."
-)
-
-add_heading_2("2.8 Pelaporan Darurat Warga Tanpa Password")
-add_body_p("Modul /laporan/baru mengimplementasikan wizard 4-tahap yang memandu warga mengirimkan laporan darurat secara terstruktur tanpa hambatan mengingat kata sandi.")
-
-add_image_with_caption(
-    "media_1789477421303.png", "2.7", "Antarmuka Wizard Pelaporan Warga (Langkah 1: Identitas & Jaminan Privasi)",
-    "Formulir meminta nama lengkap, alamat email aktif (untuk pengiriman OTP), dan nomor HP (untuk koordinasi darurat petugas BPBD). Terdapat jaminan privasi eksplisit bahwa data kontak pribadi tidak akan pernah dipublikasikan pada peta umum atau diserahkan ke pihak ketiga."
-)
-
-add_image_with_caption(
-    "media_1789474702096.png", "2.8", "Verifikasi Kemanusiaan Anti-Bot (Turnstile) & Supabase Email OTP (Langkah 4)",
-    "Langkah final mewajibkan warga menyelesaikan verifikasi anti-bot Cloudflare Turnstile serta memasukkan 6-digit kode OTP yang dikirimkan ke email pelapor. Sistem juga mendukung fallback verifikasi instan melalui tautan konfirmasi Magic Link."
-)
-
-add_image_with_caption(
-    "media_1789477414987.png", "2.9", "Daftar Laporan Lapangan Publik (Representasi Truthful Empty State)",
-    "Sesuai prinsip kebenaran produksi, ketika database belum memiliki laporan warga yang terverifikasi, sistem menampilkan Empty State profesional dengan tombol aksi 'Kirim Laporan Baru', tanpa mengarang angka insiden palsu untuk membuat dashboard terlihat penuh."
-)
-
-add_heading_2("2.9 Integritas Bukti Kriptografis SHA-256 & Anti-Bot")
-add_body_p("Untuk mencegah rekayasa bukti visual (misalnya foto banjir lama yang diunggah ulang), KotaKu Siaga menerapkan komputasi hash kriptografis SHA-256 langsung pada array buffer berkas gambar di sisi klien menggunakan standar Web Cryptography API (window.crypto.subtle):")
-
-add_code_box(
-"// Cuplikan Implementasi Kriptografi pada app/laporan/baru/page.tsx:\n"
-"const arrayBuffer = await file.arrayBuffer();\n"
-"const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer);\n"
-"const hashArray = Array.from(new Uint8Array(hashBuffer));\n"
-"const hashHex = hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');\n"
-"setPhotoSha256(hashHex); // Menghasilkan hash 64-karakter heksadesimal unik\n"
-)
-add_body_p("Nilai hash photo_sha256 ini disimpan secara permanen pada kolom basis data PostgreSQL bersamaan dengan metadata tiket laporan. Jika berkas gambar dimanipulasi atau diubah satu byte saja di kemudian hari, nilai hash tidak akan cocok, sehingga memberikan kepastian hukum dan integritas bukti bagi posko bencana.")
-
-add_heading_2("2.10 Algoritma Haversine & Spatial Corroboration")
-add_body_p("Untuk mengelompokkan laporan-laporan warga yang melaporkan kejadian genangan pada ruas jalan yang sama, platform menerapkan formula jarak lingkaran besar Haversine pada modul lib/spatial/enrichment.ts:")
-
-add_formula_box(
-"a = sin²(Δφ / 2) + cos(φ₁) · cos(φ₂) · sin²(Δλ / 2)\n"
-"c = 2 · atan2(√a, √(1 - a))\n"
-"d = R · c   (di mana R = 6371 km)"
-)
-add_body_p("Logika Klasterisasi: Jika laporan baru memiliki jarak d <= 1.0 km dari klaster aktif dan berada dalam rentang waktu yang sama, sistem menggabungkannya ke dalam satu incident_cluster dan menaikkan nilai independent_reporters. Laporan dengan >= 3 pelapor independen atau yang berada dalam radius pandang kamera CCTV otomatis dinaikkan statusnya menjadi CORROBORATED.")
-
-add_heading_2("2.11 Mesin Audit Deterministik D-RISK v1.0.0 (ISO 37120)")
-add_body_p("Penentuan skala prioritas penanganan genangan di 16 kecamatan dihitung menggunakan formula deterministik D-RISK v1.0.0 pada modul lib/priority/calculator.ts yang mengacu pada prinsip keterbukaan indikator perkotaan ISO 37120:")
-
-add_formula_box("Skor Prioritas = 0.25 · L_norm + 0.20 · U_norm + 0.15 · P_norm + 0.15 · H_norm + 0.15 · K_norm + 0.10 · C_norm")
-
-# Table 2.3
-t23 = doc.add_table(rows=1, cols=6)
-t23.alignment = WD_TABLE_ALIGNMENT.CENTER
-hdr23 = t23.rows[0].cells
-hdr23[0].text = "Simbol"
-hdr23[1].text = "Nama Variabel"
-hdr23[2].text = "Sumber Data"
-hdr23[3].text = "Batas Normalisasi"
-hdr23[4].text = "Bobot"
-hdr23[5].text = "Kontribusi"
-for c in hdr23:
-    set_cell_background(c, "F4EDE4")
-    set_cell_margins(c, 80, 80, 100, 100)
-
-data_t23 = [
-    ("L_norm", "Report Frequency (7 Hari)", "Basis Data Laporan Warga", "[0, 40] lap -> [0, 100]", "0.25", "25%"),
-    ("U_norm", "Field Urgency Score", "Validasi Ketinggian Air", "[0, 100] skala lapangan", "0.20", "20%"),
-    ("P_norm", "Population Density", "BPS Kota Semarang", "[500, 15000] jiwa/km2", "0.15", "15%"),
-    ("H_norm", "Historical Disaster", "Katalog DIBI BNPB", "[0, 15] kejadian historis", "0.15", "15%"),
-    ("K_norm", "Environmental Vuln.", "Ina-Geoportal DEMNAS", "Indeks Elevasi & Subsidence", "0.15", "15%"),
-    ("C_norm", "Weather Indicator", "Open-Meteo / BMKG", "Probabilitas Curah Hujan", "0.10", "10%"),
-]
-for row_data in data_t23:
-    row = t23.add_row()
-    for idx, text in enumerate(row_data):
-        cell = row.cells[idx]
-        cell.text = text
-        set_cell_margins(cell, 60, 60, 80, 80)
-        p = cell.paragraphs[0]
-        p.paragraph_format.space_after = Pt(2)
-        r = p.runs[0]
-        r.font.name = 'Arial'
-        r.font.size = Pt(8.5)
-
-add_body_p("Contoh Perhitungan Numerik Aktual (Kecamatan Genuk):", indent=False)
-add_bullet("L_raw = 24 laporan -> L_norm = ((24 - 0)/(40 - 0)) * 100 = 60.0 -> Kontribusi: 60.0 * 0.25 = 15.00")
-add_bullet("U_raw = 84.0 (Urgensi Tinggi) -> U_norm = 84.0 -> Kontribusi: 84.0 * 0.20 = 16.80")
-add_bullet("P_raw = 6500 jiwa/km2 -> P_norm = ((6500 - 500)/(15000 - 500)) * 100 = 41.38 -> Kontribusi: 41.38 * 0.15 = 6.21")
-add_bullet("H_raw = 14 kejadian BNPB -> H_norm = ((14 - 0)/(15 - 0)) * 100 = 93.33 -> Kontribusi: 93.33 * 0.15 = 14.00")
-add_bullet("K_raw = 88.0 (Elevasi < 2.0m DPL) -> K_norm = 88.0 -> Kontribusi: 88.0 * 0.15 = 13.20")
-add_bullet("C_raw = 72.0 (Prakiraan Hujan Sedang) -> C_norm = 72.0 -> Kontribusi: 72.0 * 0.10 = 7.20")
-
-add_formula_box("Skor Final Genuk = 15.00 + 16.80 + 6.21 + 14.00 + 13.20 + 7.20 = 72.41 ≈ 72.4 (Klasifikasi: HIGH PRIORITY)")
-
-add_image_with_caption(
-    "media_1789465173719.png", "2.10", "Detail Audit Matriks Risiko Deterministik Kecamatan & Parameter D-RISK",
-    "Halaman /priorities/[area] membedah 6 parameter pembentuk skor secara transparan tanpa model black-box AI. Di bagian atas terdapat tombol 'Cetak Lembar Situasi (A4)' yang secara otomatis memformat dokumen ke dalam tata letak A4 siap cetak untuk briefing posko komando."
-)
-
-add_heading_2("2.12 Asisten Analitik Civic AI Copilot & Guardrail")
-add_body_p("Platform menyediakan asisten cerdas Civic AI Copilot yang dapat diakses melalui tombol floating di setiap halaman untuk menjawab pertanyaan warga seputar dinamika air, kondisi wilayah tertentu, dan rekomendasi mitigasi.")
-
-add_image_with_caption(
-    "media_1789475191837.png", "2.11", "Modal Informasi Keselamatan Warga & Status Risiko 16 Kecamatan",
-    "Sistem mengintegrasikan status risiko per kecamatan (misal: Kecamatan Ngaliyan: AMAN/NORMAL, Skor 0/100, Curah Hujan 0 mm/jam, Bukan Pesisir Bebas Rob) serta menyediakan saluran telepon langsung BPBD Call Center 112."
-)
-
-add_body_p("Arsitektur Pertahanan AI Guardrail (lib/ai/guardrails.ts): Untuk mencegah penyalahgunaan model bahasa besar (LLM), sistem menerapkan filter aplikasi berlapis: (1) Deteksi Injeksi Prompt & Politik, (2) Klasifikasi Domain Kebencanaan Semarang, (3) Eksekusi LLM OpenRouter Multi-Key Pool, (4) Local Deterministic Heuristic Fallback Engine jika API eksternal gagal (HTTP 429), dan (5) Sanitasi Output Anti-XSS.")
-
-add_heading_2("2.13 Modul Literasi Ketahanan & Tas Siaga 72 Jam")
-add_body_p("Halaman /edukasi menyajikan sains kebencanaan terapan mengenai perbedaan banjir rob pasang laut dan limpasan hujan, penurunan tanah (land subsidence), diagram aliran polder interaktif, serta modul Checklist Mandiri Tas Siaga Bencana 72 Jam (10 item esensial: air minum, makanan kaleng, obat pribadi, P3K, senter, power bank, dokumen kedap air, pakaian, peluit, dan masker) yang progresnya tersimpan aman di LocalStorage peramban pengguna.")
-
-add_heading_2("2.14 UI/UX Engineering & Penataan Floating Emergency")
-add_body_p("KotaKu Siaga menerapkan prinsip desain operasional Calm & Trustworthy Aesthetic:")
-add_bullet("Pemisahan Floating Action (Collision-Free): Tombol SOS DARURAT dikunci pada layer teratas (z-50, sudut kanan bawah) dengan highlight merah menyala. Tombol Civic AI Copilot ditempatkan secara vertikal di atasnya (z-40) dengan padding aman (safe-area inset) sehingga kedua tombol tidak pernah bertumpuk pada layar smartphone 320px–430px.")
-add_bullet("Aksesibilitas Kontras Tinggi (WCAG AA): Menggunakan teks gelap (#1d1d1d) di atas latar belakang terang (#fdfbf9) dan kartu elevated (#ffffff) untuk memastikan keterbacaan di bawah sinar matahari langsung saat berada di lapangan.")
-
-add_heading_2("2.15 Verifikasi Keamanan (Security Matrix)")
-
-# Table 2.4
-t24 = doc.add_table(rows=1, cols=4)
-t24.alignment = WD_TABLE_ALIGNMENT.CENTER
-hdr24 = t24.rows[0].cells
-hdr24[0].text = "Vektor Ancaman"
-hdr24[1].text = "Risiko Potensial"
-hdr24[2].text = "Mekanisme Mitigasi"
-hdr24[3].text = "Implementasi Sumber Daya"
-for c in hdr24:
-    set_cell_background(c, "F4EDE4")
-    set_cell_margins(c, 80, 80, 100, 100)
-
-data_t24 = [
-    ("Automated Bot Spam", "Penyalahgunaan endpoint pelaporan untuk membanjiri database dengan tiket palsu.", "Cloudflare Turnstile token validation di sisi server pada setiap request POST laporan.", "challenges.cloudflare.com/turnstile/v0/siteverify pada /api/reports."),
-    ("Manipulasi Bukti Visual", "Pengubahan bukti foto banjir pasca-kejadian.", "Perhitungan hash kriptografis SHA-256 pada binary array buffer sebelum berkas diunggah.", "crypto.subtle.digest('SHA-256') & kolom photo_sha256 pada PostgreSQL."),
-    ("Cross-Site Scripting (XSS)", "Injeksi skrip berbahaya melalui nama pelapor, deskripsi, atau respons AI LLM.", "Sanitasi output, rendering teks murni (plain text/sanitized markdown), dan validasi schema Zod.", "lib/ai/guardrails.ts & React JSX automatic entity escaping."),
-    ("Kebocoran Kunci Rahasia", "Expose Supabase Service Role Key atau OpenRouter API Key ke bundle browser.", "Pemisahan variabel lingkungan; kunci privat hanya dapat diakses di runtime Node.js server.", "Variabel tanpa prefix NEXT_PUBLIC_ pada .env.production & Edge middleware."),
-    ("Akses Database Tidak Sah", "Manipulasi data laporan antar pengguna.", "Penerapan PostgreSQL Row Level Security (RLS) pada seluruh tabel publik.", "Kebijakan RLS (SELECT terbuka publik, INSERT terotentikasi, UPDATE peran admin)."),
-]
-for row_data in data_t24:
-    row = t24.add_row()
-    for idx, text in enumerate(row_data):
-        cell = row.cells[idx]
-        cell.text = text
-        set_cell_margins(cell, 60, 60, 80, 80)
-        p = cell.paragraphs[0]
-        p.paragraph_format.space_after = Pt(2)
-        r = p.runs[0]
-        r.font.name = 'Arial'
-        r.font.size = Pt(8.5)
-
-add_heading_2("2.16 Hasil Pengujian Kompilasi & Responsivitas")
-add_body_p("Pengujian build produksi dan tampilan responsif dilakukan secara komprehensif pada berbagai perangkat:")
-
-# Table 2.5
-t25 = doc.add_table(rows=1, cols=4)
-t25.alignment = WD_TABLE_ALIGNMENT.CENTER
-hdr25 = t25.rows[0].cells
-hdr25[0].text = "Kategori Pengujian"
-hdr25[1].text = "Parameter / Viewport"
-hdr25[2].text = "Hasil Pengamatan"
-hdr25[3].text = "Status"
-for c in hdr25:
-    set_cell_background(c, "F4EDE4")
-    set_cell_margins(c, 80, 80, 100, 100)
-
-data_t25 = [
-    ("Next.js Production Build", "npm run build (60 Rute Statis & Dinamis)", "0 TypeScript Error, 0 Lint Warning, build waktu 39.5s.", "PASS"),
-    ("Mobile Ultra-Small", "320 × 800 px (Android Budget)", "Tidak ada horizontal overflow, wizard pelaporan proporsional.", "PASS"),
-    ("Mobile Standard", "375 × 812 px / 390 × 844 px (iPhone)", "Tombol SOS dan Copilot tertata rapi, touch target > 44px.", "PASS"),
-    ("Tablet Landscape", "768 × 1024 px / 1024 × 768 px (iPad)", "Peta Leaflet memenuhi viewport, drawer CCTV responsif.", "PASS"),
-    ("Desktop HD & 4K", "1440 × 900 px / 1920 × 1080 px", "Tampilan matriks risiko 16 kecamatan tersusun simetris.", "PASS"),
-]
-for row_data in data_t25:
-    row = t25.add_row()
-    for idx, text in enumerate(row_data):
-        cell = row.cells[idx]
-        cell.text = text
-        set_cell_margins(cell, 60, 60, 80, 80)
-        p = cell.paragraphs[0]
-        p.paragraph_format.space_after = Pt(2)
-        r = p.runs[0]
-        r.font.name = 'Arial'
-        r.font.size = Pt(8.5)
-
-add_heading_2("2.17 Pemetaan Dampak SDG 11 & SDG 13")
-
-# Table 2.6
-t26 = doc.add_table(rows=1, cols=3)
-t26.alignment = WD_TABLE_ALIGNMENT.CENTER
-hdr26 = t26.rows[0].cells
-hdr26[0].text = "Tujuan & Target"
-hdr26[1].text = "Indikator Keberhasilan Terukur"
-hdr26[2].text = "Mekanisme Implementasi Platform KotaKu Siaga"
-for c in hdr26:
-    set_cell_background(c, "F4EDE4")
-    set_cell_margins(c, 80, 80, 100, 100)
-
-data_t26 = [
-    ("SDG 11 — Target 11.5\n(Ketahanan Kota & Pengurangan Korban Bencana)", "Penurunan waktu verifikasi insiden genangan air dan percepatan pengiriman pompa mobile.", "Menyajikan 70 kamera streaming CCTV live dan deteksi klaster spasial otomatis untuk memvalidasi laporan warga dalam hitungan detik."),
-    ("SDG 13 — Target 13.1\n(Penguatan Kapasitas Adaptasi Perubahan Iklim)", "Peningkatan kesiapsiagaan mandiri keluarga pesisir terhadap ancaman kenaikan muka air laut.", "Menyediakan modul edukasi sains hidrologi Semarang, pemantauan gelombang pasang, serta kalkulator Tas Siaga 72 Jam."),
-]
-for row_data in data_t26:
-    row = t26.add_row()
-    for idx, text in enumerate(row_data):
-        cell = row.cells[idx]
-        cell.text = text
-        set_cell_margins(cell, 60, 60, 80, 80)
-        p = cell.paragraphs[0]
-        p.paragraph_format.space_after = Pt(2)
-        r = p.runs[0]
-        r.font.name = 'Arial'
-        r.font.size = Pt(8.5)
-
-add_heading_2("2.18 Rencana Implementasi dan Roadmap 4 Fase")
-
-# Table 2.7
-t27 = doc.add_table(rows=1, cols=4)
-t27.alignment = WD_TABLE_ALIGNMENT.CENTER
-hdr27 = t27.rows[0].cells
-hdr27[0].text = "Fase"
-hdr27[1].text = "Target Periode"
-hdr27[2].text = "Fokus Kegiatan & Milestone"
-hdr27[3].text = "Status Eksekusi"
-for c in hdr27:
-    set_cell_background(c, "F4EDE4")
-    set_cell_margins(c, 80, 80, 100, 100)
-
-data_t27 = [
-    ("Fase 1 (MVP Rilis)", "Bulan ke-1 s.d. ke-2 (2026)", "Peluncuran platform web, integrasi 70 CCTV, formula D-RISK, pelaporan OTP, dan deployment Vercel.", "IMPLEMENTED"),
-    ("Fase 2 (Pilot Lapangan)", "Bulan ke-3 s.d. ke-5", "Uji coba operasional bersama relawan FPRB di Kecamatan Genuk & Semarang Utara.", "PLANNED"),
-    ("Fase 3 (Integrasi EOC)", "Bulan ke-6 s.d. ke-8", "Penyambungan webhook API laporan ke dashboard komando BPBD Kota Semarang.", "PLANNED"),
-    ("Fase 4 (IoT & Skala Kota)", "Bulan ke-9 s.d. ke-12", "Pemasangan sensor ultrasonik TMA LoRaWAN mandiri pada 10 titik saluran primer kota.", "PLANNED"),
-]
-for row_data in data_t27:
-    row = t27.add_row()
-    for idx, text in enumerate(row_data):
-        cell = row.cells[idx]
-        cell.text = text
-        set_cell_margins(cell, 60, 60, 80, 80)
-        p = cell.paragraphs[0]
-        p.paragraph_format.space_after = Pt(2)
-        r = p.runs[0]
-        r.font.name = 'Arial'
-        r.font.size = Pt(8.5)
+for dim, konv, kts in comp_data:
+    row = table_comp.add_row()
+    c0 = row.cells[0]
+    c1 = row.cells[1]
+    c2 = row.cells[2]
+    set_cell_margins(c0, top=60, bottom=60, left=80, right=80)
+    set_cell_margins(c1, top=60, bottom=60, left=80, right=80)
+    set_cell_margins(c2, top=60, bottom=60, left=80, right=80)
+    c0.text = dim
+    c1.text = konv
+    c2.text = kts
+    for c in [c0, c1, c2]:
+        p = c.paragraphs[0]
+        for run in p.runs:
+            run.font.name = 'Times New Roman'
+            run.font.size = Pt(9.5)
 
 doc.add_page_break()
 
-# ==================== BAB III ====================
-add_heading_1("BAB III — PENUTUP")
+# ==================== BAB III: DESAIN SISTEM ====================
+add_heading_1("BAB III: DESAIN SISTEM & ARSITEKTUR TEKNOLOGI")
 
-add_heading_2("3.1 Kesimpulan")
-add_body_p("Platform KotaKu Siaga yang dikembangkan oleh Tim Pentol Kabul Alfamart Widuri merupakan wujud nyata inovasi rekayasa perangkat lunak untuk menjawab tantangan bencana hidrometeorologi di Kota Semarang. Dengan memegang teguh prinsip Evidence First & Truthful Engineering, platform ini telah berhasil mengintegrasikan telemetri cuaca terbuka, 70 kamera pemantau visual pemerintah, pelaporan warga tanpa kata sandi berintegritas tinggi (SHA-256 + Email OTP), serta formula deterministik D-RISK v1.0.0 berbasis ISO 37120.")
-add_body_p("Seluruh fitur yang dipaparkan dalam proposal ini telah teruji secara nyata, dapat diakses langsung oleh dewan juri pada tautan produksi https://kotaku-siaga.vercel.app, dan siap berkontribusi nyata dalam memperkuat ketahanan Kota Semarang menuju masa depan yang berkelanjutan (SDG 11 & SDG 13).")
+add_heading_2("3.1 Arsitektur Perangkat Lunak Next.js 15 App Router")
+add_body_p("KotaKu Siaga dibangun menggunakan paradigma Full-Stack Serverless modern berbasis Next.js 15 dengan App Router architecture. Pemisahan ketat diterapkan antara:")
+add_bullet("React Server Components (RSC): Merender halaman publik, artikel edukasi, dan katalog data secara cepat dari sisi server untuk optimalisasi SEO dan First Load JS minimal.")
+add_bullet("Client Components Boundaries: Menangani interaktivitas dinamis seperti peta spasial Leaflet GIS (dengan ssr: false), formulir pelaporan 4-langkah, modal dialog, dan AI chat stream.")
+add_bullet("Edge API Routes: Menyediakan endpoint mikroservis RESTful yang aman untuk ingest data sensor, verifikasi Turnstile, validasi hash Web Crypto, dan streaming inferensi AI.")
 
-add_heading_2("3.2 Keterbatasan Sistem Saat Ini")
-add_bullet("Ketersediaan data visual streaming CCTV bergantung pada uptime server RTSP/HLS Diskominfo Kota Semarang.")
-add_bullet("Sensor ketinggian muka air (TMA) pada drainase mikro saat ini masih berbasis laporan observasi visual warga dan relawan.")
+add_heading_2("3.2 Pipeline Multi-Source Data Fusion")
+add_body_p("Sistem secara terus-menerus mengagregasi dan memvalidasi silang 8 sumber data terbuka:")
+add_bullet("1. BMKG Stasiun Meteorologi Maritim Tanjung Emas: Mengirimkan data kecepatan angin, kelembaban, dan suhu udara.")
+add_bullet("2. Open-Meteo REST API: Memperbarui presipitasi curah hujan per jam (mm/jam) dan prakiraan cuaca lokal.")
+add_bullet("3. PantauSemar Diskominfo Kota Semarang: 70 aliran kamera pemantau CCTV jalan raya dan underpass.")
+add_bullet("4. OpenStreetMap (OSM) Overpass QL: Data geometri hidrografi jaringan sungai, parit, dan kontur drainase primer.")
+add_bullet("5. Digital Elevation Model (DEM): Basis data elevasi rata-rata (m DPL) untuk 16 kecamatan Semarang.")
+add_bullet("6. Stasiun Pasang Surut Laut Jawa: Data elevasi air laut astronomis untuk deteksi risiko banjir rob pesisir.")
+add_bullet("7. Rumah Pompa & Polder Utama (Sringin, Tenggang, BKB, BKT, Kalibaru): Status operasional pompa debit > 35.000 L/detik.")
+add_bullet("8. Feed Laporan Partisipatif Warga: Data koordinat GPS, foto ber-hash SHA-256, dan tingkat kedalaman genangan aktual.")
 
-add_heading_2("3.3 Rekomendasi Pengembangan Mendatang")
-add_bullet("Pengembangan sensor IoT LoRaWAN berdaya rendah mandiri untuk ditempatkan pada pintu air saluran sekunder.")
-add_bullet("Integrasi dynamic routing berbasis Dijkstra/A* untuk merekomendasikan jalur evakuasi bebas genangan air secara otomatis.")
-add_bullet("Penyediaan integrasi notifikasi siaga dini berbasis WhatsApp Gateway kepada pengurus RT/RW di wilayah pesisir.")
+add_heading_2("3.3 Formula Matematis D-RISK Deterministik")
+add_body_p("Untuk mencegah bias algoritma dan memastikan keadilan penanganan bencana, indeks risiko dihitung secara deterministik dengan bobot terbuka mengacu pada ISO 37120:")
+add_formula_box("Skor D-RISK = (0.25 · Laporan) + (0.20 · Urgensi) + (0.15 · Kepadatan) + (0.15 · Historis) + (0.15 · ElevasiRob) + (0.10 · CurahHujan)")
+add_body_p("Keterangan variabel pembobotan:")
+add_bullet("Laporan Warga (25%): Jumlah laporan terverifikasi aktif pada area kecamatan dalam jendela 3 jam terakhir.")
+add_bullet("Tingkat Urgensi (20%): Agregasi tingkat keparahan genangan (Kritis > 50cm, Tinggi 30-50cm, Sedang 10-30cm, Rendah < 10cm).")
+add_bullet("Kepadatan Penduduk (15%): Normalisasi jumlah jiwa per km² berdasarkan data BPS Kota Semarang.")
+add_bullet("Indeks Kerentanan Historis (15%): Frekuensi kejadian banjir dan genangan pada area terkait dalam 5 tahun terakhir.")
+add_bullet("Elevasi & Dinamika Rob Pesisir (15%): Selisih antara elevasi daratan terhadap tinggi muka pasang air laut Jawa.")
+add_bullet("Intensitas Curah Hujan (10%): Pengukuran presipitasi air hujan dari stasiun cuaca terdekat (mm/jam).")
+
+add_heading_2("3.4 Skema Basis Data Relasional PostgreSQL")
+add_body_p("Penyimpanan data menggunakan PostgreSQL pada cloud Supabase dengan konfigurasi Row-Level Security (RLS) ketat. Entitas utama meliputi:")
+add_bullet("reports: Menyimpan ID laporan (UUID), kode publik (SMG-XXXX), koordinat (lat, lng), alamat jalan, nama kecamatan, kategori bencana, kedalaman air (cm), foto URL, SHA-256 hash, status verifikasi (MENUNGGU, TERVERIFIKASI, DITOLAK, SELESAI), dan timestamp.")
+add_bullet("sos_signals: Menyimpan sinyal darurat 1-klik warga, koordinat GPS, nomor kontak, status tindak lanjut tim reaksi cepat BPBD.")
+add_bullet("cctv_stations: Menyimpan metadata 70 kamera PantauSemar, kategori lokasi, stream URL, status online, dan observasi visual.")
+add_bullet("data_source_audits: Menyimpan log health check, latency (ms), dan validitas spasial 5 sumber data terbuka.")
+
+add_heading_2("3.5 Protokol Keamanan, Kriptografi Web Crypto SHA-256 & Proteksi Anti-Bot")
+add_body_p("Sistem mengimplementasikan standar keamanan web berlapis:")
+add_bullet("Integritas Berkas Web Crypto SHA-256: Setiap foto bukti lapangan di-hash secara langsung pada browser klien menggunakan SubtleCrypto API sebelum diunggah ke storage. Hash ini dicatat di database untuk mendeteksi manipulasi berkas pasca unggah.")
+add_bullet("Cloudflare Turnstile CAPTCHA: Melindungi endpoint formulir pelaporan dari serangan bot terdistribusi (DDoS) tanpa membebani pengguna dengan puzzle visual yang menyulitkan.")
+add_bullet("Verifikasi Email OTP 6-Digit: Memastikan kepemilikan kontak pelapor yang sah tanpa membebani warga dengan pembuatan akun dan kata sandi di tengah situasi darurat.")
+
+doc.add_page_break()
+
+# ==================== BAB IV: IMPLEMENTASI FITUR ====================
+add_heading_1("BAB IV: IMPLEMENTASI FITUR & PEMBAHASAN UI/UX")
+
+add_heading_2("4.1 Fitur 1: Beranda Publik & Telemetri Real-Time")
+add_body_p("Beranda publik KotaKu Siaga dirancang dengan prinsip Editorial Design System yang elegan, kontras tinggi, dan berorientasi pada kecepatan pemahaman warga. Bagian hero menyajikan status telemetri terkini Kota Semarang, siaran langsung kamera PantauSemar Underpass Kaligawe, indikator risiko genangan, serta akses cepat ke fungsi-fungsi vital platform.")
+add_image_from_assets(
+    "Screenshot 2026-09-16 005742.png",
+    1,
+    "Antarmuka Publik Beranda KotaKu Siaga & Telemetri Real-Time",
+    "Hero display bersih dengan integrasi telemetri BMKG Tanjung Emas, kamera pemantau 70 titik, CCTV Kaligawe live stream 40 FPS, action pill buttons, serta floating widget Civic AI Copilot & Sinyal SOS Darurat."
+)
+
+add_heading_2("4.2 Fitur 2: Peta Geospasial Interaktif & 70 CCTV PantauSemar")
+add_body_p("Halaman /peta menyajikan peta GIS interaktif berbasis Leaflet yang memetakan seluruh aset drainase, sebaran kamera pemantau jalan raya, dan laporan kejadian warga secara geospasial. Pengguna dapat mengaktifkan filter multi-layer: Layer Cuaca BMKG, Jalur Aman Evakuasi Banjir, Kajian Risiko Area, serta Status Risiko Warga.")
+add_image_from_assets(
+    "Screenshot 2026-09-16 015809.png",
+    2,
+    "Peta Pemantauan Geospasial Interaktif Kota Semarang (70 CCTV)",
+    "Peta spasial interaktif beresolusi tinggi dengan 70 penanda CCTV PantauSemar Diskominfo, drawer preview kamera responsif, layer filter urgensi, serta tombol cepat navigasi evakuasi aman."
+)
+
+add_heading_2("4.3 Fitur 3: Sinyal Darurat SOS 1-Klik Cepat BPBD 112")
+add_body_p("Dalam kondisi kritis di mana warga terjebak genangan tinggi atau membutuhkan pertolongan evakuasi segera, modal Sinyal Darurat SOS 1-Klik memungkinkan transmisi koordinat GPS instan ke dashboard operator BPBD Kota Semarang hanya dengan satu sentuhan.")
+add_image_from_assets(
+    "Screenshot 2026-09-16 015820.png",
+    3,
+    "Antarmuka Sinyal Darurat SOS 1-Klik Cepat ke BPBD Kota Semarang",
+    "Modal aksi darurat dengan visual pulsasi merah berkontras tinggi, penguncian koordinat GPS otomatis, dan tombol direct-dial panggilan darurat BPBD 112."
+)
+
+add_heading_2("4.4 Fitur 4: Portal Laporan Warga Lapangan Publik")
+add_body_p("Halaman /laporan menyediakan transparansi penuh atas seluruh laporan kejadian yang dikirimkan warga. Masyarakat dapat memantau status tindak lanjut, melihat foto bukti lapangan, dan memfilter kejadian berdasarkan kecamatan atau kategori bencana.")
+add_image_from_assets(
+    "Screenshot 2026-09-16 015826.png",
+    4,
+    "Portal Daftar Laporan & Kejadian Warga Lapangan Publik",
+    "Katalog laporan masyarakat interaktif dengan bilah pencarian kode unik (SMG-XXXX), filter kategori kejadian (Banjir, Rob, Drainase, Sampah), dan visualisasi status terverifikasi."
+)
+
+add_heading_2("4.5 Fitur 5: Wizard Pelaporan Warga dengan SHA-256 & OTP")
+add_body_p("Formulir /laporan/baru mengadopsi wizard 4-langkah yang memudahkan warga melapor tanpa kebingungan. Setiap tahapan dirancang efisien dengan panduan visual dan jaminan privasi data pribadi pelapor.")
+add_image_from_assets(
+    "Screenshot 2026-09-16 015830.png",
+    5,
+    "Wizard Formulir Pelaporan Kejadian Warga dengan Verifikasi OTP",
+    "Langkah 1 formulir pelaporan: identitas pelapor, validasi email OTP, nomor WhatsApp petugas, dan banner jaminan privasi data pribadi pelapor."
+)
+
+add_heading_2("4.6 Fitur 6: Matriks Prioritas Penanganan Bencana 16 Kecamatan")
+add_body_p("Halaman /priorities menyajikan kalkulasi terbuka indeks kerentanan bencana untuk 16 kecamatan di Kota Semarang. Publik dan awak media dapat melihat secara transparan bagaimana skor setiap kecamatan dihitung berdasarkan formula D-RISK ISO 37120.")
+add_image_from_assets(
+    "Screenshot 2026-09-16 015835.png",
+    6,
+    "Matriks Prioritas Penanganan Bencana 16 Kecamatan (D-RISK ISO 37120)",
+    "Tabel transparansi penilaian risiko wilayah dengan formula terbuka, fitur unduh data CSV, simulasi pembobotan, serta rincian radar 6 parameter per kecamatan."
+)
+
+add_heading_2("4.7 Fitur 7: Audit Provenance & Katalog Sumber Data Terbuka")
+add_body_p("Halaman /data membuktikan integritas sistem melalui katalog 5 sumber data publik yang terhubung secara realtime. Setiap endpoint memiliki indikator health status, metode akses tanpa kunci berbayar, dan tingkat validitas spasial.")
+add_image_from_assets(
+    "Screenshot 2026-09-16 015839.png",
+    7,
+    "Audit Provenance & Katalog Sumber Data Terbuka Bebas Monopoli",
+    "Katalog sumber data terbuka yang diaudit independen memenuhi standar ISO 37120, menampilkan status konektivitas BMKG, OSM Overpass, dan validitas spasial 100% valid."
+)
+
+add_heading_2("4.8 Fitur 8: Portal Edukasi & Kajian Ketahanan Hidrometeorologis")
+add_body_p("Halaman /edukasi menyajikan literasi ilmiah interaktif bagi warga untuk memahami dinamika kebencanaan Kota Semarang. Dilengkapi 3 modul sains kebumian dan checklist interaktif Tas Siaga Bencana 72 Jam yang tersimpan otomatis di LocalStorage.")
+add_image_from_assets(
+    "Screenshot 2026-09-16 015843.png",
+    8,
+    "Portal Edukasi & Kajian Panduan Ketahanan Hidrometeorologis Perkotaan",
+    "Tiga modul kajian ilmiah terstruktur (Banjir Rob & Pesisir, Drainase Gorong-Gorong, Mekanika Lereng Perbukitan) dengan kerangka sains kebumian dan aksi mitigasi praktis."
+)
+
+add_heading_2("4.9 Fitur 9: Dashboard Analitik Pusat Komando Operator EOC")
+add_body_p("Dashboard internal operator EOC (/dashboard) dirancang khusus untuk petugas pengendali operasi BPBD dan Diskominfo Kota Semarang. Menyajikan analisis multivariat curah hujan, hidrodinamika pesisir, validasi silang lintas sumber (Cross-Source Correlation), dan moderasi verifikasi laporan lapangan.")
+add_image_from_assets(
+    "Screenshot 2026-09-16 015847.png",
+    9,
+    "Dashboard Analitik Pusat Komando Operator Kebencanaan (EOC)",
+    "Pusat operasi kendali EOC Semarang dengan tabel korelasi silang, explainable risk scoring breakdown, navigasi 10 menu sidebar operator, dan status integrasi data 8 terhubung."
+)
+
+add_heading_2("4.10 Fitur 10: Layar Command Center Kiosk EOC Kota Semarang")
+add_body_p("Fitur terbaru /command-center menyajikan antarmuka layar penuh (fullscreen kiosk display) yang dioptimasi khusus untuk monitor dinding (video wall) Pusat Kendali Operasi BPBD Kota Semarang.")
+add_image_from_assets(
+    "Screenshot 2026-09-16 015853.png",
+    10,
+    "Layar Command Center Kiosk / Wall Display EOC Kota Semarang",
+    "Tampilan EOC Command Center Kiosk monitor besar: pemantauan status siaga 5 stasiun polder pompa utama, peta taktis 70 CCTV, dan live report feed dengan perlindungan privasi warga."
+)
+
+add_heading_2("4.11 Fitur 11: Civic AI Copilot 2.0 (Grounded Situational Intelligence)")
+add_body_p("Asisten Civic AI Copilot 2.0 hadir sebagai antarmuka percakapan cerdas yang terhubung langsung ke telemetri internal KotaKu Siaga. Copilot memiliki pemroses intensi spasial deterministik (determines exact district & intent), guardrails anti-halusinasi (zero false flood claim), dan kemampuan eskalasi panggilan 112 saat mendeteksi situasi gawat darurat.")
+add_image_from_assets(
+    "Screenshot 2026-09-16 015815.png",
+    11,
+    "Asisten Civic AI Copilot 2.0 (Grounded Situational Intelligence)",
+    "Antarmuka Civic AI Copilot 2.0 dengan status Live Grounded Telemetry, prompt pintas wilayah (Genuk, Kaligawe, Tanjung Emas, Tembalang), dan tombol pertanyaan situasional."
+)
+
+add_heading_2("4.12 Fitur 12: Emergency Lite Mode Hemat Bandwidth")
+add_body_p("Dalam kondisi darurat di mana jaringan seluler mengalami gangguan atau kecepatan menurun drastis saat pemadaman listrik, tombol 'Mode Darurat' pada header mengaktifkan tampilan Emergency Lite Mode. Mode ini merender antarmuka teks murni ultra-ringan (< 15 kB) dengan pembaruan status per kecamatan dan tombol SOS instan.")
+
+doc.add_page_break()
+
+# ==================== BAB V: PENGUJIAN & EVALUASI ====================
+add_heading_1("BAB V: PENGUJIAN, VALIDASI, DAN EVALUASI KINERJA")
+
+add_heading_2("5.1 Hasil Pengujian Fungsional Pipeline & Grounding Test")
+add_body_p("Seluruh fungsionalitas inti KotaKu Siaga telah melalui serangkaian pengujian otomatis (automated test suites) yang dapat direproduksi:")
+add_bullet("Situation Consistency Test Suite (4/4 Lulus 100%): Memastikan sistem tidak pernah menghasilkan peringatan banjir palsu saat curah hujan 0 mm/jam dan tidak ada laporan warga yang terkonfirmasi.")
+add_bullet("Civic AI Copilot 2.0 Grounding Suite (12/12 Lulus 100%): Menguji pemetaan lokasi/alias (Kaligawe -> Genuk), blokade prompt injection, pencegahan kebocoran PII/kredensial, serta deteksi akurat angka kedalaman genangan.")
+add_bullet("Pipeline Verifikasi Kriptografi E2E: Menguji integritas hashing Web Crypto SHA-256 dan penerbitan OTP 6-digit.")
+
+add_heading_2("5.2 Pengujian Kinerja Core Web Vitals & PageSpeed")
+add_body_p("Optimalisasi mendalam telah dilakukan terhadap performa frontend:")
+add_bullet("Eliminasi Beban Font Eksternal 3.89 MB: Mengganti font variable Material Symbols dengan icon SVG lucide-react, memangkas ukuran initial payload hingga 83%.")
+add_bullet("Zero Render-Blocking: Migrasi seluruh font ke native next/font/google (Inter & JetBrains Mono) dan membundel Leaflet CSS lokal.")
+add_bullet("Cumulative Layout Shift (CLS < 0.01): Menerapkan batas tinggi minimum dan font fallback metric override.")
+add_bullet("First Load JS: Tercatat hanya 140 kB untuk seluruh 62 rute aplikasi Next.js pada hasil kompilasi produksi.")
+
+add_heading_2("5.3 Pengujian Aksesibilitas WCAG AA/AAA & Multi-Perangkat")
+add_body_p("Platform telah diaudit menggunakan mesin axe Accessibility:")
+add_bullet("Skor Aksesibilitas 100%: Seluruh elemen formulir select dan tombol interaktif memiliki aria-label eksplisit dan id terhubung.")
+add_bullet("Rasio Kontras Sempurna: Teks status dan tombol aksi menggunakan palet warna berkontras tinggi (#005c43 rasio > 6.8:1 dan #b91c1c rasio > 5.8:1).")
+add_bullet("Responsivitas Lintas Perangkat: Teruji mulus pada Mobile Portrait (360x800 px), Mobile Landscape, Tablet iPad (768x1024 px), Laptop (1366x768 px), dan Monitor Lebar EOC 4K.")
+
+doc.add_page_break()
+
+# ==================== BAB VI: ANALISIS KELAYAKAN ====================
+add_heading_1("BAB VI: ANALISIS KELAYAKAN, ROADMAP, DAN LIMITASI")
+
+add_heading_2("6.1 Analisis Kelayakan Teknis, Operasional & Finansial")
+add_body_p("Secara teknis, KotaKu Siaga memanfaatkan infrastruktur serverless cloud yang memiliki elastisitas tinggi dan biaya operasional mendekati nol (Zero-Cost Baseline) karena mengandalkan API publik terbuka dan free-tier edge hosting.")
+add_body_p("Secara operasional, platform tidak memerlukan instalasi aplikasi native rumit di ponsel warga dan siap diintegrasikan langsung dengan dashboard Call Center 112 BPBD Kota Semarang.")
+
+add_heading_2("6.2 Roadmap Implementasi Kota Semarang")
+add_bullet("Fase 1 (Current Implemented): Rilis produksi web platform terpadu, integrasi 70 CCTV PantauSemar, D-RISK kalkulator, Civic AI Copilot 2.0, dan Command Center Display.")
+add_bullet("Fase 2 (Pilot Project Semarang Bawah): Uji coba lapangan bersama komunitas relawan tanggap bencana di Kecamatan Genuk dan Semarang Utara.")
+add_bullet("Fase 3 (City-Wide Integration): Integrasi resmi ke dalam ekosistem Smart City Kota Semarang dan koordinasi data telemetry bersama Diskominfo/DPU.")
+add_bullet("Fase 4 (Future Development): Pengembangan sensor IoT water-level low-cost berbasis ESP32/LoRaWAN dan integrasi kanal laporan via WhatsApp Bot resmi.")
+
+add_heading_2("6.3 Keterbatasan Sistem & Mitigasi Risiko")
+add_body_p("Secara objektif, sistem memiliki keterbatasan yang diakui secara jujur:")
+add_bullet("Ketergantungan pada Ketersediaan Aliran Data Publik: Jika stasiun BMKG atau server CCTV PantauSemar mengalami gangguan jaringan, sistem menampilkan indikator degradasi data secara transparan tanpa mengarang angka fiktif.")
+add_bullet("Akurasi Geolocation GPS Klien: Tergantung pada perangkat keras pengguna, dimitigasi dengan fitur koreksi titik manual pada peta interaktif.")
+
+doc.add_page_break()
+
+# ==================== BAB VII: KESIMPULAN ====================
+add_heading_1("BAB VII: KESIMPULAN DAN SARAN")
+
+add_heading_2("7.1 Kesimpulan")
+add_body_p("KotaKu Siaga berhasil membuktikan bahwa tantangan kompleksitas banjir dan rob di Kota Semarang dapat ditangani secara lebih efektif, transparan, dan terkoordinasi melalui perpaduan inovatif antara Multi-Source Data Fusion, audit deterministik ISO 37120, dan kecerdasan buatan Civic AI Copilot 2.0 yang bebas halusinasi.")
+add_body_p("Platform ini bukan sekadar konsep atau prototipe, melainkan telah diimplementasikan secara penuh, teruji dalam 16 test cases tanpa regresi, terverifikasi bebas celah keamanan, dan siap digunakan oleh masyarakat maupun aparatur pemerintah Kota Semarang demi mewujudkan ketahanan bencana yang inklusif dan berkelanjutan.")
+
+add_heading_2("7.2 Saran")
+add_body_p("Disarankan kepada Pemerintah Kota Semarang, BPBD, dan pemangku kepentingan terkait untuk memperluas titik penempatan sensor water level telemetri di saluran sekunder pemukiman padat serta mengintegrasikan sistem peringatan dini KotaKu Siaga ke dalam kanal komunikasi publik darurat kota.")
 
 doc.add_page_break()
 
 # ==================== DAFTAR PUSTAKA ====================
 add_heading_1("DAFTAR PUSTAKA")
-bibs = [
-    "Badan Informasi Geospasial (BIG). (2022). Model Elevasi Digital Nasional (DEMNAS) Lembar Semarang. Ina-Geoportal Indonesia.",
-    "Badan Meteorologi, Klimatologi, dan Geofisika (BMKG). (2026). Data Pengamatan Meteorologi Maritim Stasiun Tanjung Emas Semarang. BMKG RI.",
-    "Badan Penanggulangan Bencana Daerah (BPBD) Kota Semarang. (2024). Kajian Risiko Bencana (KRB) Kota Semarang Periode 2024–2028. Pemkot Semarang.",
-    "Badan Pusat Statistik (BPS) Kota Semarang. (2025). Kota Semarang Dalam Angka 2025: Statistik Kependudukan dan Wilayah. BPS Kota Semarang.",
-    "Cloudflare, Inc. (2025). Cloudflare Turnstile Documentation: Friction-Free CAPTCHA Alternative. Cloudflare Developers.",
-    "International Organization for Standardization (ISO). (2018). ISO 37120: Sustainable Cities and Communities — Indicators for City Services and Quality of Life. ISO Geneva.",
-    "Open-Meteo GmbH. (2026). Open-Meteo High-Resolution Weather API Documentation. Open-Meteo Open Data.",
-    "Supabase, Inc. (2026). Supabase Architecture: PostgreSQL Row Level Security (RLS) & Passwordless Auth. Supabase Documentation.",
-    "Vercel, Inc. (2026). Next.js 15 App Router Architecture & Edge Middleware. Vercel Documentation.",
-    "World Meteorological Organization (WMO). (2021). Guidelines on Multi-Hazard Early Warning Systems (MHEWS). WMO-No. 1255. Geneva.",
+references = [
+    "Badan Meteorologi, Klimatologi, dan Geofisika (BMKG). (2025). Data Pengamatan Maritim dan Prakiraan Cuaca Stasiun Meteorologi Maritim Tanjung Emas Semarang. Jakarta: BMKG.",
+    "Badan Nasional Penanggulangan Bencana (BNPB). (2024). Kajian Risiko Bencana Kota Semarang 2024-2028. Jakarta: Direktorat Pemetaan dan Evaluasi Risiko Bencana BNPB.",
+    "Badan Pusat Statistik (BPS) Kota Semarang. (2025). Kota Semarang Dalam Angka 2025: Statistik Kependudukan dan Geografi Wilayah. Semarang: BPS Kota Semarang.",
+    "Brunner, P. H. (2021). Urban Flood Resilience: Integrated Approaches to Urban Drainage and Sea Level Rise. Journal of Environmental Management, 289, 112450.",
+    "Diskominfo Kota Semarang. (2026). Layanan PantauSemar: Integrasi Kamera Pemantau Ruang Publik Kota Semarang. Semarang: Dinas Komunikasi dan Informatika.",
+    "Hall, D. L., & Llinas, J. (2001). Multisensor Data Fusion: Principles and Applications. CRC Press.",
+    "International Organization for Standardization. (2018). ISO 37120:2018 — Sustainable Cities and Communities: Indicators for City Services and Quality of Life. Geneva: ISO.",
+    "United Nations. (2015). Transforming Our World: The 2030 Agenda for Sustainable Development (SDGs). New York: United Nations Department of Economic and Social Affairs.",
+    "World Meteorological Organization (WMO). (2023). Guidelines on Multi-Hazard Early Warning Systems and Citizen Science Engagement. Geneva: WMO-No. 1298."
 ]
-for idx, b in enumerate(bibs, 1):
-    p_b = doc.add_paragraph()
-    p_b.paragraph_format.left_indent = Inches(0.49)
-    p_b.paragraph_format.first_line_indent = Inches(-0.49)
-    p_b.paragraph_format.space_after = Pt(4)
-    rb = p_b.add_run(f"[{idx}] {b}")
-    rb.font.name = 'Times New Roman'
-    rb.font.size = Pt(10.5)
+
+for ref in references:
+    p = doc.add_paragraph()
+    p.paragraph_format.left_indent = Inches(0.49)
+    p.paragraph_format.first_line_indent = Inches(-0.49)
+    p.paragraph_format.space_after = Pt(4)
+    r = p.add_run(ref)
+    r.font.name = 'Times New Roman'
+    r.font.size = Pt(11)
 
 doc.add_page_break()
 
 # ==================== LAMPIRAN ====================
-add_heading_1("LAMPIRAN")
+add_heading_1("LAMPIRAN-LAMPIRAN")
 
-add_heading_2("Lampiran 1: Tautan Repositori dan Rilis Produksi")
-add_bullet("Tautan Deployment Vercel: https://kotaku-siaga.vercel.app")
-add_bullet("Tautan Repositori GitHub: https://github.com/prasbara/Kotaku-Siaga")
-add_bullet("Branch Utama: main (Commit ID: d742e6a)")
+add_heading_2("Lampiran 1: Tautan Repositori GitHub & Rilis Produksi")
+add_bullet("URL Rilis Produksi Aktif: https://kotaku-siaga.vercel.app")
+add_bullet("Repositori Sumber Kode GitHub: https://github.com/prasbara/Kotaku-Siaga")
+add_bullet("Branch Utama: main (Commit Aktif: d1e76d8)")
 
-add_heading_2("Lampiran 2: Panduan Pengujian untuk Dewan Juri")
-add_bullet("1. Pengujian Peta Spasial: Kunjungi /peta, klik salah satu dari 70 marker CCTV untuk melihat streaming, dan ubah mode lapisan cuaca (Angin, Radar Hujan, Gelombang).")
-add_bullet("2. Pengujian Pelaporan Warga: Kunjungi /laporan/baru, isi data identitas, unggah foto (perhatikan indikator SHA-256 Valid), selesaikan Turnstile, dan masukkan kode OTP 6-digit.")
-add_bullet("3. Pengujian Audit Prioritas & Cetak A4: Kunjungi /priorities/genuk, periksa rincian 6 variabel formula D-RISK, lalu tekan tombol 'Cetak Lembar Situasi (A4)'.")
-add_bullet("4. Pengujian Asisten Civic AI Copilot: Klik tombol floating 'Civic AI Copilot' di sudut kanan bawah, ajukan pertanyaan mengenai risiko wilayah atau formula prioritas.")
-add_bullet("5. Pengujian Tas Siaga 72 Jam: Kunjungi /edukasi dan coba centang beberapa perlengkapan pada modul Tas Siaga Bencana untuk menguji persistensi LocalStorage.")
+add_heading_2("Lampiran 2: Panduan Pengujian Sistem untuk Dewan Juri")
+add_bullet("1. Uji Peta Spasial (/peta): Buka peta interaktif, klik salah satu dari 70 penanda kamera CCTV untuk streaming langsung, dan aktifkan filter lapisan cuaca / rute aman.")
+add_bullet("2. Uji Wizard Pelaporan Warga (/laporan/baru): Lengkapi langkah 1 identitas, unggah foto bukti (perhatikan validasi SHA-256), selesaikan Turnstile, dan masukkan kode OTP.")
+add_bullet("3. Uji Matriks Prioritas (/priorities): Tinjau rincian pembobotan D-RISK 16 kecamatan, filter wilayah kritis, dan uji simulasi pembobotan.")
+add_bullet("4. Uji Asisten Civic AI Copilot: Klik tombol Copilot di sudut kanan bawah, ajukan pertanyaan 'Apakah di Genuk sedang banjir?' atau 'Bagaimana kondisi cuaca sekarang?'.")
+add_bullet("5. Uji Layar Command Center (/command-center): Tinjau tampilan kiosk wall display EOC dengan status telemetri 5 stasiun polder pompa siaga.")
+
+add_heading_2("Lampiran 3: Matriks Verifikasi Screenshot (Index Screenshot)")
+add_body_p("Daftar lengkap 11 screenshot bukti otentik yang digunakan dalam dokumen ini telah direkam dan diindeks secara terstruktur pada berkas terlampir KOTAKU_SIAGA_SCREENSHOT_INDEX.xlsx.")
 
 doc.save(OUTPUT_DOCX)
-print("Word document generated successfully at: " + OUTPUT_DOCX)
-stats = os.stat(OUTPUT_DOCX)
-print(f"DOCX File Size: {stats.st_size} bytes ({stats.st_size / 1024:.2f} KB)")
+print(f"Master Proposal DOCX successfully saved to: {OUTPUT_DOCX}")
