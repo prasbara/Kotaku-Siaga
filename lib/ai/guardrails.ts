@@ -26,9 +26,9 @@ export const LOCATION_UNSUPPORTED_MESSAGE =
 // 1. Prompt Injection & System Tampering Patterns
 // ------------------------------------------------------------
 const PROMPT_INJECTION_PATTERNS = [
-  /ignore\s+(all\s+)?(previous|prior|above)\s+(instructions|prompts|rules)/i,
-  /abaikan\s+(semua\s+)?(instruksi|aturan|perintah)\s+(sebelumnya|awal)/i,
-  /forget\s+(all\s+)?(previous|prior)\s+(instructions|context)/i,
+  /ignore\s+(all\s+)?(previous|prior|above|rules|instructions|data|prompts)/i,
+  /abaikan\s+(semua\s+)?(instruksi|aturan|perintah|data|sumber)/i,
+  /forget\s+(all\s+)?(previous|prior|instructions|context|rules|data)/i,
   /you\s+are\s+now\s+(a\s+)?(general|unrestricted|dan|jailbreak|different|an\s+unfiltered)/i,
   /sekarang\s+kamu\s+adalah\s+(chatbot\s+umum|ai\s+bebas|asisten\s+umum)/i,
   /(reveal|show|print|display|tell|bocorkan|tampilkan)\s+(your\s+)?(system\s+prompt|prompt\s+sistem|instruksi\s+rahasia)/i,

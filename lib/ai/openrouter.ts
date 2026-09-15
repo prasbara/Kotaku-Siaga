@@ -493,39 +493,91 @@ Berikan analisis dalam format JSON berikut:
 }
 
 // ============================================================
-// C. Conversational Mitigation Assistant
+// C. Conversational Mitigation Assistant (Civic AI Copilot 2.0)
 // ============================================================
 
 export async function generateMitigationChatResponse(
   userQuery: string,
-  context?: string
+  context?: string | import('./civic-context-builder').CivicContext
 ): Promise<string> {
-  const systemPrompt = `Kamu adalah asisten mitigasi bencana dan ketahanan perkotaan KotaKu Siaga untuk Kota Semarang.
-Tugasmu membantu masyarakat dan petugas dengan informasi mitigasi banjir, genangan rob, penanganan drainase, dan keselamatan lingkungan.
-Berikan jawaban yang ramah, praktis, berbasis sains dan kondisi geografis Kota Semarang (Semarang Bawah, Pesisir Genuk/Tugu, dan Semarang Atas/Perbukitan).
-Jawab dalam Bahasa Indonesia yang lugas.`
+  let systemPrompt = `Kamu adalah Civic AI Copilot 2.0 untuk KotaKu Siaga (Platform Civic Emergency & Flood Intelligence Kota Semarang).
+Tugasmu adalah memberikan informasi situasional kebencanaan, cuaca, genangan, dan mitigasi berbasis data terstruktur aktual sistem.
+Jawab dalam Bahasa Indonesia yang lugas, terstruktur, berbasis sains, dan tidak bertele-tele.`
 
-  const messages: OpenRouterMessage[] = [
-    { role: 'system', content: systemPrompt },
-  ]
+  const messages: OpenRouterMessage[] = []
 
-  if (context) {
+  if (context && typeof context === 'object') {
+    const ctx = context as import('./civic-context-builder').CivicContext
+    const locName = ctx.location.districtName || 'Kota Semarang'
+
+    systemPrompt = `Kamu adalah Civic AI Copilot 2.0 untuk KotaKu Siaga (Platform Civic Emergency & Flood Intelligence Kota Semarang).
+
+PRINSIP UTAMA PENGAMBILAN KEPUTUSAN:
+1. JANGAN PERNAH MENGARANG KONDISI LAPANGAN, ANGKA KEDALAMAN GENANGAN, CURAH HUJAN, PENUTUPAN JALAN, ATAU STATUS DARURAT.
+2. Gunakan HANYA data aktual dari [DATA TELEMETRI & SITUASI LAPANGAN] yang disediakan di bawah ini.
+3. Bedakan secara tegas: STATUS RISIKO WILAYAH (Indeks kerentanan spasial & historis) vs KEJADIAN BANJIR AKTIF (Laporan lapangan terverifikasi saat ini). Status risiko "Waspada" BUKAN berarti wilayah sedang banjir saat ini.
+4. Jika verifiedCount = 0 dan rainfall = 0 mm/jam: Katakan secara tegas bahwa banjir saat ini "BELUM TERKONFIRMASI / NIHIL LAPORAN GENANGAN TERVERIFIKASI". Jangan mengklaim banjir hanya berdasarkan pengetahuan umum atau sejarah masa lalu.
+5. Jika ada laporan terverifikasi: Sebutkan kedalaman genangan terpantau (contoh: ±${ctx.reports.maxFloodDepthCm ?? 0} cm), jumlah laporan terverifikasi, dan waktu pemantauan WIB.
+6. CCTV Online HANYA berarti kamera aktif berfungsi, BUKAN konfirmasi visual banjir kecuali tercatat ada deteksi genangan.
+7. Berikan respon terstruktur: Status Pengamatan, Curah Hujan, Observasi Genangan, Status CCTV, Indeks Risiko Wilayah, Sumber Data, dan Waktu Pemantauan WIB.
+8. Berikan saran praktis dan jangan membocorkan data pribadi pelapor (nomor telepon/email/password).`
+
+    const contextPayload = `[DATA TELEMETRI & SITUASI LAPANGAN KOTAKU SIAGA]
+Wilayah Fokus: ${locName} (${ctx.location.zoneCategory})
+Waktu Pemantauan: ${ctx.timestampWib}
+
+1. STATUS GENANGAN LAPORAN WARGA:
+- Status Konfirmasi: ${ctx.synthesis.floodConfirmationStatus}
+- Total Laporan Terverifikasi: ${ctx.reports.verifiedCount} laporan
+- Kedalaman Genangan Maksimal: ${ctx.reports.maxFloodDepthCm !== null ? `${ctx.reports.maxFloodDepthCm} cm` : 'Nihil / Tidak teramati'}
+- Ringkasan Laporan: ${ctx.reports.summary}
+
+2. TELEMETRI CUACA & BMKG:
+- Status Data: ${ctx.weather.isDataAvailable ? 'Tersedia' : 'Tidak Tersedia'}
+- Curah Hujan: ${ctx.weather.rainfallRateMmH !== null ? `${ctx.weather.rainfallRateMmH} mm/jam` : 'Data tidak tersedia'} (${ctx.weather.rainfallCategory})
+- Kondisi Cuaca: ${ctx.weather.weatherCondition}
+- Suhu / Angin: ${ctx.weather.temperatureC ?? 29}°C / ${ctx.weather.windSpeedKmh ?? 10} km/jam
+- Gelombang Pesisir: ${ctx.weather.coastalWaveHeightM !== null ? `${ctx.weather.coastalWaveHeightM} m (Tenang)` : 'Bukan kawasan pantai langsung'}
+
+3. TELEMETRI CCTV PANTAUSEMAR:
+- Kamera di Kawasan Ini: ${ctx.cctv.totalInDistrict} titik
+- Kamera Online: ${ctx.cctv.onlineCount} online
+- Kamera Deteksi Genangan: ${ctx.cctv.observedFloodCount} titik
+- Ringkasan Visual: ${ctx.cctv.summary}
+
+4. INDEKS RISIKO WILAYAH (D-RISK ISO 37120):
+- Tingkat Risiko: ${ctx.risk.riskLevel} (Skor: ${ctx.risk.riskScore.toFixed(1)}/100)
+- Keterangan: ${ctx.risk.note}
+- Elevasi Kawasan: ${ctx.risk.topographicElevation}
+
+5. SUMBER RESMI TERINTEGRASI:
+- BMKG / Open-Meteo · CCTV PantauSemar Diskominfo · Laporan Terverifikasi Supabase · Risk Engine D-RISK`
+
+    messages.push({ role: 'system', content: systemPrompt })
     messages.push({
       role: 'user',
-      content: `Konteks situasi aktual saat ini di Semarang:\n${context}`,
+      content: `Konteks Situasi Aktual:\n${contextPayload}\n\nPertanyaan Warga: ${userQuery}`,
     })
-    messages.push({
-      role: 'assistant',
-      content: 'Saya memahami situasi aktual tersebut. Ada yang bisa saya bantu terkait mitigasi atau penanganannya?',
-    })
+  } else {
+    messages.push({ role: 'system', content: systemPrompt })
+    if (context && typeof context === 'string') {
+      messages.push({
+        role: 'user',
+        content: `Konteks situasi aktual saat ini di Semarang:\n${context}`,
+      })
+      messages.push({
+        role: 'assistant',
+        content: 'Saya memahami situasi aktual tersebut. Ada yang bisa saya bantu terkait mitigasi atau penanganannya?',
+      })
+    }
+    messages.push({ role: 'user', content: userQuery })
   }
 
-  messages.push({ role: 'user', content: userQuery })
-
   try {
-    return await callOpenRouter(messages, { temperature: 0.5, max_tokens: 800 })
+    return await callOpenRouter(messages, { temperature: 0.25, max_tokens: 800 })
   } catch (err: any) {
-    return `Mohon maaf, layanan asistensi AI sedang tidak dapat terhubung (${err?.message || 'Koneksi OpenRouter terputus'}). Untuk keadaan darurat banjir atau bantuan evakuasi, silakan segera hubungi BPBD Kota Semarang di nomor darurat 112.`
+    console.warn('OpenRouter call error:', err?.message || err)
+    throw err
   }
 }
 
@@ -535,9 +587,10 @@ export const analyzeAggregate = aggregateAreaAnalysis
 
 export async function chatAssistant(
   messages: Array<{ role: string; content: string }>,
-  context?: string
+  context?: string | import('./civic-context-builder').CivicContext
 ): Promise<string> {
   const latestMsg = messages[messages.length - 1]?.content || ''
   return generateMitigationChatResponse(latestMsg, context)
 }
+
 

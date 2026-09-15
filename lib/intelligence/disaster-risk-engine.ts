@@ -1011,3 +1011,9 @@ declare global {
 export const disasterIntelligenceEngine: DisasterIntelligenceEngine =
   globalThis.__DISASTER_INTELLIGENCE_ENGINE ||
   (globalThis.__DISASTER_INTELLIGENCE_ENGINE = new DisasterIntelligenceEngine())
+
+export async function getPublicDisasterSummary(areaSlug: string): Promise<PublicDisasterSummary> {
+  const assessment = await disasterIntelligenceEngine.evaluateDistrictRisk(areaSlug)
+  return disasterIntelligenceEngine.toPublicSummary(assessment)
+}
+
