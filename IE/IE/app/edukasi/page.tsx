@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import { EducationModule } from '@/components/education/EducationModule'
 import type { Metadata } from 'next'
 
@@ -7,5 +8,9 @@ export const metadata: Metadata = {
 }
 
 export default function EdukasiPage() {
-  return <EducationModule />
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-gray-500">Memuat modul edukasi...</div>}>
+      <EducationModule />
+    </Suspense>
+  )
 }
