@@ -23,6 +23,7 @@ import { DangerSignsExplorer } from '@/components/education/DangerSignsExplorer'
 import { ActionCardPhases } from '@/components/education/ActionCardPhases'
 import { RiskFactorsChart } from '@/components/education/RiskFactorsChart'
 import { KnowledgeQuiz } from '@/components/education/KnowledgeQuiz'
+import { TasSiagaChecklist } from '@/components/education/TasSiagaChecklist'
 
 export function EducationModule() {
   const searchParams = useSearchParams()
@@ -315,7 +316,12 @@ export function EducationModule() {
           <DangerSignsExplorer />
         </section>
 
-        {/* 5. EMERGENCY ACTION CARD & DISPATCH (Requirement #12) */}
+        {/* 5. FAMILY DISASTER CHECKLIST (72 JAM MANDIRI) */}
+        <section id="tas-siaga" className="w-full">
+          <TasSiagaChecklist />
+        </section>
+
+        {/* 6. EMERGENCY ACTION CARD & DISPATCH (Requirement #12) */}
         <section className="p-6 sm:p-8 rounded-3xl bg-[#4a154b] text-white flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl">
           <div className="space-y-2 max-w-2xl">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-[90px] bg-white/10 text-[#eddcf7] font-mono text-[10px] uppercase font-bold tracking-wider">

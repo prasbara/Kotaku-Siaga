@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { ArrowLeft, Database, Check, Droplets, MapPin, ArrowRight } from 'lucide-react'
+import { SituationBriefActions } from '@/components/priority/SituationBriefActions'
 
 interface AreaDetail {
   slug: string
@@ -169,15 +170,9 @@ export default async function AreaDetailPage({
   return (
     <div className="flex flex-col w-full bg-surface text-on-surface min-h-screen pb-20">
       {/* Tactical Header */}
-      <section className="pt-10 pb-8 bg-surface-container-lowest border-b border-outline-variant/30 px-4 sm:px-6 lg:px-8">
+      <section className="pt-8 pb-8 bg-surface-container-lowest border-b border-outline-variant/30 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto flex flex-col gap-4">
-          <Link
-            href="/priorities"
-            className="inline-flex items-center gap-1.5 text-xs font-mono font-semibold uppercase tracking-wider text-primary hover:underline transition-colors"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" />
-            Kembali ke Daftar Matriks Prioritas
-          </Link>
+          <SituationBriefActions areaName={data.name} score={data.score} level={data.level} />
 
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
             <div className="flex flex-col gap-1">
