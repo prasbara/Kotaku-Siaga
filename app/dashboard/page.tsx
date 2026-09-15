@@ -156,7 +156,7 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-3 text-xs">
+          <div className="flex items-center gap-2.5 text-xs">
             {lastSyncWib && (
               <span className="font-mono text-[11px] text-[#696969] hidden md:inline">
                 Sinkronisasi: {lastSyncWib}
@@ -164,8 +164,18 @@ export default function DashboardPage() {
             )}
             <button
               type="button"
+              onClick={fetchData}
+              disabled={isLoading}
+              className="p-2 rounded-lg bg-[#f4ede4] hover:bg-[#e8ded2] text-[#4a154b] transition-colors cursor-pointer flex items-center justify-center"
+              title="Perbarui Data Sistem"
+              aria-label="Perbarui Data Sistem"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
+            </button>
+            <button
+              type="button"
               onClick={() => setActiveTab('command-center')}
-              className="min-h-[36px] px-3 py-1.5 rounded-[90px] bg-[#4a154b] hover:bg-[#3b113c] text-white font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
+              className="min-h-[36px] px-3.5 py-1.5 rounded-xl bg-[#4a154b] hover:bg-[#3b113c] text-white font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
             >
               <span>🖥️ Layar Command Center</span>
             </button>
