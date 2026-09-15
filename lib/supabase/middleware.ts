@@ -4,6 +4,11 @@ import { verifyAdminSessionToken } from '@/lib/auth/session'
 import { getSupabaseUrl, getSupabaseAnonKey } from './config'
 
 export async function updateSession(request: NextRequest) {
+  // If not visiting dashboard, return immediately
+  if (!request.nextUrl.pathname.startsWith('/dashboard')) {
+    return NextResponse.next({ request })
+  }
+
   let supabaseResponse = NextResponse.next({
     request,
   })
@@ -21,7 +26,7 @@ export async function updateSession(request: NextRequest) {
     }
 
     if (!supabaseUrl || !supabaseUrl.startsWith('http') || !supabaseAnonKey || supabaseAnonKey.includes('your_')) {
-      if (!adminSession && request.nextUrl.pathname.startsWith('/dashboard')) {
+      if (!adminSession) {
         const url = request.nextUrl.clone()
         url.pathname = '/login'
         return NextResponse.redirect(url)
@@ -49,14 +54,13 @@ export async function updateSession(request: NextRequest) {
                 supabaseResponse.cookies.set(name, value, options)
               )
             } catch {
-              // Ignore cookie writing issues in server components
+              // Ignore cookie setting errors
             }
           },
         },
       }
     )
 
-    // Refresh session if expired
     let user = null
     try {
       const { data } = await supabase.auth.getUser()
@@ -66,13 +70,13 @@ export async function updateSession(request: NextRequest) {
     }
 
     // Protect dashboard routes
-    if (!adminSession && !user && request.nextUrl.pathname.startsWith('/dashboard')) {
+    if (!adminSession && !user) {
       const url = request.nextUrl.clone()
       url.pathname = '/login'
       return NextResponse.redirect(url)
     }
   } catch (err) {
-    console.error('Middleware execution error caught:', err)
+    console.error('Middleware updateSession error:', err)
   }
 
   return supabaseResponse

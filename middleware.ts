@@ -5,7 +5,7 @@ export async function middleware(request: NextRequest) {
   try {
     return await updateSession(request)
   } catch (error) {
-    console.error('Root middleware error caught:', error)
+    console.error('Middleware caught error, gracefully bypassing:', error)
     return NextResponse.next({
       request,
     })
@@ -14,6 +14,10 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    /*
+     * Match dashboard protected routes and auth routes.
+     * Prevents running heavyweight auth middleware on public static/CDN assets.
+     */
+    '/dashboard/:path*',
   ],
 }
