@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Eye, EyeOff, ShieldCheck, ArrowLeft, KeyRound, Lock, Radio } from 'lucide-react'
+import { Eye, EyeOff, ArrowLeft, Lock, ShieldCheck } from 'lucide-react'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -25,8 +25,7 @@ export default function LoginPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          username: identifier,
-          email: identifier,
+          identifier: identifier.trim(),
           password,
         }),
       })
@@ -34,10 +33,11 @@ export default function LoginPage() {
       const data = await res.json()
 
       if (!res.ok || !data.success) {
-        setError(data.error || 'Username atau password salah.')
+        setError(data.error || 'Email/username atau password tidak valid.')
         return
       }
 
+      // Redirect to dashboard on successful login
       router.push('/dashboard')
       router.refresh()
     } catch {
@@ -45,12 +45,6 @@ export default function LoginPage() {
     } finally {
       setLoading(false)
     }
-  }
-
-  const fillAdminCredentials = () => {
-    setIdentifier('admin')
-    setPassword('superadmin.')
-    setError('')
   }
 
   return (
@@ -81,7 +75,7 @@ export default function LoginPage() {
             Masuk ke Pusat Kendali
           </h1>
           <p className="text-xs sm:text-sm text-[#696969] mt-2 leading-relaxed">
-            Akses khusus petugas untuk verifikasi laporan warga, pemantauan pompa polder, dan koordinasi penanganan lapangan.
+            Akses khusus petugas untuk verifikasi laporan warga, pemantauan kondisi lapangan, dan koordinasi respons kebencanaan.
           </p>
         </div>
 
@@ -97,7 +91,7 @@ export default function LoginPage() {
                 type="text"
                 value={identifier}
                 onChange={e => setIdentifier(e.target.value)}
-                placeholder="admin atau nama@email.com"
+                placeholder="operator.siaga atau nama@instansi.go.id"
                 required
                 className="rounded-xl bg-[#fcfaf7] border-[#e6e6e6] text-[#1d1d1d] focus:border-[#4a154b] focus:ring-1 focus:ring-[#4a154b] text-sm h-11 font-body"
                 autoComplete="username"
@@ -116,7 +110,7 @@ export default function LoginPage() {
                   type={showPw ? 'text' : 'password'}
                   value={password}
                   onChange={e => setPassword(e.target.value)}
-                  placeholder="••••••••"
+                  placeholder="••••••••••••"
                   required
                   className="rounded-xl bg-[#fcfaf7] border-[#e6e6e6] text-[#1d1d1d] focus:border-[#4a154b] focus:ring-1 focus:ring-[#4a154b] text-sm h-11 pr-10 font-body"
                   autoComplete="current-password"
@@ -147,25 +141,10 @@ export default function LoginPage() {
             </Button>
           </form>
 
-          {/* Quick preset for Admin */}
-          <div className="pt-4 border-t border-[#e6e6e6]">
-            <div className="bg-[#f4ede4] border border-[#e6e6e6] rounded-[16px] p-4">
-              <div className="flex items-start gap-3">
-                <KeyRound className="h-4 w-4 text-[#4a154b] mt-0.5 shrink-0" />
-                <div className="text-xs space-y-1 text-[#696969]">
-                  <div className="font-bold text-[#1d1d1d]">Kredensial Pengujian Petugas:</div>
-                  <div className="font-mono text-[11px]">User: <code className="bg-white px-2 py-0.5 rounded border border-[#e6e6e6] text-[#4a154b] font-bold">admin</code></div>
-                  <div className="font-mono text-[11px]">Pass: <code className="bg-white px-2 py-0.5 rounded border border-[#e6e6e6] text-[#4a154b] font-bold">superadmin.</code></div>
-                  <button
-                    type="button"
-                    onClick={fillAdminCredentials}
-                    className="inline-flex items-center gap-1 text-xs font-bold text-[#4a154b] hover:underline mt-1 cursor-pointer"
-                  >
-                    Gunakan akun simulasi pengujian
-                  </button>
-                </div>
-              </div>
-            </div>
+          {/* Security Guarantee Badge */}
+          <div className="pt-4 border-t border-[#e6e6e6] flex items-center justify-center gap-2 text-xs text-[#696969]">
+            <ShieldCheck className="h-4 w-4 text-[#007a5a]" />
+            <span>Koneksi Terenkripsi TLS 1.3 & Supabase Auth RBAC</span>
           </div>
         </div>
 

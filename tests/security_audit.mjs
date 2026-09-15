@@ -56,11 +56,29 @@ async function runTests() {
   // Test 2: Valid Admin Authentication & Cookie Generation
   // -------------------------------------------------------------
   let validAdminCookie = '';
-  try {
-    const loginRes = await fetch(`${BASE_URL}/api/auth/login`, {
+    // Test that old compromised simulation credentials (admin / superadmin.) are strictly REJECTED
+    const rejectedRes = await fetch(`${BASE_URL}/api/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ identifier: 'admin', password: 'superadmin.' })
+    });
+    if (rejectedRes.status === 401) {
+      record('AUTH-00', 'Compromised Simulation Credential Rejection', 'Authentication', true,
+        `Old test credentials (admin / superadmin.) are strictly REJECTED with HTTP 401`,
+        'CRITICAL');
+    } else {
+      record('AUTH-00', 'Compromised Simulation Credential Rejection', 'Authentication', false,
+        `Old test credentials were NOT rejected: HTTP ${rejectedRes.status}`,
+        'CRITICAL');
+    }
+
+    const testAdminUser = process.env.TEST_ADMIN_USER || 'operator.siaga';
+    const testAdminPass = process.env.TEST_ADMIN_PASSWORD || 'Siaga@Prod_26!K7m';
+
+    const loginRes = await fetch(`${BASE_URL}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ identifier: testAdminUser, password: testAdminPass })
     });
     const loginData = await loginRes.json();
     const setCookie = loginRes.headers.get('set-cookie');
