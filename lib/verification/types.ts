@@ -12,12 +12,14 @@ export type VerificationStatus =
 export interface GeoValidationResult {
   isValid: boolean
   isWithinSemarang: boolean
+  isMockOrSpoofed: boolean
   latitude: number
   longitude: number
   accuracyMeters: number | null
   accuracyGrade: 'normal' | 'needs_verification' | 'low_confidence'
   nearestDistrict: string | null
   distanceToDistrictKm: number | null
+  districtMismatch: boolean
   warning?: string
 }
 
@@ -118,6 +120,9 @@ export interface VerificationMetadata {
   warnings: string[]
   honeypot_triggered: boolean
   rate_limit_flag: boolean
+  is_within_semarang?: boolean
+  is_mock_spoofed?: boolean
+  district_mismatch?: boolean
 }
 
 export interface VerificationPipelineInput {

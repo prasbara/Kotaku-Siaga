@@ -254,12 +254,25 @@ export async function POST(request: NextRequest) {
       recentReports
     )
 
-    // 5. Abuse Score Calculation
+    // 5. Strict Semarang Geofencing & Anti-FakeGPS Enforcement
+    if (verification.metadata.is_within_semarang === false) {
+      return NextResponse.json(
+        {
+          error:
+            'Laporan ditolak: Titik koordinat berada di luar wilayah administratif Kota Semarang. KotaKu Siaga secara khusus melayani pelaporan kebencanaan wilayah 16 Kecamatan Kota Semarang.',
+          code: 'OUTSIDE_SEMARANG_BOUNDARY',
+          nearest_district: verification.metadata.nearest_district,
+        },
+        { status: 422 }
+      )
+    }
+
+    // 6. Abuse Score Calculation
     const abuseScore = calculateAbuseScore({
       honeypotTriggered: verification.metadata.honeypot_triggered,
       hasPhoto: Boolean(photo_url || photo_sha256),
       photoTimeMismatch: verification.metadata.warnings.some((w: string) => w.includes('Waktu foto')),
-      isOutsideSemarang: verification.metadata.warnings.some((w: string) => w.includes('di luar wilayah')),
+      isOutsideSemarang: !verification.metadata.is_within_semarang,
       duplicatePhotoCount: verification.metadata.duplicate_count,
       emailVerified: Boolean(email_verified),
     })

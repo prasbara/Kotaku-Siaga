@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { disasterIntelligenceEngine } from '@/lib/intelligence/disaster-risk-engine'
 import { getUserRole } from '@/lib/auth/session'
+import { SEMARANG_KECAMATAN } from '@/lib/ingestion/semarang-admin'
 
 // GET /api/disaster-intelligence?area=semarang-utara
 // Role-based disaster intelligence output:

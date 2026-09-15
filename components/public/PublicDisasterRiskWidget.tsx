@@ -11,10 +11,14 @@ import {
   PhoneCall,
   ChevronDown,
   RefreshCw,
+  Layers,
+  MessageCircle,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { SEMARANG_KECAMATAN } from '@/lib/ingestion/semarang-admin'
 import type { PublicDisasterSummary } from '@/lib/intelligence/disaster-risk-engine'
+import { ExplainableFusionMatrixModal } from '@/components/intelligence/ExplainableFusionMatrixModal'
+import { DisasterShareModal } from '@/components/public/DisasterShareModal'
 
 interface PublicDisasterRiskWidgetProps {
   initialAreaSlug?: string
@@ -29,6 +33,8 @@ export function PublicDisasterRiskWidget({
   const [summary, setSummary] = useState<PublicDisasterSummary | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [isFusionModalOpen, setIsFusionModalOpen] = useState<boolean>(false)
+  const [isShareModalOpen, setIsShareModalOpen] = useState<boolean>(false)
   const abortControllerRef = React.useRef<AbortController | null>(null)
 
   const fetchSummary = useCallback(async (slug: string) => {
@@ -236,6 +242,25 @@ export function PublicDisasterRiskWidget({
             </span>
           </div>
           <p className="text-xs text-[#1d1d1d]/80">{riskInfo.badge}</p>
+          <div className="pt-2 flex items-center gap-2 flex-wrap">
+            <button
+              type="button"
+              onClick={() => setIsFusionModalOpen(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white text-[#4a154b] hover:bg-[#f9f0ff] text-[11px] font-bold rounded-lg border border-[#4a154b]/30 shadow-subtle transition-all cursor-pointer"
+            >
+              <Layers className="w-3.5 h-3.5 text-[#4a154b]" />
+              <span>Transparansi Bobot &amp; Data Fusion (7 Faktor)</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setIsShareModalOpen(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#25D366]/15 hover:bg-[#25D366]/25 text-[#075E54] text-[11px] font-bold rounded-lg border border-[#25D366]/40 shadow-subtle transition-all cursor-pointer"
+            >
+              <MessageCircle className="w-3.5 h-3.5 text-[#25D366]" />
+              <span>Bagikan Situasi (WA)</span>
+            </button>
+          </div>
         </div>
 
         <div className="text-right text-xs">
@@ -379,6 +404,44 @@ export function PublicDisasterRiskWidget({
           Data ini disederhanakan untuk keselamatan umum.
         </span>
       </div>
+
+      {/* Explainable Fusion Matrix Modal */}
+      {summary && (
+        <ExplainableFusionMatrixModal
+          isOpen={isFusionModalOpen}
+          onClose={() => setIsFusionModalOpen(false)}
+          areaName={summary.areaName}
+          totalScore={summary.riskScore}
+          riskLevel={summary.currentRiskLevel}
+          factors={summary.factors || []}
+          dataGaps={summary.dataGaps || []}
+          calculationIntegrity={summary.calculationIntegrity || 'OPTIMAL'}
+          lastUpdateWib={summary.lastUpdateWib}
+        />
+      )}
+
+      {/* WhatsApp Disaster Situation Share Modal */}
+      {summary && (
+        <DisasterShareModal
+          isOpen={isShareModalOpen}
+          onClose={() => setIsShareModalOpen(false)}
+          shareData={{
+            districtName: summary.areaName,
+            riskLevel:
+              summary.currentRiskLevel === 'CRITICAL'
+                ? 'kritis'
+                : summary.currentRiskLevel === 'HIGH' || summary.currentRiskLevel === 'ELEVATED'
+                ? 'tinggi'
+                : summary.currentRiskLevel === 'MODERATE'
+                ? 'sedang'
+                : 'rendah',
+            waterLevelCm: summary.rainfallSummary?.rateMmH ? Math.round(summary.rainfallSummary.rateMmH * 1.5) : 15,
+            avoidRoads: summary.roadsToAvoid,
+            safeCorridors: ['Jl. Wolter Monginsidi', 'Jl. Majapahit', 'Kawasan Gombel Baru'],
+            reportUrl: typeof window !== 'undefined' ? `${window.location.origin}/priorities/${selectedSlug}` : undefined,
+          }}
+        />
+      )}
     </div>
   )
 }

@@ -6,6 +6,7 @@ import { useState, useEffect } from 'react'
 import { ShieldAlert, Menu, X, PhoneCall, ShieldCheck, Radio } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { SOSModal } from '@/components/sos/SOSModal'
+import { EmergencyLiteModeToggle } from '@/components/layout/EmergencyLiteModeToggle'
 
 const navItems = [
   { label: 'Beranda', href: '/' },
@@ -111,6 +112,9 @@ export function Navbar() {
 
         {/* Header Right Actions */}
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          {/* Emergency Lite Mode Switch */}
+          <EmergencyLiteModeToggle />
+
           {/* EOC Clock */}
           <div className="hidden 2xl:flex flex-col text-right pr-2">
             <span className="text-[9px] font-mono text-[#696969] uppercase font-bold tracking-wider">WAKTU SISTEM</span>

@@ -8,6 +8,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import EvidenceBundlePanel from '@/components/cctv/EvidenceBundlePanel'
 import { WhyDidThisHappenCard } from '@/components/education/WhyDidThisHappenCard'
+import { DigitalEvidenceCertificate } from '@/components/verification/DigitalEvidenceCertificate'
 
 interface Props {
   params: Promise<{ id: string }>
@@ -279,21 +280,8 @@ export default async function ReportDetailPage({ params }: Props) {
               )}
             </div>
 
-            {/* Credibility Score Box */}
-            <div className="p-6 rounded-[16px] bg-[#f4ede4] border border-[#e8ded2] shadow-subtle">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-bold text-[#4a154b] uppercase tracking-wider">
-                  Skor Kredibilitas
-                </span>
-                <ShieldCheck className="w-5 h-5 text-[#007a5a]" />
-              </div>
-              <div className="text-3xl font-bold text-[#1d1d1d]">
-                {r.credibility_score ?? 85}<span className="text-sm font-normal text-[#696969]">/100</span>
-              </div>
-              <p className="text-xs text-[#696969] mt-2 leading-relaxed">
-                Dihitung dari kombinasi akurasi GPS, timestamp foto, keaslian citra, dan korelasi telemetri cuaca.
-              </p>
-            </div>
+            {/* Digital Evidence Chain-of-Custody Certificate */}
+            <DigitalEvidenceCertificate report={r} />
 
             {/* Education & Urban Resilience Context (Requirement #9) */}
             <WhyDidThisHappenCard

@@ -50,6 +50,17 @@ export interface Report {
   credibility_score?: number | null
   location_accuracy?: number | null
   verification_metadata?: any | null
+  reporter_email?: string | null
+  reporter_phone?: string | null
+  email_verified?: boolean | null
+  turnstile_verified?: boolean | null
+  incident_cluster_id?: string | null
+  independent_reporter_count?: number | null
+  corroboration_count?: number | null
+  abuse_score?: number | null
+  event_type?: string | null
+  client_session_id?: string | null
+  client_ip_hash?: string | null
   // Joined fields
   ai_analysis?: AIAnalysis | null
 }

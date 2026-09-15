@@ -23,6 +23,7 @@ import {
 } from 'lucide-react'
 import { PANTAUSEMAR_CCTV_POINTS } from '@/lib/data/cctv-pantausemar'
 import { PublicDisasterRiskWidget } from '@/components/public/PublicDisasterRiskWidget'
+import { EmergencyLiteModeManager } from '@/components/public/EmergencyLiteModeManager'
 
 export const metadata: Metadata = {
   title: 'KotaKu Siaga | Pemantauan Banjir & Rob Kota Semarang',
@@ -52,7 +53,8 @@ export default async function LandingPage() {
   const cctvCount = PANTAUSEMAR_CCTV_POINTS.length
 
   return (
-    <div className="flex flex-col w-full bg-[#fdfbf9] text-[#1d1d1d] min-h-screen">
+    <EmergencyLiteModeManager>
+      <div className="flex flex-col w-full bg-[#fdfbf9] text-[#1d1d1d] min-h-screen">
       {/* 1. HERO SECTION WITH PASTEL MESH ATMOSPHERE */}
       <section className="relative overflow-hidden pt-12 pb-20 md:pt-20 md:pb-28 border-b border-[#e6e6e6]">
         {/* Pastel Mesh Background Layers */}
@@ -812,5 +814,6 @@ export default async function LandingPage() {
         </div>
       </section>
     </div>
+    </EmergencyLiteModeManager>
   )
 }

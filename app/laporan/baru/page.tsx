@@ -31,6 +31,8 @@ import {
 } from 'lucide-react'
 import { toast } from '@/components/ui/use-toast'
 import { TurnstileWidget } from '@/components/ui/TurnstileWidget'
+import { validateGeolocation } from '@/lib/verification/geo-validator'
+import { SEMARANG_KECAMATAN } from '@/lib/ingestion/semarang-admin'
 
 const CATEGORIES = [
   {
@@ -216,7 +218,7 @@ export default function LaporBaruPage() {
     reader.readAsDataURL(file)
   }
 
-  // Geolocation trigger
+  // Geolocation trigger with anti-fakeGPS & Semarang geofencing
   const handleGetLocation = () => {
     if (!('geolocation' in navigator)) {
       toast({
@@ -230,13 +232,47 @@ export default function LaporBaruPage() {
     setGettingLocation(true)
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        setLat(Number(pos.coords.latitude.toFixed(6)))
-        setLng(Number(pos.coords.longitude.toFixed(6)))
-        setLocationAccuracy(Math.round(pos.coords.accuracy))
+        const latitude = Number(pos.coords.latitude.toFixed(6))
+        const longitude = Number(pos.coords.longitude.toFixed(6))
+        const accuracy = Math.round(pos.coords.accuracy)
+
+        setLat(latitude)
+        setLng(longitude)
+        setLocationAccuracy(accuracy)
         setGettingLocation(false)
+
+        const geo = validateGeolocation(latitude, longitude, accuracy, district)
+
+        if (!geo.isWithinSemarang) {
+          toast({
+            title: 'Lokasi Di Luar Wilayah Semarang',
+            description: `Titik GPS Anda (${latitude.toFixed(4)}, ${longitude.toFixed(4)}) terdeteksi di luar perbatasan administratif Kota Semarang. KotaKu Siaga hanya melayani 16 Kecamatan Kota Semarang.`,
+            variant: 'destructive',
+          })
+          return
+        }
+
+        if (geo.isMockOrSpoofed) {
+          toast({
+            title: 'Peringatan Sensor Lokasi',
+            description: 'Terdeteksi anomali pada sensor GPS perangkat. Pastikan sensor GPS aktif tanpa mock provider.',
+            variant: 'destructive',
+          })
+        }
+
+        // Auto-match closest district
+        if (geo.nearestDistrict) {
+          const matched = SEMARANG_DISTRICTS.find(
+            (d) => d.toLowerCase() === geo.nearestDistrict?.toLowerCase() || geo.nearestDistrict?.toLowerCase().includes(d.toLowerCase())
+          )
+          if (matched) {
+            setDistrict(matched)
+          }
+        }
+
         toast({
           title: 'Lokasi Berhasil Terdeteksi',
-          description: `Akurasi GPS ±${Math.round(pos.coords.accuracy)} meter (${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}).`,
+          description: `Terdeteksi di area ${geo.nearestDistrict || 'Kota Semarang'} (Akurasi ±${accuracy}m).`,
         })
       },
       (err) => {
@@ -281,6 +317,15 @@ export default function LaporBaruPage() {
     }
     if (lat === undefined || lng === undefined) {
       toast({ title: 'Lokasi Wajib Ditentukan', description: 'Ambil lokasi melalui GPS atau pilih kecamatan.', variant: 'destructive' })
+      return false
+    }
+    const geo = validateGeolocation(lat, lng, locationAccuracy, district)
+    if (!geo.isWithinSemarang) {
+      toast({
+        title: 'Lokasi Di Luar Kota Semarang',
+        description: 'Laporan hanya dapat dikirimkan untuk titik kejadian di dalam 16 Kecamatan Kota Semarang.',
+        variant: 'destructive',
+      })
       return false
     }
     return true

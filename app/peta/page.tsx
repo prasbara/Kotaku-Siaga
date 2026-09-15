@@ -5,7 +5,7 @@ import type { Report, ReportCategory, UrgencyLevel } from '@/types'
 import { CATEGORY_LABELS, URGENCY_LABELS } from '@/types'
 import { InteractiveMap } from '@/components/map/InteractiveMap'
 import { ReportDetailPanel } from '@/components/map/ReportDetailPanel'
-import { RefreshCw, Search, X, Wind, Video, CloudRain, Waves, Info, AlertCircle, BookOpen, ShieldAlert } from 'lucide-react'
+import { RefreshCw, Search, X, Wind, Video, CloudRain, Waves, Info, AlertCircle, BookOpen, ShieldAlert, Navigation } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { PANTAUSEMAR_CCTV_POINTS, type CCTVPoint } from '@/lib/data/cctv-pantausemar'
 import { CCTVDetailPanel } from '@/components/cctv/CCTVDetailPanel'
@@ -19,6 +19,7 @@ import type { FloodEvent } from '@/types/flood-event'
 import { FloodEventDetailModal } from '@/components/map/FloodEventDetailModal'
 import { AreaResilienceInfoModal } from '@/components/education/AreaResilienceInfoModal'
 import { PublicDisasterRiskWidget } from '@/components/public/PublicDisasterRiskWidget'
+import { SafeRouteNavigator, type SafeRoutePreset, SEMARANG_SAFE_ROUTE_PRESETS } from '@/components/map/SafeRouteNavigator'
 
 const ALL_CATEGORIES = Object.keys(CATEGORY_LABELS) as ReportCategory[]
 const ALL_URGENCIES = Object.keys(URGENCY_LABELS) as UrgencyLevel[]
@@ -66,6 +67,10 @@ export default function PetaPage() {
 
   // Public Disaster Intelligence Risk Modal (Requirement #1 & #12)
   const [showPublicRiskModal, setShowPublicRiskModal] = useState<boolean>(false)
+
+  // Safe Route Flood-Avoidance Navigator State (Feature #4)
+  const [activeSafeRoute, setActiveSafeRoute] = useState<SafeRoutePreset | null>(null)
+  const [showSafeRoutePanel, setShowSafeRoutePanel] = useState<boolean>(false)
 
   // Fetch real weather telemetry with zone support
   const fetchWeather = useCallback(async (zoneId?: SemarangZoneId) => {
@@ -254,6 +259,27 @@ export default function PetaPage() {
             onOpenIntelligencePanel={() => setShowInfoModal(!showInfoModal)}
             isPanelOpen={showInfoModal}
           />
+
+          {/* Safe Route Evacuation Navigator Toggle (Feature #4) */}
+          <button
+            onClick={() => {
+              const nextState = !showSafeRoutePanel
+              setShowSafeRoutePanel(nextState)
+              if (nextState && !activeSafeRoute) {
+                setActiveSafeRoute(SEMARANG_SAFE_ROUTE_PRESETS[0])
+              }
+            }}
+            className={cn(
+              'flex items-center gap-1.5 px-3.5 py-1.5 rounded-[90px] text-xs font-bold transition-all shadow-xs min-h-[40px]',
+              showSafeRoutePanel
+                ? 'bg-[#007a5a] text-white'
+                : 'bg-[#e6f4ea] hover:bg-[#ceead6] border border-[#ceead6] text-[#007a5a]'
+            )}
+            title="Pencari Jalur Evakuasi Bebas Banjir"
+          >
+            <Navigation className="w-3.5 h-3.5" />
+            <span className="hidden md:inline">Jalur Aman Banjir</span>
+          </button>
 
           {/* Area Resilience Education Modal Toggle (Requirement #7) */}
           <button
@@ -494,6 +520,7 @@ export default function PetaPage() {
               sosList={sosList}
               clusters={clusters}
               viewMode={viewMode}
+              activeSafeRoute={activeSafeRoute}
               onReportClick={(r) => {
                 setSelectedReport(r)
                 setSelectedCCTV(null)
@@ -625,6 +652,19 @@ export default function PetaPage() {
           areaName={inspectedAreaLocation.name}
           reportsCount={reports.length}
         />
+
+        {/* SAFE ROUTE FLOOD-AVOIDANCE NAVIGATOR PANEL (Feature #4) */}
+        {showSafeRoutePanel && (
+          <div className="absolute top-3 md:top-4 right-3 md:right-4 z-20 w-84 max-w-[calc(100vw-1.5rem)] max-h-[calc(100dvh-130px)] overflow-y-auto animate-in slide-in-from-right-4 duration-200">
+            <SafeRouteNavigator
+              onSelectRoute={(route) => setActiveSafeRoute(route)}
+              onClose={() => {
+                setShowSafeRoutePanel(false)
+                setActiveSafeRoute(null)
+              }}
+            />
+          </div>
+        )}
 
         {/* PUBLIC DISASTER RISK MODAL (Requirement #1 & #12) */}
         {showPublicRiskModal && (

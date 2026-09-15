@@ -109,6 +109,9 @@ export interface PublicDisasterSummary {
   whySummary: string[]
   roadsToAvoid: string[]
   nearbyFacilities: string[]
+  factors?: RiskFactorItem[]
+  dataGaps?: DataGapWarning[]
+  calculationIntegrity?: 'OPTIMAL' | 'DEGRADED_DUE_TO_GAPS' | 'LOW_EVIDENCE'
   lastUpdate: string
   lastUpdateWib: string
 }
@@ -972,6 +975,9 @@ export class DisasterIntelligenceEngine {
         'Puskesmas Siaga 24 Jam Kecamatan',
         'Titik Evakuasi Sementara Balai Kelurahan',
       ],
+      factors: assessment.factors,
+      dataGaps: assessment.dataGaps,
+      calculationIntegrity: assessment.calculationIntegrity,
       lastUpdate: assessment.calculatedAt,
       lastUpdateWib: assessment.calculatedAtWib,
     }

@@ -40,11 +40,12 @@ export async function runVerificationPipeline(
     (input.phoneNumberConfirm && input.phoneNumberConfirm.trim().length > 0)
   )
 
-  // 2. Geolocation & Administrative Boundaries Check
+  // 2. Geolocation, Administrative Boundaries, & Anti-FakeGPS Check
   const geo = validateGeolocation(
     input.latitude,
     input.longitude,
-    input.locationAccuracy
+    input.locationAccuracy,
+    input.districtName
   )
 
   // 3. Image Duplicate & Timestamp Check
@@ -157,6 +158,9 @@ export async function runVerificationPipeline(
     warnings: scoring.warnings,
     honeypot_triggered: honeypotTriggered,
     rate_limit_flag: false,
+    is_within_semarang: geo.isWithinSemarang,
+    is_mock_spoofed: geo.isMockOrSpoofed,
+    district_mismatch: geo.districtMismatch,
   }
 
   return {
@@ -166,5 +170,6 @@ export async function runVerificationPipeline(
     status: scoring.status,
     credibilityScore: scoring.score,
     metadata,
-  }
+    geo,
+  } as any
 }

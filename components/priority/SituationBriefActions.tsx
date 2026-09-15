@@ -1,43 +1,22 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 import Link from 'next/link'
-import { Printer, Share2, ArrowLeft, ChevronRight, Check } from 'lucide-react'
-import { toast } from '@/components/ui/use-toast'
+import { Printer, ArrowLeft, MessageCircle } from 'lucide-react'
+import { DisasterShareModal } from '@/components/public/DisasterShareModal'
 
 interface SituationBriefActionsProps {
   areaName: string
-  score: number
+  score?: number
   level: string
 }
 
-export function SituationBriefActions({ areaName, score, level }: SituationBriefActionsProps) {
-  const [copied, setCopied] = React.useState(false)
+export function SituationBriefActions({ areaName, level }: SituationBriefActionsProps) {
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false)
 
   const handlePrint = () => {
     if (typeof window !== 'undefined') {
       window.print()
-    }
-  }
-
-  const handleShare = () => {
-    if (typeof window !== 'undefined') {
-      const shareUrl = window.location.href
-      if (navigator.share) {
-        navigator.share({
-          title: `Lembar Situasi Risiko: ${areaName} (Skor: ${score})`,
-          text: `Audit Deterministik Risiko Bencana ${areaName} — KotaKu Siaga EOC Semarang.`,
-          url: shareUrl,
-        }).catch(() => {})
-      } else {
-        navigator.clipboard.writeText(shareUrl)
-        setCopied(true)
-        toast({
-          title: 'Tautan Disalin!',
-          description: 'Tautan lembar situasi siap dibagikan ke WhatsApp atau media koordinasi.',
-        })
-        setTimeout(() => setCopied(false), 2000)
-      }
     }
   }
 
@@ -73,14 +52,30 @@ export function SituationBriefActions({ areaName, score, level }: SituationBrief
 
         <button
           type="button"
-          onClick={handleShare}
-          className="px-3.5 py-1.5 rounded-[90px] bg-[#f4ede4] hover:bg-[#e8ded2] text-[#1d1d1d] text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer"
-          title="Bagikan ringkasan situasi wilayah"
+          onClick={() => setIsShareModalOpen(true)}
+          className="px-3.5 py-1.5 rounded-[90px] bg-[#25D366]/15 hover:bg-[#25D366]/25 border border-[#25D366]/40 text-[#075E54] text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer"
+          title="Bagikan ringkasan situasi wilayah ke WhatsApp"
         >
-          {copied ? <Check className="w-3.5 h-3.5 text-[#007a5a]" /> : <Share2 className="w-3.5 h-3.5 text-[#4a154b]" />}
-          <span>{copied ? 'Tersalin' : 'Bagikan'}</span>
+          <MessageCircle className="w-3.5 h-3.5 text-[#25D366]" />
+          <span>Bagikan ke WhatsApp</span>
         </button>
       </div>
+
+      <DisasterShareModal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        shareData={{
+          districtName: areaName,
+          riskLevel:
+            level === 'CRITICAL'
+              ? 'kritis'
+              : level === 'HIGH'
+              ? 'tinggi'
+              : level === 'MEDIUM'
+              ? 'sedang'
+              : 'rendah',
+        }}
+      />
     </div>
   )
 }

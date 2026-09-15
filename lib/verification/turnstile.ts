@@ -13,6 +13,7 @@ export interface TurnstileVerificationResult {
 
 // Cloudflare Turnstile Secret Key
 const DEFAULT_SECRET_KEY = '0x4AAAAAAE17c7l5rDH4t54pcdLfvE3Bpfg'
+const ALWAYS_PASS_SECRET = '1x0000000000000000000000000000000AA'
 
 export async function verifyTurnstileToken(
   token: string | null | undefined,

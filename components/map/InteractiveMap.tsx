@@ -5,6 +5,7 @@ import type { Report } from '@/types'
 import { formatRelativeTime } from '@/lib/utils'
 import type { CCTVPoint } from '@/lib/data/cctv-pantausemar'
 import type { FloodEvent } from '@/types/flood-event'
+import type { SafeRoutePreset } from '@/components/map/SafeRouteNavigator'
 
 interface InteractiveMapProps {
   reports: Report[]
@@ -24,6 +25,7 @@ interface InteractiveMapProps {
   floodEvents?: FloodEvent[]
   showFloodEvents?: boolean
   onFloodEventClick?: (event: FloodEvent) => void
+  activeSafeRoute?: SafeRoutePreset | null
 }
 
 // Kota Semarang Center
@@ -60,6 +62,7 @@ export function InteractiveMap({
   floodEvents = EMPTY_FLOOD,
   showFloodEvents = true,
   onFloodEventClick,
+  activeSafeRoute = null,
 }: InteractiveMapProps) {
   const mapRef = useRef<HTMLDivElement>(null)
   const leafletMapRef = useRef<unknown>(null)
@@ -69,6 +72,7 @@ export function InteractiveMap({
   const floodMarkersRef = useRef<unknown[]>([])
   const sosMarkersRef = useRef<unknown[]>([])
   const clusterLayersRef = useRef<unknown[]>([])
+  const safeRouteLayersRef = useRef<unknown[]>([])
   const [isClient, setIsClient] = useState(false)
 
   useEffect(() => {
@@ -150,12 +154,14 @@ export function InteractiveMap({
       floodMarkersRef.current.forEach((m) => map.removeLayer(m))
       sosMarkersRef.current.forEach((m) => map.removeLayer(m))
       clusterLayersRef.current.forEach((c) => map.removeLayer(c))
+      safeRouteLayersRef.current.forEach((l) => map.removeLayer(l))
       markersRef.current = []
       circlesRef.current = []
       cctvMarkersRef.current = []
       floodMarkersRef.current = []
       sosMarkersRef.current = []
       clusterLayersRef.current = []
+      safeRouteLayersRef.current = []
 
       reports.forEach((report) => {
         const isSelected = selectedReport?.id === report.id
@@ -528,10 +534,59 @@ export function InteractiveMap({
           clusterLayersRef.current.push(circle)
         })
       }
+
+      // Render Safe Route Polyline & Markers if present
+      if (activeSafeRoute && activeSafeRoute.safeWaypoints && activeSafeRoute.safeWaypoints.length >= 2) {
+        const polyline = L.polyline(activeSafeRoute.safeWaypoints, {
+          color: '#007a5a',
+          weight: 6,
+          opacity: 0.9,
+          lineJoin: 'round',
+        })
+        polyline.bindPopup(`
+          <div style="font-size: 11px; padding: 2px;">
+            <div style="font-weight: bold; color: #007a5a;">Jalur Evakuasi Rekomendasi</div>
+            <div style="font-weight: bold; color: #1d1d1d; margin: 2px 0;">${escapeHtml(activeSafeRoute.title)}</div>
+            <div style="font-size: 10px; color: #696969;">Jarak: ${activeSafeRoute.safeDistanceKm} km (~${activeSafeRoute.estimatedMinutes} Menit)</div>
+          </div>
+        `)
+        polyline.addTo(map as any)
+        safeRouteLayersRef.current.push(polyline)
+
+        // Start Pin
+        const startIcon = L.divIcon({
+          className: 'safe-route-start-pin',
+          html: `<div style="background:#cc4117; color:white; font-size:11px; font-weight:bold; border-radius:50%; width:24px; height:24px; display:flex; items-center; justify-content:center; border:2px solid white; box-shadow:0 2px 6px rgba(0,0,0,0.3); text-align:center; line-height:20px;">A</div>`,
+          iconSize: [24, 24],
+          iconAnchor: [12, 12],
+        })
+        const startMarker = L.marker(activeSafeRoute.originCoords, { icon: startIcon })
+        startMarker.bindPopup(`<b>Titik Asal:</b> ${escapeHtml(activeSafeRoute.originName)}`)
+        startMarker.addTo(map as any)
+        safeRouteLayersRef.current.push(startMarker)
+
+        // Dest Pin
+        const endIcon = L.divIcon({
+          className: 'safe-route-end-pin',
+          html: `<div style="background:#007a5a; color:white; font-size:11px; font-weight:bold; border-radius:50%; width:24px; height:24px; display:flex; items-center; justify-content:center; border:2px solid white; box-shadow:0 2px 6px rgba(0,0,0,0.3); text-align:center; line-height:20px;">B</div>`,
+          iconSize: [24, 24],
+          iconAnchor: [12, 12],
+        })
+        const endMarker = L.marker(activeSafeRoute.destCoords, { icon: endIcon })
+        endMarker.bindPopup(`<b>Tujuan Evakuasi:</b> ${escapeHtml(activeSafeRoute.destName)}`)
+        endMarker.addTo(map as any)
+        safeRouteLayersRef.current.push(endMarker)
+
+        try {
+          ;(map as any).fitBounds(polyline.getBounds(), { padding: [50, 50], maxZoom: 14 })
+        } catch {
+          // Ignore if map not ready
+        }
+      }
     }
 
     updateMarkers()
-  }, [reports, sosList, clusters, viewMode, selectedReport, onReportClick, isClient, showCCTV, cctvList, onCCTVClick, floodEvents, showFloodEvents, onFloodEventClick])
+  }, [reports, sosList, clusters, viewMode, selectedReport, onReportClick, isClient, showCCTV, cctvList, onCCTVClick, floodEvents, showFloodEvents, onFloodEventClick, activeSafeRoute])
 
   // Center on selected report
   useEffect(() => {
