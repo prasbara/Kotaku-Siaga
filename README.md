@@ -1,115 +1,108 @@
-# KotaKu Siaga
+# KOTAKU SIAGA
+**Platform Civic Emergency & Flood Intelligence Hub Berbasis Multi-Source Data Fusion dan Audit Deterministik ISO 37120 untuk Ketahanan Kota Semarang**
 
-**Platform Kolaboratif Pemantauan dan Respons Bencana Iklim**
-
-> Data Lingkungan. Respons Lebih Cepat. Kota Lebih Tangguh.
-
-KotaKu Siaga menghubungkan laporan warga, pemetaan risiko, dan analisis AI untuk membantu membangun kota yang lebih siap menghadapi bencana iklim.
-
-## Tech Stack
-
-- **Frontend:** Next.js 15 + TypeScript
-- **UI:** Tailwind CSS + shadcn-style components
-- **Map:** Leaflet.js (vanilla, no react-leaflet)
-- **Charts:** Recharts
-- **Backend:** Next.js API Routes
-- **Database:** Supabase PostgreSQL
-- **Auth:** Supabase Auth
-- **Storage:** Supabase Storage
-- **AI:** OpenRouter API (via backend routes)
-
-## Quick Start
-
-### 1. Clone & Install
-
-```bash
-npm install
-```
-
-### 2. Setup Environment Variables
-
-Copy `.env.example` ke `.env.local` dan isi dengan nilai yang benar:
-
-```env
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
-OPENROUTER_API_KEY=your_openrouter_api_key
-OPENROUTER_MODEL=anthropic/claude-3-haiku
-NEXT_PUBLIC_APP_URL=http://localhost:3000
-NEXT_PUBLIC_DEMO_MODE=true
-```
-
-### 3. Setup Supabase
-
-1. Buat project baru di [supabase.com](https://supabase.com)
-2. Jalankan SQL dari `supabase/schema.sql` di SQL Editor
-3. (Opsional) Jalankan SQL dari `supabase/seed.sql` untuk data demo
-4. Buat storage bucket bernama `report-photos` (Public)
-5. Tambahkan storage policies (lihat schema.sql)
-
-Atau gunakan API endpoint untuk seed data:
-```
-POST /api/seed
-```
-
-### 4. Run Development Server
-
-```bash
-npm run dev
-```
-
-Buka [http://localhost:3000](http://localhost:3000)
-
-## Halaman
-
-| Route | Deskripsi |
-|---|---|
-| `/` | Landing Page |
-| `/peta` | Peta Interaktif |
-| `/laporan/baru` | Form Laporan Warga |
-| `/laporan/[id]` | Detail Laporan |
-| `/dashboard` | Analytics Dashboard |
-| `/dashboard/prioritas` | Sistem Skor Prioritas |
-| `/edukasi` | Modul Edukasi |
-| `/login` | Halaman Login |
-| `/register` | Halaman Register |
-
-## API Endpoints
-
-| Endpoint | Method | Deskripsi |
-|---|---|---|
-| `/api/reports` | GET, POST | CRUD laporan |
-| `/api/reports/[id]` | GET, PATCH | Detail laporan |
-| `/api/ai/analyze-report` | POST | Analisis AI laporan |
-| `/api/ai/chat` | POST | Chat assistant |
-| `/api/ai/aggregate-analysis` | POST | Analisis agregat area |
-| `/api/dashboard/stats` | GET | Statistik dashboard |
-| `/api/priority-scores` | GET | Skor prioritas area |
-| `/api/upload` | POST | Upload foto |
-| `/api/education` | GET | Konten edukasi |
-| `/api/seed` | POST | Seed demo data |
-
-## Demo Mode
-
-Set `NEXT_PUBLIC_DEMO_MODE=true` untuk menampilkan banner "MODE SIMULASI".
-
-Jalankan `POST /api/seed` untuk populate data demo ke Supabase.
-
-## SDG Support
-
-- **SDG 13** — Climate Action
-- **SDG 11** — Sustainable Cities and Communities  
-- **SDG 9** — Industry, Innovation and Infrastructure
-- **SDG 4** — Quality Education
-
-## Deployment (Vercel)
-
-1. Push ke GitHub
-2. Import project di Vercel
-3. Set environment variables di Vercel dashboard
-4. Deploy
+> **Kompetisi:** INFINITERA 2.0 — Web Development 2026  
+> **Tim Pengembang:** PENTOL KABUL ALFAMART WIDURI  
+> **Kategori:** Civic Technology, Disaster Informatics, Climate Resilience & Urban AI
 
 ---
 
-*KotaKu Siaga — Civic Technology for Climate Resilience*
+## 1. Ringkasan Eksekutif
+**KOTAKU SIAGA** adalah platform intelijen kebencanaan dan kedaruratan terpadu yang dirancang khusus untuk memitigasi risiko banjir limpasan, rob air laut, dan genangan kronis di Kota Semarang. 
+
+Platform ini menggabungkan:
+1. **Multi-Source Data Fusion (7 Stream Real-time):** Mengintegrasikan prakiraan cuaca & curah hujan BMKG, pasang laut maritim, elevasi topografi DEMNAS, katalog sejarah bencana BNPB, deteksi genangan AI kamera CCTV PantauSemar, laporan spasial warga terverifikasi, serta telemetri rumah pompa drainase.
+2. **Audit Deterministik ISO 37120 & Algoritma D-RISK v2.4:** Menyajikan kalkulasi risiko berbasis indikator ketahanan perkotaan ISO 37120 yang transparan, dapat dipertanggungjawabkan (*explainable*), dan bebas dari halusinasi *black-box AI*.
+3. **Sertifikat Integritas Bukti Digital (Chain-of-Custody):** Hashing instan SHA-256 via Web Crypto API sebelum transmisi, Cloudflare Turnstile anti-bot, Email OTP 6-digit, dan validasi *Haversine spatial corroboration*.
+4. **Strict Geofencing Kota Semarang (18 km Limit) & Anti-FakeGPS Defense:** Menolak pelaporan di luar wilayah administratif Semarang (HTTP 422) dan menyaring anomali GPS mock/spoofing.
+5. **Emergency Lite Mode (<30KB Payload):** Antarmuka ramah hemat baterai dan jaringan lambat dengan tombol panggilan 1-tap ke Call Center 112 / PSC 119 / TRC BPBD Kota Semarang.
+6. **Dynamic Flood-Avoidance Safe Route Navigator:** Navigasi rute evakuasi cerdas pada peta GIS yang secara otomatis menghindari ruas jalan tergenang rob (Kaligawe, Pelabuhan Tanjung Emas, Mangkang).
+7. **WhatsApp Emergency Situation Share Hub:** Diseminasi cepat format pesan resmi darurat ke grup RT/RW dan warga sekitar.
+
+---
+
+## 2. Tech Stack & Arsitektur
+
+- **Framework:** Next.js 15 (App Router, Server Components & Edge Handlers) + TypeScript 5
+- **Styling:** Vanilla Tailwind CSS + Design System Token Palette + Lucide Icons
+- **GIS Mapping:** Leaflet.js Vanilla Engine + OpenStreetMap + Windy Radar Layer
+- **Visualisasi Data:** Recharts Dataviz + SVG Sparklines
+- **Database & Storage:** Supabase Managed PostgreSQL + Row-Level Security (RLS) + Supabase Storage
+- **Keamanan:** Cloudflare Turnstile CAPTCHA + Web Crypto API SHA-256 + HMAC Signed Sessions + Rate Limiter
+- **AI Intelligence:** OpenRouter API (Civic AI Copilot) + Strict Domain Guardrails & Heuristic Engine Fallback
+
+---
+
+## 3. Daftar Halaman & Rute Utama
+
+| Rute | Deskripsi Fungsional |
+| :--- | :--- |
+| `/` | Beranda Intelijen Kebencanaan + Public Disaster Risk Widget + Emergency Lite Mode Toggle |
+| `/peta` | GIS Workspace Interaktif, Layer CCTV PantauSemar, Windy Live Radar & Safe Route Navigator |
+| `/laporan/baru` | Form Pelaporan Kedaruratan Warga + 1-Click GPS Quick Match + Anti-FakeGPS + Turnstile + OTP |
+| `/laporan/[id]` | Detail Laporan Warga + Sertifikat Integritas Bukti Digital SHA-256 (Chain-of-Custody) |
+| `/priorities` | Matriks Deterministik Prioritas Risiko Wilayah (16 Kecamatan Kota Semarang) |
+| `/priorities/[area]` | Lembar Situasi & Audit Deterministik Wilayah ISO 37120 (Ramah Cetak A4 PDF) |
+| `/dashboard` | EOC Operator Command Dashboard (Insiden Aktif, Klaster Bencana, Triage TRC BPBD) |
+| `/edukasi` | Panduan Evakuasi Banjir & Checklist Tas Siaga Bencana 72 Jam |
+| `/data` | Katalog Keterbukaan Data Spasial & Metadata Sensor |
+| `/login` | Portal Autentikasi Petugas Operator EOC BPBD |
+| `/presentasi` | Presentasi Pitch Deck Interaktif untuk Dewan Juri |
+
+---
+
+## 4. Panduan Menjalankan Lokal
+
+### 1. Instalasi Dependensi
+```bash
+git clone https://github.com/prasbara/Kotaku-Siaga.git
+cd Kotaku-Siaga
+npm install
+```
+
+### 2. Konfigurasi Variabel Lingkungan
+Salin template konfigurasi:
+```bash
+cp .env.example .env.local
+```
+Lengkapi nilai variabel publik dan kredensial Supabase pada file `.env.local`.
+
+### 3. Setup Database Supabase
+1. Buka dashboard Supabase SQL Editor.
+2. Eksekusi skema utama dari file `supabase/schema.sql`.
+3. Eksekusi file migrasi dari `supabase/migration_001_otp_sos_clustering.sql`.
+4. Buat storage bucket publik bernama `report-photos`.
+
+### 4. Menjalankan Server Pengembangan
+```bash
+npm run dev
+```
+Buka peramban di [http://localhost:3000](http://localhost:3000).
+
+---
+
+## 5. Quality Assurance & Verifikasi Build
+
+```bash
+# 1. Typecheck Strict (0 Errors)
+npx tsc --noEmit
+
+# 2. Static Code Analysis (Linting)
+npm run lint
+
+# 3. Production Build Compilation (60/60 Static & Dynamic Routes)
+npm run build
+```
+
+---
+
+## 6. Penyelarasan Target SDG (Sustainable Development Goals)
+
+- **SDG 11:** Sustainable Cities and Communities (Indikator 11.5 — Pengurangan dampak bencana perkotaan).
+- **SDG 13:** Climate Action (Indikator 13.1 — Penguatan ketahanan dan adaptasi terhadap bahaya iklim).
+- **SDG 9:** Industry, Innovation and Infrastructure (Infrastruktur data terbuka dan pemantauan drainase pintar).
+- **SDG 16:** Peace, Justice and Strong Institutions (Transparansi alokasi sumber daya darurat dan integritas bukti audit).
+
+---
+
+*© 2026 Tim PENTOL KABUL ALFAMART WIDURI — INFINITERA 2.0 Web Development Competition.*
