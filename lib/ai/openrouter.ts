@@ -528,3 +528,16 @@ Jawab dalam Bahasa Indonesia yang lugas.`
     return `Mohon maaf, layanan asistensi AI sedang tidak dapat terhubung (${err?.message || 'Koneksi OpenRouter terputus'}). Untuk keadaan darurat banjir atau bantuan evakuasi, silakan segera hubungi BPBD Kota Semarang di nomor darurat 112.`
   }
 }
+
+// Aliases and additional exports for backwards compatibility
+export const MODEL_NAME = process.env.OPENROUTER_MODEL || 'openrouter/free'
+export const analyzeAggregate = aggregateAreaAnalysis
+
+export async function chatAssistant(
+  messages: Array<{ role: string; content: string }>,
+  context?: string
+): Promise<string> {
+  const latestMsg = messages[messages.length - 1]?.content || ''
+  return generateMitigationChatResponse(latestMsg, context)
+}
+
