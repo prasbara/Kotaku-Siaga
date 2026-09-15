@@ -11,7 +11,7 @@ interface SituationBriefActionsProps {
   level: string
 }
 
-export function SituationBriefActions({ areaName, level }: SituationBriefActionsProps) {
+export function SituationBriefActions({ areaName, level, score }: SituationBriefActionsProps) {
   const [isShareModalOpen, setIsShareModalOpen] = useState(false)
 
   const handlePrint = () => {
@@ -72,8 +72,9 @@ export function SituationBriefActions({ areaName, level }: SituationBriefActions
               : level === 'HIGH'
               ? 'tinggi'
               : level === 'MEDIUM'
-              ? 'sedang'
+              ? 'waspada'
               : 'rendah',
+          riskScore: score,
         }}
       />
     </div>

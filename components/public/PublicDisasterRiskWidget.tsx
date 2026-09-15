@@ -242,6 +242,9 @@ export function PublicDisasterRiskWidget({
             </span>
           </div>
           <p className="text-xs text-[#1d1d1d]/80">{riskInfo.badge}</p>
+          <p className="text-[11px] text-[#696969] italic font-medium">
+            *Status risiko wilayah mencerminkan tingkat kerentanan spasial &amp; kesiapsiagaan — bukan konfirmasi banjir sedang terjadi.
+          </p>
           <div className="pt-2 flex items-center gap-2 flex-wrap">
             <button
               type="button"
@@ -427,18 +430,22 @@ export function PublicDisasterRiskWidget({
           onClose={() => setIsShareModalOpen(false)}
           shareData={{
             districtName: summary.areaName,
-            riskLevel:
-              summary.currentRiskLevel === 'CRITICAL'
-                ? 'kritis'
-                : summary.currentRiskLevel === 'HIGH' || summary.currentRiskLevel === 'ELEVATED'
-                ? 'tinggi'
-                : summary.currentRiskLevel === 'MODERATE'
-                ? 'sedang'
-                : 'rendah',
-            waterLevelCm: summary.rainfallSummary?.rateMmH ? Math.round(summary.rainfallSummary.rateMmH * 1.5) : 15,
+            riskLevel: summary.currentRiskLevel,
+            riskScore: summary.riskScore,
+            rainfallMmH: summary.rainfallSummary.rateMmH,
+            rainfallCategory: summary.rainfallSummary.category,
+            rainfallStatus: summary.rainfallSummary.status,
+            coastalStatus: summary.coastalRiskSummary.status,
+            waveHeightM: summary.coastalRiskSummary.waveHeightM,
+            floodDepthCm: summary.activeFloodDepthCm || null,
+            activeReportsCount: summary.activeReportsCount || 0,
             avoidRoads: summary.roadsToAvoid,
-            safeCorridors: ['Jl. Wolter Monginsidi', 'Jl. Majapahit', 'Kawasan Gombel Baru'],
+            safeCorridors:
+              summary.roadsToAvoid && summary.roadsToAvoid.length > 0
+                ? ['Jalur alternatif evakuasi dapat dipantau di menu Peta Interaktif']
+                : undefined,
             reportUrl: typeof window !== 'undefined' ? `${window.location.origin}/priorities/${selectedSlug}` : undefined,
+            lastUpdateWib: summary.lastUpdateWib,
           }}
         />
       )}

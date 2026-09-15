@@ -105,6 +105,8 @@ export interface PublicDisasterSummary {
     status: string
     tideWarning: boolean
   }
+  activeFloodDepthCm?: number | null
+  activeReportsCount?: number
   publicRecommendations: string[]
   whySummary: string[]
   roadsToAvoid: string[]
@@ -857,14 +859,21 @@ export class DisasterIntelligenceEngine {
       },
     ]
 
-    // 11. Authentic District Recommendations & Roads to Avoid
+    // 11. Authentic District Recommendations & Roads to Avoid (STRICTLY DATA-BACKED)
     const specificData = DISTRICT_SPECIFIC_ROADS[kecamatan.slug] || DISTRICT_SPECIFIC_ROADS['semarang-utara']
+    const hasActiveReports = areaReports.length > 0
+    const hasHeavyRain = weatherRawRainMm >= 20
+    const hasTideSurge = isCoastal && Boolean(liveMarine && liveMarine.waveHeightM >= 1.25)
+
+    // Roads to avoid is populated ONLY when there is active evidence (incidents or severe weather trigger)
+    const roadsAvoid = hasActiveReports || hasHeavyRain || hasTideSurge ? [...specificData.roads] : []
     const publicRecs = [...specificData.recs]
-    const roadsAvoid = [...specificData.roads]
     const whyBullets = [...specificData.reasons]
 
-    if (areaReports.length > 0) {
+    if (hasActiveReports) {
       whyBullets.push(`Terdapat ${areaReports.length} laporan warga terpantau aktif di wilayah ini.`)
+    } else {
+      whyBullets.push('Nihil laporan genangan aktif dari warga saat ini.')
     }
 
     return {
@@ -922,6 +931,7 @@ export class DisasterIntelligenceEngine {
   public toPublicSummary(assessment: OperatorDisasterAssessment): PublicDisasterSummary {
     const weatherFactor = assessment.factors.find((f) => f.id === 'weather')
     const coastalFactor = assessment.factors.find((f) => f.id === 'coastal')
+    const citizenFactor = assessment.factors.find((f) => f.id === 'citizenEvidence')
 
     // Parse actual rain rate from rawValue string (e.g. "0 mm/h (Berawan)")
     let actualRain = 0
@@ -951,6 +961,12 @@ export class DisasterIntelligenceEngine {
       }
     }
 
+    let activeReportsCount = 0
+    if (typeof citizenFactor?.rawValue === 'string') {
+      const matchCount = citizenFactor.rawValue.match(/^(\d+)\s*Laporan/)
+      if (matchCount) activeReportsCount = parseInt(matchCount[1])
+    }
+
     return {
       areaId: assessment.areaId,
       areaName: assessment.areaName,
@@ -967,6 +983,8 @@ export class DisasterIntelligenceEngine {
         status: coastalFactor?.rawValue.toString() || (isCoastal ? 'Laut Tenang' : 'Bukan Kawasan Pesisir'),
         tideWarning,
       },
+      activeFloodDepthCm: null,
+      activeReportsCount,
       publicRecommendations: assessment.publicRecommendations,
       whySummary: assessment.whySummary,
       roadsToAvoid: assessment.roadsToAvoid,

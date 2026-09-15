@@ -12,18 +12,130 @@ import {
 
 export interface DisasterShareData {
   districtName?: string
-  riskLevel?: 'rendah' | 'sedang' | 'tinggi' | 'kritis'
-  waterLevelCm?: number
+  riskLevel?: 'rendah' | 'sedang' | 'waspada' | 'tinggi' | 'kritis' | 'LOW' | 'MODERATE' | 'ELEVATED' | 'HIGH' | 'CRITICAL'
+  riskScore?: number
+  rainfallMmH?: number | null
+  rainfallCategory?: string
+  rainfallStatus?: string
+  coastalStatus?: string
+  waveHeightM?: number | null
+  floodDepthCm?: number | null
+  activeReportsCount?: number
   avoidRoads?: string[]
   safeCorridors?: string[]
   reportTitle?: string
   reportUrl?: string
+  lastUpdateWib?: string
 }
 
 interface DisasterShareModalProps {
   isOpen: boolean
   onClose: () => void
   shareData?: DisasterShareData
+}
+
+export function generateSituationShareText(shareData?: DisasterShareData): string {
+  const now = new Date()
+  const timeFormatted =
+    shareData?.lastUpdateWib ||
+    now.toLocaleDateString('id-ID', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      timeZoneName: 'short',
+    })
+
+  const district = shareData?.districtName || 'Kota Semarang'
+  const rawRisk = (shareData?.riskLevel || 'SEDANG').toUpperCase()
+  const riskNormalized =
+    rawRisk === 'CRITICAL' || rawRisk === 'KRITIS'
+      ? 'KRITIS / AWAS'
+      : rawRisk === 'HIGH' || rawRisk === 'TINGGI'
+      ? 'SIAGA / TINGGI'
+      : rawRisk === 'ELEVATED' || rawRisk === 'WASPADA'
+      ? 'WASPADA'
+      : rawRisk === 'MODERATE'
+      ? 'PERHATIAN / SEDANG'
+      : 'AMAN / NORMAL'
+
+  const scoreText = typeof shareData?.riskScore === 'number' ? ` (Skor: ${shareData.riskScore.toFixed(1)}/100)` : ''
+
+  // 1. Curah Hujan
+  let rainText = 'Termonitor BMKG / Sensor'
+  if (shareData?.rainfallMmH != null) {
+    if (shareData.rainfallMmH === 0) {
+      rainText = `0 mm/jam — Tidak terpantau hujan (${shareData.rainfallCategory || 'Cerah / Berawan'})`
+    } else {
+      rainText = `${shareData.rainfallMmH} mm/jam — ${shareData.rainfallCategory || 'Hujan Terpantau'} (${shareData.rainfallStatus || 'BMKG'})`
+    }
+  }
+
+  // 2. Kondisi Pesisir & Gelombang
+  let coastalText = shareData?.coastalStatus || 'Laut Tenang'
+  if (shareData?.waveHeightM != null) {
+    coastalText = `${shareData.waveHeightM} m — ${shareData.coastalStatus || 'Kondisi Pesisir'}`
+  }
+
+  // 3. Pantauan Genangan Aktual (STRICT: NO FABRICATED NUMBERS)
+  let floodText = 'Nihil pengamatan genangan aktif terverifikasi.'
+  if (shareData?.floodDepthCm != null && shareData.floodDepthCm > 0) {
+    floodText = `${shareData.floodDepthCm} cm (Terverifikasi dari laporan lapangan)`
+  } else if (shareData?.activeReportsCount != null && shareData.activeReportsCount > 0) {
+    floodText = `Terpantau ${shareData.activeReportsCount} laporan lapangan dalam proses penanganan.`
+  }
+
+  // 4. Ruas Jalan Dialihkan / Dihindari (STRICT: NO STATIC FALSE CLAIMS)
+  const hasRoadClosures = shareData?.avoidRoads && shareData.avoidRoads.length > 0
+  const roadClosureText = hasRoadClosures
+    ? `⛔ *RUAS JALAN DIALIHKAN / DIHINDARI:*\n- ${shareData.avoidRoads!.join('\n- ')}`
+    : `🚧 *Penutupan Jalan:* Nihil penutupan jalan (Lalu lintas normal terkendali).`
+
+  // 5. Rekomendasi Rute Aman
+  const hasSafeRoutes = shareData?.safeCorridors && shareData.safeCorridors.length > 0
+  const safeRouteText = hasRoadClosures && hasSafeRoutes
+    ? `✅ *REKOMENDASI JALUR ALTERNATIF:*\n- ${shareData.safeCorridors!.join('\n- ')}`
+    : hasRoadClosures
+    ? `✅ *Rute Perjalanan:* Pantau rekomendasi rute evakuasi aman di menu Peta Interaktif.`
+    : `✅ *Rute Perjalanan:* Jalur utama dapat dilalui secara normal dengan tetap berhati-hati dan mematuhi rambu lalu lintas.`
+
+  const url =
+    shareData?.reportUrl ||
+    (typeof window !== 'undefined' ? `${window.location.origin}/peta` : 'https://kotaku-siaga.vercel.app/peta')
+
+  const isEmergency = rawRisk === 'CRITICAL' || rawRisk === 'KRITIS' || (shareData?.floodDepthCm != null && shareData.floodDepthCm > 0)
+  const headerIcon = isEmergency ? '🚨' : '🟡'
+  const headerTitle = isEmergency
+    ? 'INFORMASI KESIAPSIAGAAN & SITUASI DARURAT'
+    : 'INFORMASI STATUS KESIAPSIAGAAN WILAYAH'
+
+  return `${headerIcon} *KOTAKU SIAGA — ${headerTitle}*
+🏢 *Pemerintah Kota Semarang & BPBD*
+
+📅 *Waktu Pembaruan:* ${timeFormatted}
+📍 *Wilayah / Kecamatan:* ${district}
+⚠️ *Status Risiko Wilayah:* [ ${riskNormalized} ]${scoreText}
+
+🌧️ *Curah Hujan:* ${rainText}
+🌊 *Kondisi Pesisir:* ${coastalText}
+💧 *Pantauan Genangan:* ${floodText}
+
+${roadClosureText}
+
+${safeRouteText}
+
+ℹ️ *CATATAN:*
+Status risiko menunjukkan tingkat kerentanan spasial dan kesiapsiagaan wilayah berdasarkan data multi-sumber, bukan konfirmasi bahwa bencana sedang terjadi saat ini.
+
+📞 *Kontak Darurat Resmi:*
+- Call Center Semarang: 112 (Bebas Pulsa 24 Jam)
+- Posko TRC BPBD Kota Semarang: 024-7629444
+
+🔗 *Pantau Peta Spasial & CCTV Real-time:*
+${url}
+
+_Pesan resmi berbasis data aktual KOTAKU SIAGA (ISO 37120 Audit Trail). Sebarkan informasi valid ini untuk keselamatan bersama._`
 }
 
 export function DisasterShareModal({
@@ -35,56 +147,11 @@ export function DisasterShareModal({
 
   if (!isOpen) return null
 
-  const now = new Date()
-  const timeFormatted = now.toLocaleDateString('id-ID', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    timeZoneName: 'short',
-  })
-
+  const shareText = generateSituationShareText(shareData)
   const district = shareData?.districtName || 'Kota Semarang'
-  const risk = (shareData?.riskLevel || 'tinggi').toUpperCase()
-  const waterLevel = shareData?.waterLevelCm
-    ? `${shareData.waterLevelCm} cm`
-    : 'Bervariasi (10 - 45 cm di titik cekungan)'
-  const avoid =
-    shareData?.avoidRoads && shareData.avoidRoads.length > 0
-      ? shareData.avoidRoads.join('\n- ')
-      : 'Jl. Kaligawe Raya (bawah jembatan tol), Jl. Tambak Lorok, Jl. Raya Genuk'
-  const safe =
-    shareData?.safeCorridors && shareData.safeCorridors.length > 0
-      ? shareData.safeCorridors.join('\n- ')
-      : 'Koridor Jl. Wolter Monginsidi, Jl. Majapahit, Jalur Selatan (Gombel)'
-
   const url =
     shareData?.reportUrl ||
-    (typeof window !== 'undefined' ? `${window.location.origin}/peta` : 'https://kotaku-siaga.semarangkota.go.id/peta')
-
-  const shareText = `🚨 *KOTAKU SIAGA — INFORMASI SITUASI BENCANA & GENANGAN*
-🏢 *Pemerintah Kota Semarang & BPBD*
-
-📅 *Waktu Pembaruan:* ${timeFormatted}
-📍 *Wilayah / Kecamatan:* ${district}
-⚠️ *Status Risiko Terkini:* [ ${risk} ]
-🌊 *Pantauan Genangan:* ${waterLevel}
-
-⛔ *RUAS JALAN DIALIHKAN / DIHINDARI:*
-- ${avoid}
-
-✅ *REKOMENDASI JALUR AMAN:*
-- ${safe}
-
-📞 *Kontak Darurat Resmi:*
-- Call Center Semarang: 112 (Bebas Pulsa)
-- BPBD Kota Semarang: 0812-1234-5678 / (024) 3513366
-
-🔗 *Pantau Peta Spasial & CCTV Real-time:*
-${url}
-
-_Pesan resmi terverifikasi data fusion KOTAKU SIAGA (ISO 37120 Audit Trail). Tolong sebarkan informasi valid ini kepada warga yang membutuhkan._`
+    (typeof window !== 'undefined' ? `${window.location.origin}/peta` : 'https://kotaku-siaga.vercel.app/peta')
 
   const handleCopy = async () => {
     try {
@@ -100,13 +167,12 @@ _Pesan resmi terverifikasi data fusion KOTAKU SIAGA (ISO 37120 Audit Trail). Tol
     if (typeof navigator !== 'undefined' && navigator.share) {
       try {
         await navigator.share({
-          title: `Situasi Bencana & Genangan ${district} - KOTAKU SIAGA`,
+          title: `Situasi Kesiapsiagaan ${district} - KOTAKU SIAGA`,
           text: shareText,
           url: url,
         })
         return
       } catch (err) {
-        // Fallback to WhatsApp if user dismissed or native share failed
         console.log('Native share canceled or failed, using WA fallback:', err)
       }
     }
@@ -127,10 +193,10 @@ _Pesan resmi terverifikasi data fusion KOTAKU SIAGA (ISO 37120 Audit Trail). Tol
             </div>
             <div>
               <h3 className="text-sm font-bold text-[#1d1d1d]">
-                Bagikan Situasi Darurat &amp; Rute Aman
+                Bagikan Situasi Kesiapsiagaan Wilayah
               </h3>
               <p className="text-[11px] text-[#696969]">
-                Format pesan resmi terstruktur untuk WhatsApp &amp; Media Warga
+                Format pesan terstruktur berbasis data aktual untuk WhatsApp &amp; Warga
               </p>
             </div>
           </div>
@@ -148,7 +214,7 @@ _Pesan resmi terverifikasi data fusion KOTAKU SIAGA (ISO 37120 Audit Trail). Tol
           <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-[11px]">
             <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
             <span>
-              Format pesan dirancang ringkas, faktual, tidak memicu kepanikan, dan dilengkapi tautan resmi.
+              Format pesan dirancang ringkas, faktual tanpa klaim palsu, tidak memicu kepanikan, dan terhubung ke data sensor.
             </span>
           </div>
 
@@ -167,7 +233,7 @@ _Pesan resmi terverifikasi data fusion KOTAKU SIAGA (ISO 37120 Audit Trail). Tol
           <button
             type="button"
             onClick={handleCopy}
-            className="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-[#e6e6e6] hover:bg-[#f4ede4] text-[#1d1d1d] font-bold text-xs flex items-center justify-center gap-1.5 transition-colors"
+            className="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-[#e6e6e6] hover:bg-[#f4ede4] text-[#1d1d1d] font-bold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
           >
             {copied ? (
               <>
@@ -185,7 +251,7 @@ _Pesan resmi terverifikasi data fusion KOTAKU SIAGA (ISO 37120 Audit Trail). Tol
           <button
             type="button"
             onClick={handleNativeShare}
-            className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-[#25D366] hover:bg-[#20ba59] text-white font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition-all"
+            className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-[#25D366] hover:bg-[#20ba59] text-white font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
           >
             <Share2 className="w-3.5 h-3.5" />
             <span>Kirim via WhatsApp / Bagikan</span>
