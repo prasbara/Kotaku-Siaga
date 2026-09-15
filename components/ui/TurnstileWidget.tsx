@@ -30,8 +30,8 @@ interface TurnstileWidgetProps {
   theme?: 'light' | 'dark' | 'auto'
 }
 
-// Fallback dummy key that always passes in Cloudflare testing
-const ALWAYS_PASS_SITEKEY = '1x00000000000000000000AA'
+// Default Cloudflare Turnstile Site Key
+const DEFAULT_SITEKEY = '0x4AAAAAAE17c-VKz5v2NkXI'
 
 export function TurnstileWidget({
   onSuccess,
@@ -48,7 +48,7 @@ export function TurnstileWidget({
   const siteKey =
     process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ||
     process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY ||
-    ALWAYS_PASS_SITEKEY
+    DEFAULT_SITEKEY
 
   useEffect(() => {
     // If script is not yet added, load it

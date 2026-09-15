@@ -11,9 +11,8 @@ export interface TurnstileVerificationResult {
   isBypassed?: boolean
 }
 
-// Cloudflare dummy test keys for development/staging
-// https://developers.cloudflare.com/turnstile/troubleshooting/testing/
-const ALWAYS_PASS_SECRET = '1x0000000000000000000000000000000000000000000000AA'
+// Cloudflare Turnstile Secret Key
+const DEFAULT_SECRET_KEY = '0x4AAAAAAE17c7l5rDH4t54pcdLfvE3Bpfg'
 
 export async function verifyTurnstileToken(
   token: string | null | undefined,
@@ -22,7 +21,7 @@ export async function verifyTurnstileToken(
   const secretKey =
     process.env.TURNSTILE_SECRET_KEY ||
     process.env.CLOUDFLARE_TURNSTILE_SECRET_KEY ||
-    ALWAYS_PASS_SECRET
+    DEFAULT_SECRET_KEY
 
   // If token is missing
   if (!token || token.trim().length === 0) {
