@@ -23,6 +23,9 @@ export async function GET(request: NextRequest) {
       ),
     ])
 
+    // Public / Warga Safe Payload
+    const publicSummary = disasterIntelligenceEngine.toPublicSummary(operatorAssessment)
+
     if (effectiveRole === 'admin' || effectiveRole === 'officer') {
       return NextResponse.json(
         {
@@ -30,6 +33,7 @@ export async function GET(request: NextRequest) {
           authorizedRole: effectiveRole,
           dataMode: 'PRODUCTION_INTELLIGENCE_ENGINE',
           assessment: operatorAssessment,
+          summary: publicSummary,
         },
         {
           headers: { 'Cache-Control': 'no-store, max-age=0' },
@@ -37,8 +41,6 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Public / Warga Safe Payload
-    const publicSummary = disasterIntelligenceEngine.toPublicSummary(operatorAssessment)
     return NextResponse.json(
       {
         success: true,

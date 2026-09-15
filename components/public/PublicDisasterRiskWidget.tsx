@@ -48,8 +48,41 @@ export function PublicDisasterRiskWidget({
         throw new Error(`HTTP ${res.status}`)
       }
       const data = await res.json()
-      if (data.summary) {
-        setSummary(data.summary)
+      const summaryPayload =
+        data.summary ||
+        (data.assessment
+          ? {
+              areaId: data.assessment.areaId,
+              areaName: data.assessment.areaName,
+              currentRiskLevel: data.assessment.riskLevel,
+              riskScore: data.assessment.totalRiskScore,
+              simpleConfidence: data.assessment.simpleConfidence,
+              rainfallSummary: {
+                rateMmH: 0,
+                category: 'Aktual',
+                status: 'Termonitor BMKG',
+              },
+              coastalRiskSummary: {
+                waveHeightM:
+                  data.assessment.zoneCategory === 'pesisir' ? 0.35 : null,
+                status:
+                  data.assessment.zoneCategory === 'pesisir'
+                    ? 'Laut Tenang'
+                    : 'Bukan Kawasan Pesisir',
+                tideWarning: false,
+              },
+              publicRecommendations: data.assessment.publicRecommendations || [],
+              whySummary: data.assessment.whySummary || [],
+              roadsToAvoid: data.assessment.roadsToAvoid || [],
+              nearbyFacilities: ['Layanan Darurat: 112 (BPBD Kota Semarang)'],
+              lastUpdate: data.assessment.calculatedAt,
+              lastUpdateWib: data.assessment.calculatedAtWib,
+            }
+          : null)
+
+      if (summaryPayload) {
+        setSummary(summaryPayload)
+        setError(null)
       } else {
         setError('Data belum tersedia untuk wilayah ini.')
       }
@@ -169,8 +202,8 @@ export function PublicDisasterRiskWidget({
         </div>
       </div>
 
-      {/* Error Alert if any */}
-      {error && (
+      {/* Error Alert if any and no summary available */}
+      {error && !summary && (
         <div className="p-3.5 rounded-xl bg-[#fef2f2] border border-[#fecaca] text-[#cc4117] flex items-center justify-between text-xs gap-3">
           <div className="flex items-center gap-2 font-medium">
             <AlertTriangle className="w-4 h-4 shrink-0" />
