@@ -3,8 +3,10 @@
 -- Run this in Supabase SQL Editor
 -- ============================================================
 
--- Enable UUID extension
+-- Enable extensions
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+CREATE EXTENSION IF NOT EXISTS "cube";
+CREATE EXTENSION IF NOT EXISTS "earthdistance";
 
 -- ============================================================
 -- AREAS TABLE
