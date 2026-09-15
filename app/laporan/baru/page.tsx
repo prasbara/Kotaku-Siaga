@@ -156,6 +156,24 @@ export default function LaporBaruPage() {
     return () => clearTimeout(timer)
   }, [resendCooldown])
 
+  // Check if citizen confirmed via email link (Magic Link / Supabase URL verify)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const hash = window.location.hash
+      const search = window.location.search
+      const params = new URLSearchParams(search)
+      if (params.get('verified') === 'true' || hash.includes('access_token=')) {
+        setIsEmailVerified(true)
+        setOtpSent(true)
+        setCurrentStep(4)
+        toast({
+          title: 'Email Terverifikasi!',
+          description: 'Alamat email Anda telah diverifikasi melalui tautan konfirmasi Supabase.',
+        })
+      }
+    }
+  }, [])
+
   // Compute SHA-256 hash when photo is chosen
   const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -818,11 +836,11 @@ export default function LaporBaruPage() {
                       </div>
                     ) : (
                       <div className="flex flex-col gap-3">
-                        <p className="text-xs text-[#1d1d1d]">
-                          Masukkan 6 digit kode verifikasi yang telah dikirim ke <strong>{maskEmail(reporterEmail)}</strong>:
+                        <p className="text-xs text-[#1d1d1d] leading-relaxed">
+                          Masukkan 6-digit kode OTP yang dikirim ke <strong>{maskEmail(reporterEmail)}</strong> (atau klik tautan konfirmasi di email Anda):
                         </p>
 
-                        <div className="flex items-center gap-3">
+                        <div className="flex flex-wrap items-center gap-3">
                           <input
                             type="text"
                             maxLength={6}
