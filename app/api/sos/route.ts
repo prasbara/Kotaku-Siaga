@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient, isSupabaseConfigured } from '@/lib/supabase/server'
-
-// In-memory fallback for local development / testing
-const localSosStore: any[] = []
+import { localSosStore } from '@/lib/services/local-sos-store'
 
 // POST /api/sos — Ultra-fast unblocked emergency signal
 export async function POST(request: NextRequest) {
@@ -37,8 +35,8 @@ export async function POST(request: NextRequest) {
       district_name: district_name || 'Kota Semarang',
       client_session_id: client_session_id || `session-${Date.now()}`,
       client_ip_hash: Buffer.from(clientIp).toString('base64').slice(0, 16),
-      status: 'NEW',
-      priority: 'CRITICAL',
+      status: 'NEW' as const,
+      priority: 'CRITICAL' as const,
       created_at: now,
       updated_at: now,
     }
@@ -83,8 +81,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Fallback store
-    const localEntry = { id: `sos-local-${Date.now()}`, ...sosPayload }
-    localSosStore.unshift(localEntry)
+    const localEntry = localSosStore.create(sosPayload)
 
     return NextResponse.json(
       {
@@ -125,10 +122,11 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    const allLocal = localSosStore.getAll()
     return NextResponse.json({
       success: true,
-      data: localSosStore,
-      count: localSosStore.length,
+      data: allLocal,
+      count: allLocal.length,
       is_local_store: true,
     })
   } catch (err: any) {

@@ -13,8 +13,7 @@ Thumbs.db
 *.tsbuildinfo
 next-env.d.ts
 scratch/
-.data/*.bak
-.data/*.tmp
+.data/
 tests/*.log
 public/uploads/
 __pycache__/

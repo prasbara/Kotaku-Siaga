@@ -48,16 +48,18 @@ export function SOSEmergencyView() {
       const data = await res.json()
       if (data.success && Array.isArray(data.data)) {
         setSosList(data.data)
-        if (!selectedSos && data.data.length > 0) {
-          setSelectedSos(data.data[0])
-        }
+        setSelectedSos((current) => {
+          if (!current) return data.data[0] || null
+          const found = data.data.find((s: SOSEvent) => s.id === current.id || s.sos_code === current.sos_code)
+          return found || data.data[0] || null
+        })
       }
     } catch (err) {
       console.warn('Failed to fetch SOS list:', err)
     } finally {
       setIsLoading(false)
     }
-  }, [selectedSos])
+  }, [])
 
   useEffect(() => {
     fetchSosList()
@@ -68,19 +70,34 @@ export function SOSEmergencyView() {
 
   const handleUpdateStatus = async (status: string) => {
     if (!selectedSos) return
+    const targetId = selectedSos.id || selectedSos.sos_code
     setIsUpdating(true)
+
+    // Optimistic UI state update
+    setSelectedSos((prev) => (prev ? { ...prev, status: status as any } : null))
+    setSosList((prev) =>
+      prev.map((item) =>
+        item.id === selectedSos.id || item.sos_code === selectedSos.sos_code
+          ? { ...item, status: status as any }
+          : item
+      )
+    )
+
     try {
-      await fetch(`/api/sos/${selectedSos.id}/followup`, {
+      const res = await fetch(`/api/sos/${encodeURIComponent(targetId)}/followup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status }),
       })
-      setSelectedSos((prev) => (prev ? { ...prev, status: status as any } : null))
-      fetchSosList()
+      const result = await res.json()
+      if (res.ok && result.data) {
+        setSelectedSos(result.data)
+      }
     } catch (err) {
       console.warn('Update SOS status error:', err)
     } finally {
       setIsUpdating(false)
+      fetchSosList()
     }
   }
 
@@ -269,18 +286,27 @@ export function SOSEmergencyView() {
                     type="button"
                     onClick={() => handleUpdateStatus('DISPATCHED')}
                     disabled={isUpdating}
-                    className="min-h-[42px] px-4 py-2 rounded-[90px] bg-[#007a5a] text-white hover:bg-[#006046] font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
+                    className={`min-h-[42px] px-4 py-2 rounded-[90px] font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer ${
+                      selectedSos.status === 'DISPATCHED'
+                        ? 'bg-[#007a5a] text-white ring-2 ring-[#007a5a]/30 shadow-sm'
+                        : 'bg-[#007a5a] text-white hover:bg-[#006046]'
+                    }`}
                   >
                     <CheckCircle2 className="w-4 h-4" />
-                    Tandai Tim Terjun
+                    <span>{selectedSos.status === 'DISPATCHED' ? '✓ Tim di Lapangan' : 'Tandai Tim Terjun'}</span>
                   </button>
+
                   <button
                     type="button"
                     onClick={() => handleUpdateStatus('RESOLVED')}
                     disabled={isUpdating}
-                    className="min-h-[42px] px-4 py-2 rounded-[90px] bg-[#f4ede4] hover:bg-[#e8ded2] text-[#1d1d1d] font-bold text-xs transition-colors cursor-pointer"
+                    className={`min-h-[42px] px-4 py-2 rounded-[90px] font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer ${
+                      selectedSos.status === 'RESOLVED'
+                        ? 'bg-[#007a5a] text-white ring-2 ring-[#007a5a]/30'
+                        : 'bg-[#f4ede4] hover:bg-[#e8ded2] text-[#1d1d1d]'
+                    }`}
                   >
-                    Selesai
+                    <span>{selectedSos.status === 'RESOLVED' ? '✓ Selesai Ditangani' : 'Selesai'}</span>
                   </button>
                 </div>
               </div>
