@@ -490,11 +490,11 @@ export default async function LandingPage() {
                   Bagaimana Warga Melaporkan Genangan?
                 </h3>
                 <p className="text-sm text-[#696969] leading-relaxed">
-                  Setiap warga dapat berkontribusi melalui fitur <Link href="/lapor-genangan" className="text-[#4a154b] font-bold underline">Lapor Genangan</Link>. Pengguna memilih lokasi di peta, menentukan estimasi ketinggian genangan air, melampirkan foto bukti lapangan, dan mengirimkan laporan yang akan segera divalidasi sistem.
+                  Setiap warga dapat berkontribusi melalui fitur <Link href="/laporan/baru" className="text-[#4a154b] font-bold underline">Lapor Genangan</Link>. Pengguna memilih lokasi di peta, menentukan estimasi ketinggian genangan air, melampirkan foto bukti lapangan, dan mengirimkan laporan yang akan segera divalidasi sistem.
                 </p>
               </div>
               <div className="mt-4 pt-3 border-t border-[#e6e6e6]/80 text-xs">
-                <Link href="/lapor-genangan" className="font-semibold text-[#1264a3] hover:underline flex items-center gap-1">
+                <Link href="/laporan/baru" className="font-semibold text-[#1264a3] hover:underline flex items-center gap-1">
                   Kirim Laporan Warga →
                 </Link>
               </div>
@@ -550,11 +550,11 @@ export default async function LandingPage() {
                   Bagaimana Data Digunakan Petugas &amp; Warga?
                 </h3>
                 <p className="text-sm text-[#696969] leading-relaxed">
-                  Bagi warga, data memberi kepastian rute perjalanan bebas genangan saat berangkat atau pulang kerja. Bagi tim BPBD dan Dinas PU, sistem <Link href="/matriks-risiko" className="text-[#4a154b] font-bold underline">Matriks Prioritas</Link> memandu pengerahan pompa bergerak, penutupan pintu air, dan bantuan logistik cepat.
+                  Bagi warga, data memberi kepastian rute perjalanan bebas genangan saat berangkat atau pulang kerja. Bagi tim BPBD dan Dinas PU, sistem <Link href="/priorities" className="text-[#4a154b] font-bold underline">Matriks Prioritas</Link> memandu pengerahan pompa bergerak, penutupan pintu air, dan bantuan logistik cepat.
                 </p>
               </div>
               <div className="mt-4 pt-3 border-t border-[#e6e6e6]/80 text-xs">
-                <Link href="/pusat-kendali" className="font-semibold text-[#1264a3] hover:underline flex items-center gap-1">
+                <Link href="/dashboard" className="font-semibold text-[#1264a3] hover:underline flex items-center gap-1">
                   Pusat Kendali Data →
                 </Link>
               </div>
@@ -579,14 +579,14 @@ export default async function LandingPage() {
               </p>
             </div>
             <Link
-              href="/matriks-risiko"
+              href="/priorities"
               className="text-xs font-bold text-[#4a154b] hover:text-[#3b0f3c] uppercase tracking-wider flex items-center gap-1 shrink-0"
             >
               Lihat Matriks Lengkap →
             </Link>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {[
               { slug: 'genuk', name: 'Kecamatan Genuk', tag: 'Kawasan Rob & Kaligawe', alert: 'Prioritas Tinggi' },
               { slug: 'semarang-utara', name: 'Kecamatan Semarang Utara', tag: 'Pesisir Tanjung Emas', alert: 'Prioritas Tinggi' },
@@ -743,7 +743,7 @@ export default async function LandingPage() {
               <p className="leading-relaxed">
                 Data observasi bersumber dari Stasiun Meteorologi Maritim BMKG Tanjung Emas, jaringan kamera PantauSemar Dinas Komunikasi dan Informatika Kota Semarang, serta pos pantau pintu air Dinas Pekerjaan Umum.
               </p>
-              <Link href="/integritas-data" className="inline-block mt-2 font-bold text-[#1264a3] hover:underline">
+              <Link href="/data" className="inline-block mt-2 font-bold text-[#1264a3] hover:underline">
                 Audit Silsilah Data (Lineage) →
               </Link>
             </div>

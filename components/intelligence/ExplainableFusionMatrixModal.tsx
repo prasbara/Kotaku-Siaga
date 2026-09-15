@@ -134,7 +134,7 @@ export function ExplainableFusionMatrixModal({
             </h3>
             <div className="border border-[#e6e6e6] rounded-xl overflow-hidden shadow-subtle">
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs border-collapse">
+                <table className="w-full min-w-[620px] text-left text-xs border-collapse">
                   <thead>
                     <tr className="bg-[#f4ede4] text-[#4a154b] font-bold border-b border-[#e6e6e6]">
                       <th className="py-2.5 px-3">Parameter &amp; Bobot</th>

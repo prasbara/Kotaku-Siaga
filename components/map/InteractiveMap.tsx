@@ -122,12 +122,52 @@ export function InteractiveMap({
       }
 
       leafletMapRef.current = map
+
+      // Invalidate size immediately once loaded
+      setTimeout(() => {
+        try {
+          map.invalidateSize()
+        } catch {
+          // ignore
+        }
+      }, 150)
+
       return map
     }
 
     initMap()
 
+    // ResizeObserver on the container to handle dynamic container resizing, sidebar toggles, and orientation changes
+    let resizeTimer: NodeJS.Timeout
+    const handleResize = () => {
+      clearTimeout(resizeTimer)
+      resizeTimer = setTimeout(() => {
+        if (leafletMapRef.current) {
+          try {
+            ;(leafletMapRef.current as { invalidateSize: () => void }).invalidateSize()
+          } catch {
+            // ignore if unmounted
+          }
+        }
+      }, 100)
+    }
+
+    let observer: ResizeObserver | null = null
+    if (typeof ResizeObserver !== 'undefined' && mapRef.current) {
+      observer = new ResizeObserver(handleResize)
+      observer.observe(mapRef.current)
+    }
+
+    window.addEventListener('resize', handleResize)
+    window.addEventListener('orientationchange', handleResize)
+
     return () => {
+      clearTimeout(resizeTimer)
+      if (observer) {
+        observer.disconnect()
+      }
+      window.removeEventListener('resize', handleResize)
+      window.removeEventListener('orientationchange', handleResize)
       if (leafletMapRef.current) {
         const map = leafletMapRef.current as { remove: () => void }
         map.remove()

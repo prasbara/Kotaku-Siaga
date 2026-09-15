@@ -242,16 +242,16 @@ export default function PetaPage() {
   }, [reports])
 
   return (
-    <div className="relative flex flex-col w-full h-[calc(100vh-5rem)] min-h-[500px] overflow-hidden bg-[#fdfbf9] text-[#1d1d1d]">
+    <div className="relative flex flex-col w-full h-[calc(100vh-4rem)] sm:h-[calc(100vh-5rem)] h-[calc(100dvh-4rem)] sm:h-[calc(100dvh-5rem)] min-h-[480px] overflow-hidden bg-[#fdfbf9] text-[#1d1d1d]">
       {/* 1. TOP TELEMETRY RIBBON */}
-      <div className="flex-shrink-0 w-full bg-white/95 backdrop-blur-md border-b border-[#e6e6e6] px-3 sm:px-6 py-2.5 flex items-center justify-between gap-2 sm:gap-4 z-30 shadow-subtle flex-wrap">
+      <div className="flex-shrink-0 w-full bg-white/95 backdrop-blur-md border-b border-[#e6e6e6] px-3 sm:px-6 py-2 flex items-center justify-between gap-2 z-30 shadow-subtle flex-wrap overflow-x-auto no-scrollbar">
         <WeatherSummaryCard
           weather={weather}
           isLoading={isWeatherLoading}
           onRefresh={fetchWeather}
         />
 
-        <div className="flex items-center gap-2 font-mono text-xs flex-wrap ml-auto">
+        <div className="flex items-center gap-1.5 sm:gap-2 font-mono text-xs flex-wrap ml-auto">
           {/* Progressive Weather Layer Selector (Requirement #8) */}
           <WeatherLayerSelector
             currentLayer={mapCanvasMode}

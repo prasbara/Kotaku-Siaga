@@ -235,7 +235,7 @@ export function ChatAssistant() {
                 </div>
 
                 {/* Message Content */}
-                <div className="whitespace-pre-line leading-relaxed font-sans">
+                <div className="whitespace-pre-line leading-relaxed font-sans break-words [overflow-wrap:anywhere]">
                   {msg.content}
                 </div>
 

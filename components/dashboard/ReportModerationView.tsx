@@ -235,7 +235,7 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
 
       {/* Moderation Queue Table */}
       <div className="border border-outline-variant/30 rounded-xl bg-surface-container-low overflow-x-auto shadow-md">
-        <table className="w-full text-left text-xs border-collapse">
+        <table className="w-full min-w-[720px] text-left text-xs border-collapse">
           <thead>
             <tr className="border-b border-outline-variant/30 bg-surface-container text-on-surface-variant font-mono text-[10px] uppercase tracking-wider">
               <th className="py-3 px-4 font-semibold">Kode Laporan / Waktu</th>

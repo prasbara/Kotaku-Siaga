@@ -158,10 +158,10 @@ export function SOSModal({ isOpen, onClose }: SOSModalProps) {
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 sm:p-6 bg-black/75 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl border border-[#f0e6e5] overflow-hidden flex flex-col">
+    <div className="fixed inset-0 z-[999] flex items-center justify-center p-3 sm:p-6 bg-black/75 backdrop-blur-md animate-in fade-in duration-200">
+      <div className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl border border-[#f0e6e5] overflow-hidden flex flex-col max-h-[calc(100vh-1.5rem)] max-h-[calc(100dvh-1.5rem)]">
         {/* Top Emergency Header */}
-        <div className="bg-gradient-to-r from-[#1f0621] via-[#3a0e30] to-[#1f0621] text-white px-5 py-4 flex items-center justify-between border-b border-white/10">
+        <div className="bg-gradient-to-r from-[#1f0621] via-[#3a0e30] to-[#1f0621] text-white px-5 py-4 flex items-center justify-between border-b border-white/10 shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-[#cc4117] flex items-center justify-center text-white shadow-sm shrink-0 ring-2 ring-white/20">
               <ShieldAlert className="w-5 h-5 text-white" />
@@ -187,7 +187,7 @@ export function SOSModal({ isOpen, onClose }: SOSModalProps) {
         </div>
 
         {/* Modal Body */}
-        <div className="p-5 sm:p-6 flex flex-col gap-4">
+        <div className="p-4 sm:p-6 flex flex-col gap-4 overflow-y-auto">
           {errorMsg && (
             <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-xs text-red-700 font-medium flex items-center gap-2">
               <AlertTriangle className="w-4 h-4 shrink-0 text-red-600" />

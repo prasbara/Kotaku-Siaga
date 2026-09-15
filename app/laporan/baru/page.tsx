@@ -892,14 +892,14 @@ export default function LaporBaruPage() {
                             placeholder="123456"
                             value={otpCode}
                             onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
-                            className="font-mono text-center text-lg tracking-widest font-bold w-48 h-12 rounded-[12px] border-2 border-[#4a154b] bg-white focus:outline-none"
+                            className="font-mono text-center text-lg tracking-widest font-bold w-full sm:w-48 h-12 rounded-[12px] border-2 border-[#4a154b] bg-white focus:outline-none"
                           />
 
                           <button
                             type="button"
                             onClick={handleVerifyOtp}
                             disabled={otpVerifying || otpCode.length < 6}
-                            className="min-h-[46px] px-6 py-2 rounded-[90px] bg-[#007a5a] hover:bg-[#006046] text-white font-bold text-xs flex items-center gap-2 transition-all cursor-pointer disabled:opacity-50"
+                            className="w-full sm:w-auto min-h-[46px] px-6 py-2 rounded-[90px] bg-[#007a5a] hover:bg-[#006046] text-white font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50"
                           >
                             {otpVerifying ? 'Memverifikasi...' : 'Verifikasi & Kirim'}
                           </button>
