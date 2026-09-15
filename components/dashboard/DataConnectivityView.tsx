@@ -535,6 +535,7 @@ export function DataConnectivityView() {
             </label>
             <select
               id="source-select"
+              aria-label="Pilih Sumber"
               value={selectedChartSourceId}
               onChange={(e) => setSelectedChartSourceId(e.target.value)}
               className="min-h-[38px] px-3 py-1.5 rounded-lg bg-[#f9f8f6] border border-[#dcdcdc] text-xs font-bold text-[#1d1d1d] focus:outline-none focus:ring-2 focus:ring-[#4a154b]"
@@ -806,6 +807,7 @@ export function DataConnectivityView() {
             </label>
             <select
               id="outage-filter"
+              aria-label="Filter Sumber Gangguan"
               value={selectedOutageFilter}
               onChange={(e) => setSelectedOutageFilter(e.target.value)}
               className="min-h-[36px] px-3 py-1 rounded-lg bg-[#f9f8f6] border border-[#dcdcdc] text-xs font-bold text-[#1d1d1d]"

@@ -5,7 +5,7 @@ import type { Report, ReportCategory, UrgencyLevel } from '@/types'
 import { CATEGORY_LABELS, URGENCY_LABELS } from '@/types'
 import { InteractiveMap } from '@/components/map/InteractiveMap'
 import { ReportDetailPanel } from '@/components/map/ReportDetailPanel'
-import { RefreshCw, Search, X, Wind, Video, CloudRain, Waves, Info, AlertCircle, BookOpen, ShieldAlert, Navigation } from 'lucide-react'
+import { RefreshCw, Search, X, Wind, Video, CloudRain, Waves, Info, AlertCircle, BookOpen, ShieldAlert, Navigation, SlidersHorizontal } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { PANTAUSEMAR_CCTV_POINTS, type CCTVPoint } from '@/lib/data/cctv-pantausemar'
 import { CCTVDetailPanel } from '@/components/cctv/CCTVDetailPanel'
@@ -349,7 +349,7 @@ export default function PetaPage() {
             onClick={() => setIsMobileHudOpen(!isMobileHudOpen)}
             className="flex items-center gap-2 px-4 py-2.5 rounded-[90px] bg-white/95 backdrop-blur-md border border-[#4a154b] text-[#4a154b] font-bold text-xs shadow-card"
           >
-            <span className="material-symbols-outlined text-[16px]">tune</span>
+            <SlidersHorizontal className="w-4 h-4 shrink-0" />
             <span>{isMobileHudOpen ? 'Tutup Filter' : 'Filter & Lapisan'}</span>
             <span className="px-2 py-0.5 rounded-full bg-[#4a154b] text-white text-[10px]">
               {filteredReports.length}

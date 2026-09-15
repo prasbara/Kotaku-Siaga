@@ -161,6 +161,7 @@ export function SafeRouteNavigator({ onSelectRoute, onClose, className }: SafeRo
         </label>
         <select
           id="safe-route-select"
+          aria-label="Pilih koridor evakuasi atau rute perjalanan"
           value={selectedRouteId}
           onChange={(e) => handleRouteSelect(e.target.value)}
           className="w-full bg-[#faf9f8] text-xs font-bold text-[#1d1d1d] px-3 py-2 rounded-xl border border-[#e6e6e6] focus:outline-none focus:ring-2 focus:ring-[#4a154b]"

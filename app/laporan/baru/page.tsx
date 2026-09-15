@@ -654,10 +654,12 @@ export default function LaporBaruPage() {
                   {/* Lokasi & Kecamatan */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-xs font-bold text-[#1d1d1d] uppercase tracking-wider">
+                      <label htmlFor="select-district" className="text-xs font-bold text-[#1d1d1d] uppercase tracking-wider">
                         Kecamatan di Semarang <span className="text-[#cc4117]">*</span>
                       </label>
                       <select
+                        id="select-district"
+                        aria-label="Kecamatan di Semarang"
                         value={district}
                         onChange={(e) => setDistrict(e.target.value)}
                         className="min-h-[46px] px-4 rounded-[12px] border border-[#e6e6e6] bg-[#fdfbf9] focus:bg-white focus:border-[#4a154b] text-sm text-[#1d1d1d] font-semibold"

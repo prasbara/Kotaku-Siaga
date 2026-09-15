@@ -20,6 +20,7 @@ import {
   CheckCircle2,
   MapPin,
   AlertTriangle,
+  Megaphone,
 } from 'lucide-react'
 import { PANTAUSEMAR_CCTV_POINTS } from '@/lib/data/cctv-pantausemar'
 import { PublicDisasterRiskWidget } from '@/components/public/PublicDisasterRiskWidget'
@@ -91,7 +92,7 @@ export default async function LandingPage() {
               href="/laporan/baru"
               className="min-h-[48px] px-8 py-3.5 rounded-[90px] bg-[#4a154b] hover:bg-[#481a54] active:bg-[#611f69] text-white font-bold text-sm tracking-wide shadow-[0_5px_20px_rgba(0,0,0,0.1)] flex items-center gap-2 transition-all active:scale-[0.98]"
             >
-              <span className="material-symbols-outlined text-[20px]">campaign</span>
+              <Megaphone className="w-5 h-5 shrink-0" />
               Laporkan Genangan Air
             </Link>
 
@@ -133,7 +134,7 @@ export default async function LandingPage() {
           </div>
 
           {/* Floating Product UI Mockup (Slacc Signature 3:2 Aspect on Pastel Mesh) */}
-          <div className="mt-14 w-full max-w-5xl rounded-[12px] overflow-hidden bg-white border border-[#e6e6e6] shadow-[0_0_32px_rgba(0,0,0,0.08)] text-left">
+          <div className="mt-14 w-full max-w-5xl rounded-[12px] overflow-hidden bg-white border border-[#e6e6e6] shadow-[0_0_32px_rgba(0,0,0,0.08)] text-left min-h-[440px]">
             {/* Chrome Top Bar */}
             <div className="bg-[#f4ede4] px-4 py-3 border-b border-[#e6e6e6] flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -155,7 +156,7 @@ export default async function LandingPage() {
               <div className="md:col-span-4 flex flex-col gap-4">
                 <div className="rounded-[12px] p-4 bg-white border border-[#e6e6e6]">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-[#4a154b]">KAMERA PEMANTAU AKTIF</span>
-                  <h3 className="font-bold text-sm text-[#1d1d1d] mt-1">Underpass Kaligawe (KM 4)</h3>
+                  <div className="font-bold text-sm text-[#1d1d1d] mt-1">Underpass Kaligawe (KM 4)</div>
                   <div className="mt-3 flex items-center justify-between text-xs">
                     <span className="text-[#696969]">Status Kamera:</span>
                     <span className="font-bold text-[#007a5a]">Beroperasi Normal</span>
@@ -202,8 +203,10 @@ export default async function LandingPage() {
                   src="/images/cctv-kaligawe-preview.jpg"
                   alt="Siaran Langsung Kamera CCTV Underpass Kaligawe"
                   fill
-                  className="object-cover object-center group-hover:scale-[1.02] transition-transform duration-500"
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 60vw, 640px"
+                  quality={75}
                   priority
+                  className="object-cover object-center group-hover:scale-[1.02] transition-transform duration-500"
                 />
 
                 {/* Subtle CCTV dark gradient & vignette overlay for text legibility */}

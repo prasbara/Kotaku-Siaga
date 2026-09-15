@@ -150,10 +150,10 @@ export function PublicDisasterRiskWidget({
       default:
         return {
           label: 'AMAN / NORMAL',
-          bg: 'bg-[#007a5a]/10',
-          text: 'text-[#007a5a]',
-          border: 'border-[#007a5a]/30',
-          dot: 'bg-[#007a5a]',
+          bg: 'bg-[#005c43]/10',
+          text: 'text-[#005c43]',
+          border: 'border-[#005c43]/30',
+          dot: 'bg-[#005c43]',
           badge: 'Kapasitas Saluran Normal',
         }
     }
@@ -172,13 +172,13 @@ export function PublicDisasterRiskWidget({
       <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#f0f0f0] pb-4">
         <div>
           <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-[#007a5a] animate-pulse"></span>
+            <span className="w-2 h-2 rounded-full bg-[#005c43] animate-pulse"></span>
             <span className="text-[11px] font-mono font-bold text-[#4a154b] uppercase tracking-wider">
               INFORMASI KESELAMATAN WARGA SEMARANG
             </span>
           </div>
           <h2 className="text-xl sm:text-2xl font-bold text-[#4a154b] tracking-tight mt-0.5">
-            Status Risiko & Kesiapsiagaan Wilayah
+            Status Risiko &amp; Kesiapsiagaan Wilayah
           </h2>
         </div>
 
@@ -186,7 +186,12 @@ export function PublicDisasterRiskWidget({
         <div className="flex items-center gap-2">
           <MapPin className="w-4 h-4 text-[#4a154b]" />
           <div className="relative flex items-center">
+            <label htmlFor="select-kecamatan-risiko" className="sr-only">
+              Pilih Wilayah Kecamatan Kota Semarang
+            </label>
             <select
+              id="select-kecamatan-risiko"
+              aria-label="Pilih Wilayah Kecamatan Kota Semarang"
               value={selectedSlug}
               onChange={(e) => setSelectedSlug(e.target.value)}
               className="appearance-none min-h-[40px] px-3.5 py-2 pr-9 rounded-xl bg-[#f9f8f6] hover:bg-white border border-[#dcdcdc] focus:border-[#4a154b] font-bold text-xs text-[#1d1d1d] focus:outline-none focus:ring-2 focus:ring-[#4a154b]/20 transition-all cursor-pointer shadow-2xs"
@@ -210,7 +215,7 @@ export function PublicDisasterRiskWidget({
 
       {/* Error Alert if any and no summary available */}
       {error && !summary && (
-        <div className="p-3.5 rounded-xl bg-[#fef2f2] border border-[#fecaca] text-[#cc4117] flex items-center justify-between text-xs gap-3">
+        <div className="p-3.5 rounded-xl bg-[#fef2f2] border border-[#fecaca] text-[#b91c1c] flex items-center justify-between text-xs gap-3">
           <div className="flex items-center gap-2 font-medium">
             <AlertTriangle className="w-4 h-4 shrink-0" />
             <span>{error}</span>
@@ -219,7 +224,7 @@ export function PublicDisasterRiskWidget({
             type="button"
             onClick={() => fetchSummary(selectedSlug)}
             disabled={isLoading}
-            className="px-3.5 py-1.5 bg-white text-[#cc4117] font-bold rounded-lg border border-[#fecaca] hover:bg-[#fee2e2] transition-colors shrink-0 cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+            className="px-3.5 py-1.5 bg-white text-[#b91c1c] font-bold rounded-lg border border-[#fecaca] hover:bg-[#fee2e2] transition-colors shrink-0 cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
           >
             <RefreshCw className={cn('w-3.5 h-3.5', isLoading && 'animate-spin')} />
             <span>{isLoading ? 'Memuat...' : 'Coba Lagi'}</span>
@@ -269,7 +274,7 @@ export function PublicDisasterRiskWidget({
         <div className="text-right text-xs">
           <div className="font-bold flex items-center gap-1.5 justify-end">
             <span>Tingkat Keyakinan:</span>
-            <span className="text-[#007a5a] font-bold bg-white px-2 py-0.5 rounded border border-[#007a5a]/30">
+            <span className="text-[#005c43] font-bold bg-white px-2 py-0.5 rounded border border-[#005c43]/30">
               {summary?.simpleConfidence === 'TINGGI' ? '✓ Tinggi (Data Valid)' : summary?.simpleConfidence === 'SEDANG' ? 'Sedang' : 'Perlu Verifikasi'}
             </span>
           </div>
@@ -288,7 +293,7 @@ export function PublicDisasterRiskWidget({
               <CloudRain className="w-4 h-4 text-[#3860be]" />
               <span>Curah Hujan Terpantau</span>
             </div>
-            <span className="font-mono text-[11px] font-bold text-[#007a5a] bg-white px-2 py-0.5 rounded border border-[#e6e6e6]">
+            <span className="font-mono text-[11px] font-bold text-[#005c43] bg-white px-2 py-0.5 rounded border border-[#e6e6e6]">
               {summary?.rainfallSummary.status || 'Aktual'}
             </span>
           </div>
@@ -308,14 +313,14 @@ export function PublicDisasterRiskWidget({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 font-bold text-[#1d1d1d]">
               <Waves className="w-4 h-4 text-[#1264a3]" />
-              <span>Kondisi Pesisir & Rob</span>
+              <span>Kondisi Pesisir &amp; Rob</span>
             </div>
             {summary?.coastalRiskSummary.tideWarning ? (
-              <span className="font-mono text-[10px] font-bold text-[#e01e5a] bg-[#e01e5a]/10 px-2 py-0.5 rounded border border-[#e01e5a]/30">
+              <span className="font-mono text-[10px] font-bold text-[#b91c1c] bg-[#b91c1c]/10 px-2 py-0.5 rounded border border-[#b91c1c]/30">
                 Pesisir Rendah (Waspada)
               </span>
             ) : summary?.coastalRiskSummary.waveHeightM != null ? (
-              <span className="font-mono text-[10px] font-bold text-[#007a5a] bg-[#007a5a]/10 px-2 py-0.5 rounded border border-[#007a5a]/30">
+              <span className="font-mono text-[10px] font-bold text-[#005c43] bg-[#005c43]/10 px-2 py-0.5 rounded border border-[#005c43]/30">
                 Pesisir (Laut Tenang)
               </span>
             ) : (

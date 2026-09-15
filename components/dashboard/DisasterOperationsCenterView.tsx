@@ -200,6 +200,7 @@ export function DisasterOperationsCenterView() {
               </label>
               <select
                 id="kecamatan-select"
+                aria-label="Kecamatan Fokus Pengamatan"
                 value={selectedAreaSlug}
                 onChange={(e) => setSelectedAreaSlug(e.target.value)}
                 className="min-h-[42px] px-3.5 py-2 rounded-xl bg-white text-[#1d1d1d] font-bold text-xs shadow-md border border-[#e6e6e6] focus:outline-none focus:ring-2 focus:ring-[#ec942c]"

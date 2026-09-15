@@ -2,7 +2,7 @@
 
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
-import { ShieldAlert, PhoneCall } from 'lucide-react'
+import { ShieldAlert, PhoneCall, Building2, Waves } from 'lucide-react'
 
 export function Footer() {
   const pathname = usePathname()
@@ -34,14 +34,14 @@ export function Footer() {
 
           <div className="flex items-center gap-3 flex-wrap">
             <div className="flex items-center gap-2.5 px-4 py-2 rounded-full bg-white/10 border border-white/10">
-              <span className="material-symbols-outlined text-[#f4ede4] text-[20px]">location_city</span>
+              <Building2 className="w-5 h-5 text-[#f4ede4]" />
               <div className="flex flex-col">
                 <span className="text-[9px] font-mono text-[#d9bdde] uppercase font-bold">SDG GOAL 11</span>
                 <span className="text-xs text-white font-semibold">Kota Berkelanjutan</span>
               </div>
             </div>
             <div className="flex items-center gap-2.5 px-4 py-2 rounded-full bg-white/10 border border-white/10">
-              <span className="material-symbols-outlined text-[#f4ede4] text-[20px]">cyclone</span>
+              <Waves className="w-5 h-5 text-[#f4ede4]" />
               <div className="flex flex-col">
                 <span className="text-[9px] font-mono text-[#d9bdde] uppercase font-bold">SDG GOAL 13</span>
                 <span className="text-xs text-white font-semibold">Aksi Iklim Terpadu</span>

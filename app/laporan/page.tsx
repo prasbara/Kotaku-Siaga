@@ -130,6 +130,7 @@ export default function LaporanListPage() {
 
             {/* Category Select */}
             <select
+              aria-label="Filter Kategori Laporan"
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
               className="h-12 px-4 rounded-xl border border-[#e6e6e6] bg-[#fdfbf9] text-sm text-[#1d1d1d] font-medium focus:outline-none focus:border-[#4a154b] w-full md:w-auto"
@@ -143,6 +144,7 @@ export default function LaporanListPage() {
 
             {/* Status Select */}
             <select
+              aria-label="Filter Status Laporan"
               value={selectedStatus}
               onChange={(e) => setSelectedStatus(e.target.value)}
               className="h-12 px-4 rounded-xl border border-[#e6e6e6] bg-[#fdfbf9] text-sm text-[#1d1d1d] font-medium focus:outline-none focus:border-[#4a154b] w-full md:w-auto"

@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
-import { ShieldAlert, Menu, X, PhoneCall, ShieldCheck, Radio } from 'lucide-react'
+import { ShieldAlert, Menu, X, PhoneCall, ShieldCheck, Radio, Megaphone } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { SOSModal } from '@/components/sos/SOSModal'
 import { EmergencyLiteModeToggle } from '@/components/layout/EmergencyLiteModeToggle'
@@ -49,24 +49,21 @@ export function Navbar() {
 
   return (
     <>
-    <header className="sticky top-0 w-full z-50 bg-white/95 backdrop-blur-md border-b border-[#e6e6e6] shadow-[0_2px_12px_rgba(74,21,75,0.04)]">
-      <div className="max-w-[1440px] mx-auto px-3 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-1.5 sm:gap-3">
-        {/* Brand & Badge */}
-        <div className="flex items-center gap-2 sm:gap-3 shrink-0 min-w-0">
-          <Link href="/" className="flex items-center gap-2 sm:gap-3 group min-w-0" title="Beranda KotaKu Siaga">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-[10px] sm:rounded-[12px] bg-[#4a154b] flex items-center justify-center text-white shadow-sm group-hover:bg-[#481a54] transition-colors shrink-0">
-              <ShieldAlert className="w-4 h-4 sm:w-5 sm:h-5 text-[#f4ede4]" />
+    <header className="sticky top-0 w-full z-50 bg-white/95 backdrop-blur-md border-b border-[#e6e6e6] shadow-subtle transition-all">
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-4">
+        {/* Brand Logo & Editorial Title */}
+        <div className="flex items-center gap-3">
+          <Link
+            href="/"
+            className="flex items-center gap-3 group focus:outline-none focus:ring-2 focus:ring-[#4a154b] rounded-xl p-1"
+          >
+            <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-[12px] bg-[#4a154b] flex items-center justify-center text-white shadow-subtle group-hover:bg-[#481a54] transition-colors shrink-0">
+              <ShieldAlert className="w-5 h-5 sm:w-6 sm:h-6 text-[#f4ede4]" />
             </div>
-            <div className="flex flex-col min-w-0">
-              <div className="flex items-center gap-1.5 sm:gap-2">
-                <span className="font-display text-base sm:text-xl text-[#1d1d1d] font-bold tracking-tight truncate">
-                  KotaKu Siaga
-                </span>
-                <span className="text-[9px] sm:text-[10px] uppercase px-1.5 sm:px-2 py-0.5 rounded-full bg-[#f9f0ff] text-[#4a154b] border border-[#eddcf7] font-bold hidden xs:inline-flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#007a5a] animate-pulse"></span>
-                  Semarang
-                </span>
-              </div>
+            <div className="flex flex-col">
+              <span className="font-display font-bold text-lg sm:text-xl text-[#1d1d1d] tracking-tight leading-none group-hover:text-[#4a154b] transition-colors">
+                KotaKu Siaga
+              </span>
               <span className="text-[10px] sm:text-[11px] text-[#696969] tracking-normal hidden md:inline truncate font-medium">
                 Pemantauan Risiko Banjir &amp; Rob Kota Semarang
               </span>
@@ -89,7 +86,7 @@ export function Navbar() {
                   href={item.href}
                   className="min-h-[42px] px-5 py-2 rounded-[90px] bg-[#4a154b] text-white hover:bg-[#481a54] active:bg-[#611f69] font-bold text-xs shadow-sm flex items-center gap-1.5 transition-all ml-1.5 mr-1 active:scale-[0.98]"
                 >
-                  <span className="material-symbols-outlined text-[16px]">campaign</span>
+                  <Megaphone className="w-4 h-4 shrink-0" />
                   {item.label}
                 </Link>
               )
@@ -130,7 +127,7 @@ export function Navbar() {
           <button
             type="button"
             onClick={() => setIsSosOpen(true)}
-            className="min-h-[40px] sm:min-h-[48px] px-2.5 sm:px-4 py-1.5 sm:py-2.5 rounded-[90px] bg-[#cc4117] text-white hover:bg-[#b03713] active:bg-[#992e0e] text-[11px] sm:text-xs font-bold tracking-wide flex items-center gap-1.5 sm:gap-2 shadow-sm transition-all active:scale-[0.98] animate-pulse cursor-pointer"
+            className="min-h-[40px] sm:min-h-[48px] px-2.5 sm:px-4 py-1.5 sm:py-2.5 rounded-[90px] bg-[#b91c1c] text-white hover:bg-[#991b1b] active:bg-[#7f1d1d] text-[11px] sm:text-xs font-bold tracking-wide flex items-center gap-1.5 sm:gap-2 shadow-sm transition-all active:scale-[0.98] animate-pulse cursor-pointer"
             title="Kirim Sinyal SOS Darurat 1-Klik"
             aria-label="Kirim Sinyal SOS Darurat 1-Klik"
           >

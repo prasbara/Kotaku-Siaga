@@ -179,6 +179,7 @@ export function EmergencyLiteView() {
             </label>
             <select
               id="lite-district"
+              aria-label="Pilih Wilayah Kecamatan Anda"
               value={selectedKec}
               onChange={(e) => setSelectedKec(e.target.value)}
               className="bg-[#2a2a2a] text-white text-sm font-bold px-3 py-2 rounded-lg border border-white/30 focus:outline-none focus:ring-2 focus:ring-[#cc4117]"

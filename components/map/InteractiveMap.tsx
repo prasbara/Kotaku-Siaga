@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import 'leaflet/dist/leaflet.css'
 import type { Report } from '@/types'
 import { formatRelativeTime } from '@/lib/utils'
 import type { CCTVPoint } from '@/lib/data/cctv-pantausemar'
