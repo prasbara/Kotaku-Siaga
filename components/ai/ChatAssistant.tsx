@@ -81,7 +81,7 @@ export function ChatAssistant() {
     <>
       {/* Analytical Drawer / Modal */}
       {isOpen && (
-        <div className="fixed bottom-20 right-4 sm:right-6 z-50 w-[calc(100vw-2rem)] sm:w-[420px] max-w-[420px] max-h-[calc(100dvh-6rem)] bg-white border border-[#e6e6e6] rounded-[20px] shadow-2xl flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-200">
+        <div className="fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom,0px))] sm:bottom-20 right-4 sm:right-6 z-[80] w-[calc(100vw-2rem)] sm:w-[420px] max-w-[420px] max-h-[calc(100dvh-7rem)] bg-white border border-[#e6e6e6] rounded-[20px] shadow-2xl flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-200">
           {/* Header in Deep Aubergine */}
           <div className="flex items-center justify-between px-5 py-4 bg-[#4a154b] text-white shrink-0">
             <div className="flex items-center gap-3">
@@ -205,18 +205,20 @@ export function ChatAssistant() {
         </div>
       )}
 
-      {/* Floating Trigger Pill */}
+      {/* Floating Trigger Pill — Secondary Action, Stacked Cleanly Above SOS */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-5 right-5 sm:right-8 z-50 min-h-[48px] px-5 rounded-[90px] bg-[#4a154b] text-white text-xs font-bold tracking-wide uppercase hover:bg-[#611f69] transition-all shadow-xl flex items-center gap-2.5 group cursor-pointer border border-white/20"
-        aria-label="Toggle AI Copilot"
+        className="fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom,0px))] sm:bottom-20 right-4 sm:right-6 z-40 min-h-[42px] sm:min-h-[46px] px-3.5 sm:px-4.5 py-2 sm:py-2.5 rounded-full bg-[#4a154b] text-white text-[11px] sm:text-xs font-bold tracking-wide uppercase hover:bg-[#611f69] active:scale-95 transition-all shadow-lg hover:shadow-xl flex items-center gap-2 group cursor-pointer border border-white/20 select-none"
+        aria-label="Toggle Civic AI Copilot"
+        title="Buka Asisten Kecerdasan Buatan Civic AI Copilot"
       >
         <div className="relative">
-          <Bot className="w-4 h-4 text-white" />
+          <Bot className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white shrink-0" />
           <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-[#007a5a] ring-2 ring-[#4a154b] animate-pulse"></span>
         </div>
-        <span>{isOpen ? 'Tutup Copilot' : 'Civic AI Copilot'}</span>
+        <span className="whitespace-nowrap">{isOpen ? 'Tutup Copilot' : 'Civic AI Copilot'}</span>
       </button>
+
     </>
   )
 }
