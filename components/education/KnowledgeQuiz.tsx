@@ -113,8 +113,18 @@ export function KnowledgeQuiz({ questions, moduleTitle }: KnowledgeQuizProps) {
                       : 'bg-[#fef3c7] border-[#d97706]/40 text-[#b45309]'
                   }`}
                 >
-                  <span className="font-bold block mb-1">
-                    {isCorrect ? '✓ Jawaban Anda Benar!' : '⚠️ Jawaban Kurang Tepat.'}
+                  <span className="font-bold flex items-center gap-1.5 mb-1">
+                    {isCorrect ? (
+                      <>
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        <span>Jawaban Anda Tepat</span>
+                      </>
+                    ) : (
+                      <>
+                        <XCircle className="w-3.5 h-3.5" />
+                        <span>Jawaban Kurang Tepat</span>
+                      </>
+                    )}
                   </span>
                   <p className="text-[#1d1d1d]">{q.explanation}</p>
                 </div>

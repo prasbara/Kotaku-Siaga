@@ -12,7 +12,9 @@ import {
   PhoneCall,
   ArrowRight,
   Layers,
-  MapPin
+  MapPin,
+  X,
+  Check
 } from 'lucide-react'
 import { EDUCATION_MODULES } from '@/lib/data/education-resilience'
 import { EducationalTooltip } from '@/components/education/EducationalTooltip'
@@ -128,11 +130,12 @@ export function EducationModule() {
                     Kawasan: {mod.topographyType}
                   </span>
                   <span
-                    className={`font-bold flex items-center gap-1 ${
+                    className={`font-bold flex items-center gap-1.5 ${
                       isSelected ? 'text-[#4a154b]' : 'text-[#696969]'
                     }`}
                   >
-                    {isSelected ? 'Sedang Dibaca' : 'Buka Modul'} ➔
+                    <span>{isSelected ? 'Sedang Dibaca' : 'Buka Modul'}</span>
+                    <ArrowRight className="w-3 h-3" />
                   </span>
                 </div>
               </button>
@@ -233,7 +236,7 @@ export function EducationModule() {
                 <ul className="space-y-1.5 text-xs text-[#1d1d1d]">
                   {currentModule.fivePillars.apaDampaknya.map((item, idx) => (
                     <li key={idx} className="flex items-start gap-2">
-                      <span className="text-[#cc4117] font-bold">✕</span>
+                      <X className="w-3.5 h-3.5 text-[#cc4117] shrink-0 mt-0.5" />
                       <span>{item}</span>
                     </li>
                   ))}
@@ -250,7 +253,7 @@ export function EducationModule() {
                 <ul className="space-y-1.5 text-xs text-[#1d1d1d]">
                   {currentModule.fivePillars.apaYangDapatDilakukan.map((item, idx) => (
                     <li key={idx} className="flex items-start gap-2">
-                      <span className="text-[#007a5a] font-bold">✓</span>
+                      <Check className="w-3.5 h-3.5 text-[#007a5a] shrink-0 mt-0.5" />
                       <span>{item}</span>
                     </li>
                   ))}
