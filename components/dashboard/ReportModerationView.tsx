@@ -353,24 +353,51 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
                           </div>
 
                           <div className="flex items-center gap-1.5 flex-wrap text-[10px] font-mono text-on-surface-variant">
+                            {report.email_verified && (
+                              <span className="text-emerald-400 font-semibold" title="Email Pelapor Terverifikasi OTP">
+                                ✓ OTP Verified
+                              </span>
+                            )}
+                            {(report.independent_reporter_count || meta?.independent_reporter_count) && (
+                              <span className="text-cyan-400 font-bold" title="Jumlah Pelapor Independen">
+                                👥 {report.independent_reporter_count || meta?.independent_reporter_count} Pelapor
+                              </span>
+                            )}
+                            {meta?.cluster_code && (
+                              <span className="text-purple-400 font-mono" title="Kode Klaster Insiden">
+                                🏷️ {meta.cluster_code}
+                              </span>
+                            )}
                             {meta?.location_grade === 'normal' && (
                               <span className="text-emerald-400 font-semibold" title="Koordinat GPS Valid">
-                                ✓ GPS Valid
+                                📍 GPS Valid
+                              </span>
+                            )}
+                            {(meta?.abuse_score ?? report.abuse_score) !== undefined && (
+                              <span
+                                className={`font-semibold ${
+                                  (meta?.abuse_score ?? report.abuse_score ?? 0) > 40
+                                    ? 'text-red-400'
+                                    : 'text-emerald-400'
+                                }`}
+                                title="Skor Penyalahgunaan / Spam"
+                              >
+                                Abuse: {meta?.abuse_score ?? report.abuse_score ?? 0}/100
                               </span>
                             )}
                             {meta?.duplicate_photo && (
                               <span className="text-red-400 font-bold" title="Foto Terindikasi Duplikat">
-                                ⚠ Foto Duplikat
+                                ⚠️ Foto Duplikat
                               </span>
                             )}
                             {meta?.corroboration_count ? (
                               <span className="text-cyan-400 font-semibold" title="Dikonfirmasi Laporan Sekitar">
-                                ✓ {meta.corroboration_count} Laporan Dekat
+                                👥 {meta.corroboration_count} Laporan Dekat
                               </span>
                             ) : null}
                             {meta?.cctv_evidence === 'corroborated' && (
                               <span className="text-emerald-400 font-semibold" title="Terkonfirmasi CCTV Terdekat">
-                                ✓ CCTV
+                                📹 CCTV
                               </span>
                             )}
                           </div>

@@ -8,6 +8,8 @@ import type { FloodEvent } from '@/types/flood-event'
 
 interface InteractiveMapProps {
   reports: Report[]
+  sosList?: Array<{ id: string; sos_code: string; latitude: number; longitude: number; status: string; created_at: string; district_name?: string }>
+  clusters?: Array<{ id: string; cluster_code: string; category: string; latitude: number; longitude: number; independent_reporter_count: number; report_count: number; radius_m: number; status: string }>
   viewMode?: 'markers' | 'heatmap' | 'both'
   onReportClick?: (report: Report) => void
   selectedReport?: Report | null
@@ -42,6 +44,8 @@ function escapeHtml(str: unknown): string {
 
 export function InteractiveMap({
   reports,
+  sosList = [],
+  clusters = [],
   viewMode = 'markers',
   onReportClick,
   selectedReport,
@@ -63,6 +67,8 @@ export function InteractiveMap({
   const circlesRef = useRef<unknown[]>([])
   const cctvMarkersRef = useRef<unknown[]>([])
   const floodMarkersRef = useRef<unknown[]>([])
+  const sosMarkersRef = useRef<unknown[]>([])
+  const clusterLayersRef = useRef<unknown[]>([])
   const [isClient, setIsClient] = useState(false)
 
   useEffect(() => {
@@ -142,10 +148,14 @@ export function InteractiveMap({
       circlesRef.current.forEach((c) => map.removeLayer(c))
       cctvMarkersRef.current.forEach((m) => map.removeLayer(m))
       floodMarkersRef.current.forEach((m) => map.removeLayer(m))
+      sosMarkersRef.current.forEach((m) => map.removeLayer(m))
+      clusterLayersRef.current.forEach((c) => map.removeLayer(c))
       markersRef.current = []
       circlesRef.current = []
       cctvMarkersRef.current = []
       floodMarkersRef.current = []
+      sosMarkersRef.current = []
+      clusterLayersRef.current = []
 
       reports.forEach((report) => {
         const isSelected = selectedReport?.id === report.id
@@ -435,10 +445,93 @@ export function InteractiveMap({
           floodMarkersRef.current.push(floodMarker)
         })
       }
+
+      // Render Active SOS Beacons (Critical Emergency Signals)
+      if (sosList && sosList.length > 0) {
+        sosList.forEach((sos) => {
+          const sosSize = 36
+          const sosIcon = L.divIcon({
+            className: 'custom-sos-marker',
+            html: `
+              <div style="position: relative; width: ${sosSize}px; height: ${sosSize}px; display: flex; align-items: center; justify-content: center;">
+                <span style="position: absolute; inset: -10px; border-radius: 9999px; background-color: #EF4444; opacity: 0.7; animation: ping 1.2s cubic-bezier(0, 0, 0.2, 1) infinite;"></span>
+                <div style="
+                  width: ${sosSize}px;
+                  height: ${sosSize}px;
+                  border-radius: 9999px;
+                  background-color: #CC4117;
+                  border: 2px solid #FFFFFF;
+                  box-shadow: 0 0 20px #EF4444;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  color: #FFFFFF;
+                  font-family: 'JetBrains Mono', monospace;
+                  font-size: 14px;
+                  font-weight: 900;
+                  cursor: pointer;
+                ">
+                  🚨
+                </div>
+              </div>
+            `,
+            iconSize: [sosSize, sosSize],
+            iconAnchor: [sosSize / 2, sosSize / 2],
+          })
+
+          const marker = L.marker([sos.latitude, sos.longitude], { icon: sosIcon })
+          const popupContent = document.createElement('div')
+          popupContent.className = 'text-xs'
+          popupContent.innerHTML = `
+            <div style="min-width: 170px;">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
+                <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #EF4444; font-weight: bold;">
+                  ${escapeHtml(sos.sos_code)}
+                </span>
+                <span style="font-size: 9px; padding: 1px 5px; border-radius: 4px; background: #EF4444; color: #FFFFFF; font-weight: bold;">
+                  CRITICAL SOS
+                </span>
+              </div>
+              <div style="font-weight: bold; font-size: 12px; color: #1D1D1D; margin-bottom: 2px;">
+                Sinyal Darurat 1-Klik Warga
+              </div>
+              <div style="color: #696969; font-size: 10px;">
+                ${escapeHtml(sos.district_name || 'Kota Semarang')}
+              </div>
+            </div>
+          `
+          marker.bindPopup(popupContent, { offset: [0, -sosSize / 2] })
+          marker.addTo(map as any)
+          sosMarkersRef.current.push(marker)
+        })
+      }
+
+      // Render Incident Clusters (Radius and multi-report badge)
+      if (clusters && clusters.length > 0) {
+        clusters.forEach((cl) => {
+          const circle = L.circle([cl.latitude, cl.longitude], {
+            radius: cl.radius_m || 250,
+            color: '#4a154b',
+            fillColor: '#4a154b',
+            fillOpacity: 0.12,
+            weight: 2,
+            dashArray: '4, 4',
+          })
+          circle.bindPopup(`
+            <div style="min-width: 160px; font-size: 11px;">
+              <div style="font-weight: bold; color: #4a154b; margin-bottom: 2px;">${escapeHtml(cl.cluster_code)}</div>
+              <div style="font-size: 10px; color: #007a5a; font-weight: bold;">👥 ${cl.independent_reporter_count} Pelapor Independen</div>
+              <div style="font-size: 10px; color: #696969;">Total Laporan: ${cl.report_count} | Radius ~${cl.radius_m}m</div>
+            </div>
+          `)
+          circle.addTo(map as any)
+          clusterLayersRef.current.push(circle)
+        })
+      }
     }
 
     updateMarkers()
-  }, [reports, viewMode, selectedReport, onReportClick, isClient, showCCTV, cctvList, onCCTVClick, floodEvents, showFloodEvents, onFloodEventClick])
+  }, [reports, sosList, clusters, viewMode, selectedReport, onReportClick, isClient, showCCTV, cctvList, onCCTVClick, floodEvents, showFloodEvents, onFloodEventClick])
 
   // Center on selected report
   useEffect(() => {

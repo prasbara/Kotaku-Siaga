@@ -17,10 +17,12 @@ import {
   PhoneCall,
   Video,
   Activity,
+  Radio,
+  Layers,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-export type DashboardTab = 'operations' | 'overview' | 'reports' | 'priorities' | 'cctv' | 'data' | 'audit'
+export type DashboardTab = 'operations' | 'sos' | 'overview' | 'reports' | 'clusters' | 'priorities' | 'cctv' | 'data' | 'audit'
 
 interface AdminSidebarProps {
   activeTab: DashboardTab
@@ -58,6 +60,12 @@ export function AdminSidebar({
       icon: ShieldAlert,
     },
     {
+      id: 'sos' as DashboardTab,
+      label: '🚨 Sinyal SOS Darurat',
+      sublabel: 'Pemantauan 1-Klik Warga',
+      icon: Radio,
+    },
+    {
       id: 'overview' as DashboardTab,
       label: 'Ringkasan Situasi',
       sublabel: 'Overview & Tren',
@@ -65,11 +73,17 @@ export function AdminSidebar({
     },
     {
       id: 'reports' as DashboardTab,
-      label: 'Moderasi Laporan',
-      sublabel: 'Verifikasi Tindakan',
+      label: 'Moderasi Laporan Warga',
+      sublabel: 'Verifikasi & Validasi Data',
       icon: ClipboardCheck,
       count: pendingReportsCount,
       countAriaLabel: `${pendingReportsCount} laporan menunggu verifikasi`,
+    },
+    {
+      id: 'clusters' as DashboardTab,
+      label: 'Klaster & Koroborasi',
+      sublabel: 'Multi-Report Intelligence',
+      icon: Layers,
     },
     {
       id: 'priorities' as DashboardTab,

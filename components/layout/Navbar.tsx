@@ -3,8 +3,9 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
-import { Menu, X, PhoneCall, ShieldAlert, ShieldCheck } from 'lucide-react'
+import { ShieldAlert, Menu, X, PhoneCall, ShieldCheck, Radio } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { SOSModal } from '@/components/sos/SOSModal'
 
 const navItems = [
   { label: 'Beranda', href: '/' },
@@ -20,6 +21,7 @@ const navItems = [
 export function Navbar() {
   const pathname = usePathname()
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [isSosOpen, setIsSosOpen] = useState(false)
   const [currentTime, setCurrentTime] = useState('')
 
   useEffect(() => {
@@ -40,6 +42,7 @@ export function Navbar() {
   }, [])
 
   return (
+    <>
     <header className="sticky top-0 w-full z-50 bg-white/95 backdrop-blur-md border-b border-[#e6e6e6] shadow-[0_2px_12px_rgba(74,21,75,0.04)]">
       <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-3">
         {/* Brand & Badge */}
@@ -59,7 +62,7 @@ export function Navbar() {
                 </span>
               </div>
               <span className="text-[11px] text-[#696969] tracking-normal hidden md:inline truncate font-medium">
-                Pemantauan Risiko Banjir & Rob Kota Semarang
+                Pemantauan Risiko Banjir &amp; Rob Kota Semarang
               </span>
             </div>
           </Link>
@@ -114,14 +117,25 @@ export function Navbar() {
             <span className="text-xs font-mono text-[#1d1d1d] font-semibold">{currentTime || 'WIB'}</span>
           </div>
 
+          {/* SOS Emergency Button */}
+          <button
+            type="button"
+            onClick={() => setIsSosOpen(true)}
+            className="min-h-[48px] px-4 py-2.5 rounded-[90px] bg-[#cc4117] text-white hover:bg-[#b03713] active:bg-[#992e0e] text-xs font-bold tracking-wide flex items-center gap-2 shadow-sm transition-all active:scale-[0.98] animate-pulse cursor-pointer"
+            title="Kirim Sinyal SOS Darurat 1-Klik"
+          >
+            <Radio className="w-4 h-4" />
+            <span className="font-extrabold uppercase">SOS</span>
+          </button>
+
           {/* Emergency 112 Dispatch Button */}
           <a
             href="tel:112"
-            className="min-h-[48px] px-4 py-2.5 rounded-[90px] bg-[#cc4117] text-white hover:bg-[#b03713] active:bg-[#992e0e] text-xs font-bold tracking-wide flex items-center gap-2 shadow-sm transition-all active:scale-[0.98]"
+            className="hidden sm:inline-flex min-h-[48px] px-4 py-2.5 rounded-[90px] bg-[#f4ede4] hover:bg-[#e8ded2] text-[#1d1d1d] text-xs font-bold tracking-wide items-center gap-2 shadow-sm transition-all active:scale-[0.98]"
             title="Hubungi Panggilan Darurat BPBD 112"
           >
-            <PhoneCall className="w-4 h-4" />
-            <span className="hidden sm:inline">Darurat 112</span>
+            <PhoneCall className="w-4 h-4 text-[#cc4117]" />
+            <span>112</span>
           </a>
 
           {/* Operator / Profile Icon */}
@@ -186,5 +200,7 @@ export function Navbar() {
         </div>
       )}
     </header>
+    <SOSModal isOpen={isSosOpen} onClose={() => setIsSosOpen(false)} />
+    </>
   )
 }

@@ -3,6 +3,12 @@ import { createAdminClient, isSupabaseConfigured } from '@/lib/supabase/server'
 import { checkRateLimit } from '@/lib/verification/rate-limiter'
 import { runVerificationPipeline } from '@/lib/verification/pipeline'
 import { localReportStore } from '@/lib/services/local-report-store'
+import { verifyTurnstileToken } from '@/lib/verification/turnstile'
+import {
+  calculateAbuseScore,
+  processReportClustering,
+} from '@/lib/verification/corroboration-engine'
+import { getUserRole, sanitizeReportForRole } from '@/lib/auth/session'
 
 // Helper to safely extract IP
 function getClientIp(request: NextRequest): string {
@@ -17,7 +23,16 @@ function getClientIp(request: NextRequest): string {
   return '127.0.0.1'
 }
 
-// GET /api/reports — fetch reports with search, district, category, urgency, status filters
+// Normalize Indonesian phone number to +628...
+function normalizeIndonesianPhone(phone: string): string {
+  const cleaned = phone.replace(/[^0-9+]/g, '')
+  if (cleaned.startsWith('+62')) return cleaned
+  if (cleaned.startsWith('62')) return `+${cleaned}`
+  if (cleaned.startsWith('0')) return `+62${cleaned.slice(1)}`
+  return cleaned
+}
+
+// GET /api/reports — fetch reports with filters & role-based sanitization
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams
   const search = searchParams.get('q') || searchParams.get('search') || undefined
@@ -28,7 +43,9 @@ export async function GET(request: NextRequest) {
   const limit = parseInt(searchParams.get('limit') || '100')
   const page = parseInt(searchParams.get('page') || '0')
 
-  // Local Testing Fallback: If Supabase is not configured, serve from local file store
+  const role = await getUserRole(request)
+
+  // Local Testing Fallback: If Supabase is not configured
   if (!isSupabaseConfigured()) {
     const { data, count } = localReportStore.getAll({
       search,
@@ -39,9 +56,10 @@ export async function GET(request: NextRequest) {
       limit,
       page,
     })
+    const sanitized = (data || []).map((r: any) => sanitizeReportForRole(r, role))
     return NextResponse.json({
       success: true,
-      data,
+      data: sanitized,
       count,
       page,
       limit,
@@ -50,7 +68,6 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-
     const supabase = await createAdminClient()
     let query = supabase
       .from('reports')
@@ -63,7 +80,9 @@ export async function GET(request: NextRequest) {
     if (status && status !== 'all') query = query.eq('status', status)
     if (district && district !== 'all') query = query.ilike('district_name', `%${district}%`)
     if (search && search.trim()) {
-      query = query.or(`title.ilike.%${search.trim()}%,description.ilike.%${search.trim()}%,district_name.ilike.%${search.trim()}%,report_code.ilike.%${search.trim()}%`)
+      query = query.or(
+        `title.ilike.%${search.trim()}%,description.ilike.%${search.trim()}%,district_name.ilike.%${search.trim()}%,report_code.ilike.%${search.trim()}%`
+      )
     }
 
     const { data, error, count } = await query
@@ -76,10 +95,11 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Successful query — return real data (may be empty array if no reports yet)
+    const sanitizedData = (data || []).map((report) => sanitizeReportForRole(report, role))
+
     return NextResponse.json({
       success: true,
-      data: data ?? [],
+      data: sanitizedData,
       count: count ?? (data ? data.length : 0),
       page,
       limit,
@@ -90,12 +110,12 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST /api/reports — create new citizen report with multi-layered verification and real DB corroboration
+// POST /api/reports — create citizen report with Turnstile, OTP verification, photo hash & clustering
 export async function POST(request: NextRequest) {
   try {
     const clientIp = getClientIp(request)
 
-    // 1. Rate Limiting Protection (Default 3 reports / IP / 15 min)
+    // 1. Rate Limiting Protection (Max 5 reports / IP / 15 min)
     const rateLimit = checkRateLimit(clientIp)
     if (!rateLimit.allowed) {
       return NextResponse.json(
@@ -113,16 +133,18 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    
     const {
       category,
       description,
       latitude,
       longitude,
       location_accuracy,
-      urgency,
+      urgency = 'sedang',
       reporter_name,
-      reporter_contact,
+      reporter_email,
+      reporter_phone,
+      email_verified = false,
+      turnstile_token,
       photo_url,
       photo_taken_at,
       photo_dhash,
@@ -130,6 +152,7 @@ export async function POST(request: NextRequest) {
       district_name,
       address,
       title,
+      client_session_id,
       website, // Honeypot field
       company, // Honeypot field
       phone_number_confirm, // Honeypot field
@@ -137,29 +160,60 @@ export async function POST(request: NextRequest) {
     } = body
 
     // 2. Fundamental Input Validation
-    if (!category || !description || latitude === undefined || longitude === undefined || !urgency) {
-      return NextResponse.json({ error: 'Data laporan tidak lengkap.' }, { status: 400 })
+    if (!reporter_name || reporter_name.trim().length < 2) {
+      return NextResponse.json({ error: 'Nama pelapor wajib diisi (minimal 2 karakter).' }, { status: 400 })
     }
 
-    if (description.length > 2000) {
-      return NextResponse.json({ error: 'Deskripsi terlalu panjang (max 2000 karakter).' }, { status: 400 })
+    if (!reporter_email || !reporter_email.includes('@')) {
+      return NextResponse.json({ error: 'Alamat email pelapor valid wajib diisi.' }, { status: 400 })
+    }
+
+    if (!reporter_phone || reporter_phone.trim().length < 8) {
+      return NextResponse.json({ error: 'Nomor HP pelapor wajib diisi untuk kontak darurat/petugas.' }, { status: 400 })
+    }
+
+    if (!category || !description) {
+      return NextResponse.json({ error: 'Kategori dan deskripsi kejadian wajib diisi.' }, { status: 400 })
+    }
+
+    if (description.trim().length < 10) {
+      return NextResponse.json(
+        { error: 'Deskripsi kejadian terlalu singkat. Berikan rincian kondisi di lapangan.' },
+        { status: 400 }
+      )
+    }
+
+    if (latitude === undefined || longitude === undefined) {
+      return NextResponse.json({ error: 'Koordinat lokasi kejadian wajib tersedia.' }, { status: 400 })
     }
 
     if (Math.abs(latitude) > 90 || Math.abs(longitude) > 180) {
-      return NextResponse.json({ error: 'Koordinat tidak valid.' }, { status: 400 })
+      return NextResponse.json({ error: 'Koordinat lintang/bujur tidak valid.' }, { status: 400 })
     }
 
-    // 3. Multi-Layered Verification Pipeline with Database or Local Store Corroboration
-    let recentReports: Array<{
-      id: string
-      report_code: string
-      latitude: number
-      longitude: number
-      created_at: string
-      photo_url?: string | null
-      category?: string
-    }> = []
+    // Photo is mandatory for standard report
+    if (!photo_url && !photo_sha256) {
+      return NextResponse.json(
+        { error: 'Foto bukti lapangan wajib dilampirkan untuk laporan warga standar.' },
+        { status: 400 }
+      )
+    }
 
+    // 3. Turnstile Server-Side Validation
+    const turnstileResult = await verifyTurnstileToken(turnstile_token, clientIp)
+    if (!turnstileResult.success) {
+      return NextResponse.json(
+        { error: turnstileResult.error || 'Verifikasi keamanan anti-bot gagal.' },
+        { status: 403 }
+      )
+    }
+
+    const normalizedPhone = normalizeIndonesianPhone(reporter_phone)
+    const normalizedEmail = reporter_email.trim().toLowerCase()
+    const clientIpHash = Buffer.from(clientIp).toString('base64').slice(0, 16)
+
+    // 4. Verification Pipeline Execution
+    let recentReports: any[] = []
     if (isSupabaseConfigured()) {
       try {
         const supabase = await createAdminClient()
@@ -176,16 +230,6 @@ export async function POST(request: NextRequest) {
       } catch (fetchErr) {
         console.warn('Could not fetch recent reports for corroboration:', fetchErr)
       }
-    } else {
-      recentReports = localReportStore.getAll().data.map((r) => ({
-        id: r.id,
-        report_code: r.report_code,
-        latitude: r.latitude,
-        longitude: r.longitude,
-        created_at: r.created_at,
-        photo_url: r.photo_url,
-        category: r.category,
-      }))
     }
 
     const verification = await runVerificationPipeline(
@@ -210,10 +254,43 @@ export async function POST(request: NextRequest) {
       recentReports
     )
 
-    const reportCode = verification.reportCode
-    const determinedStatus = verification.status
+    // 5. Abuse Score Calculation
+    const abuseScore = calculateAbuseScore({
+      honeypotTriggered: verification.metadata.honeypot_triggered,
+      hasPhoto: Boolean(photo_url || photo_sha256),
+      photoTimeMismatch: verification.metadata.warnings.some((w: string) => w.includes('Waktu foto')),
+      isOutsideSemarang: verification.metadata.warnings.some((w: string) => w.includes('di luar wilayah')),
+      duplicatePhotoCount: verification.metadata.duplicate_count,
+      emailVerified: Boolean(email_verified),
+    })
 
-    // If Supabase is not configured (Local testing), persist in local JSON store
+    const reportCode = verification.reportCode
+
+    // 6. Multi-Report Clustering & Corroboration Processing
+    const clusterResult = await processReportClustering({
+      report_code: reportCode,
+      category,
+      latitude,
+      longitude,
+      reporterName: reporter_name,
+      reporterEmail: normalizedEmail,
+      reporterPhone: normalizedPhone,
+      clientSessionId: client_session_id,
+      clientIpHash,
+      photoHash: photo_sha256 || photo_dhash,
+      photoUrl: photo_url,
+      districtName: district_name || verification.metadata.nearest_district,
+      reportedAt: reported_at,
+    })
+
+    let determinedStatus = verification.status
+    if (clusterResult.corroborationStatus === 'CONFIRMED_BY_CORROBORATION') {
+      determinedStatus = 'verified'
+    } else if (clusterResult.corroborationStatus === 'CORROBORATED') {
+      determinedStatus = 'verified'
+    }
+
+    // 7. Save Report
     if (!isSupabaseConfigured()) {
       const createdLocal = localReportStore.create({
         report_code: reportCode,
@@ -225,10 +302,16 @@ export async function POST(request: NextRequest) {
         urgency,
         status: determinedStatus,
         credibility_score: verification.credibilityScore,
-        verification_metadata: verification.metadata,
+        verification_metadata: {
+          ...verification.metadata,
+          abuse_score: abuseScore,
+          incident_cluster_id: clusterResult.clusterId,
+          cluster_code: clusterResult.clusterCode,
+          independent_reporter_count: clusterResult.independentReporterCount,
+        },
         photo_url: photo_url || null,
-        reporter_name: reporter_name || null,
-        reporter_contact: reporter_contact || null,
+        reporter_name,
+        reporter_contact: normalizedPhone,
         is_demo: false,
         district_name: district_name || verification.metadata.nearest_district || 'Kota Semarang',
         address: address || null,
@@ -240,21 +323,18 @@ export async function POST(request: NextRequest) {
           success: true,
           data: createdLocal,
           report_code: reportCode,
+          cluster_code: clusterResult.clusterCode,
+          independent_reporter_count: clusterResult.independentReporterCount,
+          corroboration_status: clusterResult.corroborationStatus,
           credibility_score: verification.credibilityScore,
           status: determinedStatus,
-          verification_summary: {
-            score: verification.credibilityScore,
-            confidence_level: verification.metadata.confidence_level,
-            positive_evidence: verification.metadata.positive_evidence,
-            warnings: verification.metadata.warnings,
-          },
           is_local_store: true,
         },
         { status: 201 }
       )
     }
 
-    // Production Supabase flow
+    // Supabase Insert
     const supabase = await createAdminClient()
     const { data, error } = await supabase
       .from('reports')
@@ -268,13 +348,23 @@ export async function POST(request: NextRequest) {
         urgency,
         status: determinedStatus,
         credibility_score: verification.credibilityScore,
-        verification_metadata: verification.metadata,
+        verification_metadata: {
+          ...verification.metadata,
+          abuse_score: abuseScore,
+          cluster_code: clusterResult.clusterCode,
+          independent_reporter_count: clusterResult.independentReporterCount,
+        },
         photo_url: photo_url || null,
         photo_hash: photo_sha256 || null,
         photo_taken_at: photo_taken_at || null,
-        reporter_name: reporter_name || null,
-        reporter_contact: reporter_contact || null,
-        is_demo: false,
+        reporter_name,
+        reporter_email: normalizedEmail,
+        reporter_phone: normalizedPhone,
+        email_verified: Boolean(email_verified),
+        turnstile_verified: true,
+        incident_cluster_id: clusterResult.clusterId,
+        independent_reporter_count: clusterResult.independentReporterCount,
+        abuse_score: abuseScore,
         district_name: district_name || verification.metadata.nearest_district || null,
         address: address || null,
         title: title || description.slice(0, 40),
@@ -293,8 +383,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         success: true,
-        data,
+        data: sanitizeReportForRole(data, 'public'),
         report_code: reportCode,
+        cluster_code: clusterResult.clusterCode,
+        independent_reporter_count: clusterResult.independentReporterCount,
+        corroboration_status: clusterResult.corroborationStatus,
         credibility_score: verification.credibilityScore,
         status: determinedStatus,
         verification_summary: {
@@ -302,6 +395,7 @@ export async function POST(request: NextRequest) {
           confidence_level: verification.metadata.confidence_level,
           positive_evidence: verification.metadata.positive_evidence,
           warnings: verification.metadata.warnings,
+          abuse_score: abuseScore,
         },
       },
       { status: 201 }

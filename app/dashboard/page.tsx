@@ -9,6 +9,8 @@ import Link from 'next/link'
 import type { Report } from '@/types'
 import { AdminSidebar, type DashboardTab } from '@/components/dashboard/AdminSidebar'
 import { ReportModerationView } from '@/components/dashboard/ReportModerationView'
+import { SOSEmergencyView } from '@/components/dashboard/SOSEmergencyView'
+import { IncidentClustersView } from '@/components/dashboard/IncidentClustersView'
 import { InterventionMatrixView } from '@/components/dashboard/InterventionMatrixView'
 import { CCTVMonitoringView } from '@/components/dashboard/CCTVMonitoringView'
 import { DataConnectivityView } from '@/components/dashboard/DataConnectivityView'
@@ -139,6 +141,8 @@ export default function DashboardPage() {
         {/* Dynamic Tab Views */}
         <div className="p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-8">
           {activeTab === 'operations' && <DisasterOperationsCenterView />}
+
+          {activeTab === 'sos' && <SOSEmergencyView />}
 
           {activeTab === 'overview' && (
             <div className="space-y-8 animate-in fade-in duration-200">
@@ -363,6 +367,8 @@ export default function DashboardPage() {
               onReportUpdated={fetchData}
             />
           )}
+
+          {activeTab === 'clusters' && <IncidentClustersView />}
 
           {activeTab === 'priorities' && <InterventionMatrixView />}
 

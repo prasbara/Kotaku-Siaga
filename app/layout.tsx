@@ -6,6 +6,7 @@ import { DemoBanner } from '@/components/layout/DemoBanner'
 import { FloodAlertBanner } from '@/components/layout/FloodAlertBanner'
 import { ChatAssistant } from '@/components/ai/ChatAssistant'
 import { Toaster } from '@/components/ui/toaster'
+import { SOSFloatingButton } from '@/components/sos/SOSFloatingButton'
 import { Analytics } from '@vercel/analytics/next'
 
 export const viewport: Viewport = {
@@ -188,6 +189,7 @@ export default function RootLayout({
         <main className="flex-1 w-full min-w-0">{children}</main>
         <Footer />
         <ChatAssistant />
+        <SOSFloatingButton />
         <Toaster />
         <Analytics />
       </body>

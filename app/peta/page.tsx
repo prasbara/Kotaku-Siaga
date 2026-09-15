@@ -97,6 +97,9 @@ export default function PetaPage() {
     }
   }, [])
 
+  const [sosList, setSosList] = useState<any[]>([])
+  const [clusters, setClusters] = useState<any[]>([])
+
   // Fetch verified reports
   const fetchReports = useCallback(async () => {
     setIsLoading(true)
@@ -116,6 +119,32 @@ export default function PetaPage() {
       setReports([])
     } finally {
       setIsLoading(false)
+    }
+  }, [])
+
+  // Fetch active SOS signals
+  const fetchSosList = useCallback(async () => {
+    try {
+      const res = await fetch('/api/sos')
+      const data = await res.json()
+      if (data.success && Array.isArray(data.data)) {
+        setSosList(data.data)
+      }
+    } catch (err) {
+      console.warn('Gagal mengambil SOS untuk peta:', err)
+    }
+  }, [])
+
+  // Fetch incident clusters
+  const fetchClusters = useCallback(async () => {
+    try {
+      const res = await fetch('/api/clusters')
+      const data = await res.json()
+      if (data.success && Array.isArray(data.data)) {
+        setClusters(data.data)
+      }
+    } catch (err) {
+      console.warn('Gagal mengambil klaster untuk peta:', err)
     }
   }, [])
 
@@ -151,12 +180,16 @@ export default function PetaPage() {
     fetchWeather()
     fetchReports()
     fetchFloodEvents()
-  }, [fetchWeather, fetchReports, fetchFloodEvents])
+    fetchSosList()
+    fetchClusters()
+  }, [fetchWeather, fetchReports, fetchFloodEvents, fetchSosList, fetchClusters])
 
   const handleGlobalRefresh = () => {
     fetchWeather()
     fetchReports()
     fetchFloodEvents()
+    fetchSosList()
+    fetchClusters()
   }
 
   const toggleCategory = (cat: ReportCategory) => {
@@ -458,6 +491,8 @@ export default function PetaPage() {
           {mapCanvasMode === 'gis' ? (
             <InteractiveMap
               reports={filteredReports}
+              sosList={sosList}
+              clusters={clusters}
               viewMode={viewMode}
               onReportClick={(r) => {
                 setSelectedReport(r)
