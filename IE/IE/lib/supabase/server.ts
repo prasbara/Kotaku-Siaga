@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import { getSupabaseUrl, getSupabaseAnonKey, getSupabaseServiceRoleKey } from './config'
 
 /**
  * isSupabaseConfigured — checks if Supabase env vars are present and non-placeholder.
@@ -7,11 +8,8 @@ import { cookies } from 'next/headers'
  * Use this to return explicit 503 errors instead of silent fake-data fallbacks.
  */
 export function isSupabaseConfigured(): boolean {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const key =
-    process.env.SUPABASE_SERVICE_ROLE_KEY ||
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  const url = getSupabaseUrl()
+  const key = getSupabaseServiceRoleKey() || getSupabaseAnonKey()
   return (
     !!url &&
     url.startsWith('https://') &&
@@ -26,8 +24,8 @@ export async function createClient() {
   const cookieStore = await cookies()
 
   return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    (process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)!,
+    getSupabaseUrl(),
+    getSupabaseAnonKey(),
     {
       cookies: {
         getAll() {
@@ -51,8 +49,8 @@ export async function createAdminClient() {
   const cookieStore = await cookies()
 
   return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    getSupabaseUrl(),
+    getSupabaseServiceRoleKey(),
     {
       cookies: {
         getAll() {
@@ -71,4 +69,3 @@ export async function createAdminClient() {
     }
   )
 }
-
