@@ -19,10 +19,11 @@ import {
   Activity,
   Radio,
   Layers,
+  Monitor,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-export type DashboardTab = 'operations' | 'sos' | 'overview' | 'reports' | 'clusters' | 'priorities' | 'cctv' | 'data' | 'audit'
+export type DashboardTab = 'command-center' | 'operations' | 'sos' | 'overview' | 'reports' | 'clusters' | 'priorities' | 'cctv' | 'data' | 'audit'
 
 interface AdminSidebarProps {
   activeTab: DashboardTab
@@ -53,6 +54,12 @@ export function AdminSidebar({
   }, [isMobileOpen, onMobileClose])
 
   const navItems = [
+    {
+      id: 'command-center' as DashboardTab,
+      label: '🖥️ Layar Command Center',
+      sublabel: 'Display Kiosk & Monitor Besar',
+      icon: Monitor,
+    },
     {
       id: 'operations' as DashboardTab,
       label: 'Pusat Operasi Bencana',

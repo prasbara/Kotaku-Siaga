@@ -71,19 +71,39 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
     }
   }
 
-  // Fetch verified reports on mount if not supplied by parent
-  React.useEffect(() => {
-    if (!reports || reports.length === 0) {
-      fetch('/api/reports?limit=100')
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.success && Array.isArray(data.data)) {
-            setLocalReports(data.data)
-          }
-        })
-        .catch((err) => console.warn('Failed to fetch reports in ReportModerationView:', err))
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const [lastSyncTime, setLastSyncTime] = useState<string>('')
+
+  const fetchReports = React.useCallback(async () => {
+    setIsRefreshing(true)
+    try {
+      const res = await fetch('/api/reports?limit=100')
+      const data = await res.json()
+      if (data.success && Array.isArray(data.data)) {
+        setLocalReports(data.data)
+      }
+      setLastSyncTime(
+        new Date().toLocaleTimeString('id-ID', {
+          timeZone: 'Asia/Jakarta',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: false,
+        }) + ' WIB'
+      )
+    } catch (err) {
+      console.warn('Failed to fetch reports in ReportModerationView:', err)
+    } finally {
+      setIsRefreshing(false)
     }
   }, [])
+
+  // Auto-refresh polling every 10 seconds for real-time operator moderation
+  React.useEffect(() => {
+    fetchReports()
+    const interval = setInterval(fetchReports, 10000)
+    return () => clearInterval(interval)
+  }, [fetchReports])
 
   // Sync if reports prop changes
   React.useEffect(() => {
@@ -167,8 +187,27 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
           </p>
         </div>
 
-        {/* Filter Chips */}
-        <div className="flex flex-wrap items-center gap-1.5">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+          {lastSyncTime && (
+            <div className="flex items-center gap-2 text-[11px] font-mono text-on-surface-variant bg-surface-container px-3 py-1.5 rounded-lg border border-outline-variant/30">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span>Sync: {lastSyncTime}</span>
+            </div>
+          )}
+          <button
+            type="button"
+            onClick={fetchReports}
+            disabled={isRefreshing}
+            className="min-h-[38px] px-3.5 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface text-xs font-mono font-bold flex items-center gap-2 border border-outline-variant/30 transition-all cursor-pointer"
+          >
+            <RotateCcw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
+            <span>Segarkan</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Filter Chips Bar */}
+      <div className="flex flex-wrap items-center gap-1.5">
           {[
             { id: 'all', label: `Semua (${localReports.length})` },
             { id: 'submitted', label: `Menunggu (${pendingCount})` },
@@ -193,7 +232,6 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
             </button>
           ))}
         </div>
-      </div>
 
       {/* Moderation Queue Table */}
       <div className="border border-outline-variant/30 rounded-xl bg-surface-container-low overflow-x-auto shadow-md">

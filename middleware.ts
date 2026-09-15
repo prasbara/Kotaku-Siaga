@@ -15,9 +15,11 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     /*
-     * Match dashboard protected routes and auth routes.
+     * Match dashboard protected routes, command center, and auth routes.
      * Prevents running heavyweight auth middleware on public static/CDN assets.
      */
     '/dashboard/:path*',
+    '/command-center',
+    '/command-center/:path*',
   ],
 }

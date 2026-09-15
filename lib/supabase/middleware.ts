@@ -4,8 +4,11 @@ import { verifyAdminSessionToken } from '@/lib/auth/session'
 import { getSupabaseUrl, getSupabaseAnonKey } from './config'
 
 export async function updateSession(request: NextRequest) {
-  // If not visiting dashboard, return immediately
-  if (!request.nextUrl.pathname.startsWith('/dashboard')) {
+  // If not visiting dashboard or command center, return immediately
+  if (
+    !request.nextUrl.pathname.startsWith('/dashboard') &&
+    !request.nextUrl.pathname.startsWith('/command-center')
+  ) {
     return NextResponse.next({ request })
   }
 

@@ -1,13 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
-import { Navbar } from '@/components/layout/Navbar'
-import { Footer } from '@/components/layout/Footer'
-import { DemoBanner } from '@/components/layout/DemoBanner'
-import { FloodAlertBanner } from '@/components/layout/FloodAlertBanner'
-import { ChatAssistant } from '@/components/ai/ChatAssistant'
-import { Toaster } from '@/components/ui/toaster'
-import { SOSFloatingButton } from '@/components/sos/SOSFloatingButton'
-import { Analytics } from '@vercel/analytics/next'
+import { ConditionalPublicLayout } from '@/components/layout/ConditionalPublicLayout'
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -182,16 +175,8 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       </head>
-      <body className="min-h-screen bg-[#fdfbf9] text-[#1d1d1d] font-sans antialiased flex flex-col selection:bg-[#4a154b]/15 selection:text-[#4a154b]">
-        <DemoBanner />
-        <Navbar />
-        <FloodAlertBanner />
-        <main className="flex-1 w-full min-w-0">{children}</main>
-        <Footer />
-        <ChatAssistant />
-        <SOSFloatingButton />
-        <Toaster />
-        <Analytics />
+      <body>
+        <ConditionalPublicLayout>{children}</ConditionalPublicLayout>
       </body>
     </html>
   )

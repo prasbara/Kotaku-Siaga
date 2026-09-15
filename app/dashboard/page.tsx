@@ -8,6 +8,7 @@ import { RefreshCw, Menu, Droplets, CheckCircle2, ArrowRight, ShieldAlert, Phone
 import Link from 'next/link'
 import type { Report } from '@/types'
 import { AdminSidebar, type DashboardTab } from '@/components/dashboard/AdminSidebar'
+import { CommandCenterDisplayView } from '@/components/dashboard/CommandCenterDisplayView'
 import { ReportModerationView } from '@/components/dashboard/ReportModerationView'
 import { SOSEmergencyView } from '@/components/dashboard/SOSEmergencyView'
 import { IncidentClustersView } from '@/components/dashboard/IncidentClustersView'
@@ -50,6 +51,7 @@ export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [dashboardError, setDashboardError] = useState<string | null>(null)
   const [isLocalStore, setIsLocalStore] = useState(false)
+  const [lastSyncWib, setLastSyncWib] = useState<string>('')
 
   const fetchData = useCallback(async () => {
     setIsLoading(true)
@@ -61,6 +63,15 @@ export default function DashboardPage() {
         fetch('/api/reports?limit=100'),
         fetch('/api/weather'),
       ])
+
+      const nowWib = new Date().toLocaleTimeString('id-ID', {
+        timeZone: 'Asia/Jakarta',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false,
+      }) + ' WIB'
+      setLastSyncWib(nowWib)
 
       const statsData = await statsRes.json()
       const reportsData = await reportsRes.json()
@@ -123,23 +134,48 @@ export default function DashboardPage() {
 
       {/* 2. Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 bg-[#fdfbf9]">
-        {/* Mobile Header Bar */}
-        <div className="md:hidden border-b border-[#e6e6e6] bg-white px-4 py-3 flex items-center justify-between sticky top-0 z-20 shadow-subtle">
-          <button
-            type="button"
-            onClick={() => setIsMobileSidebarOpen(true)}
-            className="min-h-[44px] px-3.5 py-2 rounded-[90px] bg-[#f4ede4] text-[#4a154b] flex items-center gap-2 text-xs font-bold"
-          >
-            <Menu className="h-4 w-4" />
-            <span>Menu Kendali</span>
-          </button>
-          <span className="font-display font-bold text-sm text-[#1d1d1d]">
-            Pusat Kendali
-          </span>
-        </div>
+        {/* Internal Operator Header Bar (Clean & Professional) */}
+        <header className="border-b border-[#e6e6e6] bg-white px-4 sm:px-6 py-2.5 flex items-center justify-between sticky top-0 z-20 shadow-xs">
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setIsMobileSidebarOpen(true)}
+              className="md:hidden min-h-[38px] px-3 py-1.5 rounded-[90px] bg-[#f4ede4] text-[#4a154b] flex items-center gap-1.5 text-xs font-bold"
+            >
+              <Menu className="h-4 w-4" />
+              <span>Menu</span>
+            </button>
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-[#007a5a] animate-pulse"></span>
+              <span className="text-xs font-mono font-bold text-[#4a154b] uppercase tracking-wider hidden sm:inline">
+                PUSAT KENDALI OPERASI KOTA SEMARANG
+              </span>
+              <span className="text-xs font-mono font-bold text-[#4a154b] uppercase tracking-wider sm:hidden">
+                PUSAT KENDALI
+              </span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 text-xs">
+            {lastSyncWib && (
+              <span className="font-mono text-[11px] text-[#696969] hidden md:inline">
+                Sinkronisasi: {lastSyncWib}
+              </span>
+            )}
+            <button
+              type="button"
+              onClick={() => setActiveTab('command-center')}
+              className="min-h-[36px] px-3 py-1.5 rounded-[90px] bg-[#4a154b] hover:bg-[#3b113c] text-white font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
+            >
+              <span>🖥️ Layar Command Center</span>
+            </button>
+          </div>
+        </header>
 
         {/* Dynamic Tab Views */}
-        <div className="p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-8">
+        <div className={activeTab === 'command-center' ? 'w-full' : 'p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-8'}>
+          {activeTab === 'command-center' && <CommandCenterDisplayView />}
+
           {activeTab === 'operations' && <DisasterOperationsCenterView />}
 
           {activeTab === 'sos' && <SOSEmergencyView />}

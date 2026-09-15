@@ -9,7 +9,7 @@ import type { SafeRoutePreset } from '@/components/map/SafeRouteNavigator'
 
 interface InteractiveMapProps {
   reports: Report[]
-  sosList?: Array<{ id: string; sos_code: string; latitude: number; longitude: number; status: string; created_at: string; district_name?: string }>
+  sosList?: Array<{ id: string; sos_code: string; latitude: number; longitude: number; status: string; created_at: string; district_name?: string | null }>
   clusters?: Array<{ id: string; cluster_code: string; category: string; latitude: number; longitude: number; independent_reporter_count: number; report_count: number; radius_m: number; status: string }>
   viewMode?: 'markers' | 'heatmap' | 'both'
   onReportClick?: (report: Report) => void
