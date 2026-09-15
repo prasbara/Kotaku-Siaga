@@ -45,6 +45,8 @@ export function DisasterOperationsCenterView() {
   const [lastRefreshedWib, setLastRefreshedWib] = useState<string>('')
   const [selectedEvidenceModal, setSelectedEvidenceModal] = useState<RiskFactorItem | null>(null)
   const [adminLayers, setAdminLayers] = useState<AdminMapLayersState>(DEFAULT_ADMIN_LAYERS)
+  const [activeIncidentsCount, setActiveIncidentsCount] = useState<number>(0)
+  const [verifiedIncidentsCount, setVerifiedIncidentsCount] = useState<number>(0)
 
   const fetchAssessment = useCallback(async (slug: string) => {
     setIsLoading(true)
@@ -96,6 +98,27 @@ export function DisasterOperationsCenterView() {
           roadsToAvoid: data.summary.roadsToAvoid || [],
           whySummary: data.summary.whySummary || [],
         })
+      }
+
+      // Fetch real production active reports & verified counts
+      try {
+        const [statsRes, reportsRes] = await Promise.all([
+          fetch('/api/dashboard/stats'),
+          fetch('/api/reports?limit=100'),
+        ])
+        const statsData = await statsRes.json()
+        const reportsData = await reportsRes.json()
+        if (statsData.success && statsData.stats) {
+          setActiveIncidentsCount(statsData.stats.active || 0)
+        }
+        if (reportsData.success && Array.isArray(reportsData.data)) {
+          const verified = reportsData.data.filter(
+            (r: any) => r.status === 'verified' || r.status === 'corroborated' || r.status === 'in_progress'
+          ).length
+          setVerifiedIncidentsCount(verified)
+        }
+      } catch (countErr) {
+        console.warn('Gagal memuat statistik insiden real-time:', countErr)
       }
 
       const now = new Date()
@@ -219,10 +242,16 @@ export function DisasterOperationsCenterView() {
           <div className="p-4 rounded-xl bg-white/10 backdrop-blur-md border border-white/15">
             <span className="text-[11px] font-mono text-[#f4ede4]/80 uppercase">KEJADIAN AKTIF TERPANTAU</span>
             <div className="mt-1 flex items-center gap-2">
-              <span className="text-2xl font-bold font-mono">7</span>
-              <span className="text-xs text-[#f4ede4]/80">Insiden (Banjir & Genangan)</span>
+              <span className="text-2xl font-bold font-mono">{activeIncidentsCount}</span>
+              <span className="text-xs text-[#f4ede4]/80">
+                {activeIncidentsCount === 0 ? 'Belum Ada Kejadian Aktif' : 'Insiden (Banjir & Genangan)'}
+              </span>
             </div>
-            <p className="text-[11px] text-[#f4ede4]/70 mt-1">4 Terverifikasi CCTV / Warga</p>
+            <p className="text-[11px] text-[#f4ede4]/70 mt-1">
+              {verifiedIncidentsCount === 0
+                ? 'Belum ada kejadian terverifikasi'
+                : `${verifiedIncidentsCount} Terverifikasi CCTV / Warga`}
+            </p>
           </div>
 
           <div className="p-4 rounded-xl bg-white/10 backdrop-blur-md border border-white/15">
