@@ -138,7 +138,6 @@ export default async function LandingPage() {
                 <span className="w-3 h-3 rounded-full bg-[#cc4117]/80"></span>
                 <span className="w-3 h-3 rounded-full bg-[#d97706]/80"></span>
                 <span className="w-3 h-3 rounded-full bg-[#007a5a]/80"></span>
-                <span className="ml-2 font-mono text-[11px] text-[#696969]">kotakusiaga.semarangkota.go.id/radar</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-[#4a154b] text-white">
