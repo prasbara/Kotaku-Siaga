@@ -9,6 +9,8 @@ import {
   CheckCircle2,
   Info,
   PhoneCall,
+  ChevronDown,
+  RefreshCw,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { SEMARANG_KECAMATAN } from '@/lib/ingestion/semarang-admin'
@@ -144,11 +146,11 @@ export function PublicDisasterRiskWidget({
         {/* District Selector */}
         <div className="flex items-center gap-2">
           <MapPin className="w-4 h-4 text-[#4a154b]" />
-          <div className="relative">
+          <div className="relative flex items-center">
             <select
               value={selectedSlug}
               onChange={(e) => setSelectedSlug(e.target.value)}
-              className="min-h-[40px] px-3 py-1.5 pr-8 rounded-xl bg-[#f9f8f6] border border-[#dcdcdc] font-bold text-xs text-[#1d1d1d] focus:outline-none focus:ring-2 focus:ring-[#4a154b] cursor-pointer"
+              className="appearance-none min-h-[40px] px-3.5 py-2 pr-9 rounded-xl bg-[#f9f8f6] hover:bg-white border border-[#dcdcdc] focus:border-[#4a154b] font-bold text-xs text-[#1d1d1d] focus:outline-none focus:ring-2 focus:ring-[#4a154b]/20 transition-all cursor-pointer shadow-2xs"
             >
               {SEMARANG_KECAMATAN.map((k) => (
                 <option key={k.id} value={k.slug}>
@@ -156,9 +158,13 @@ export function PublicDisasterRiskWidget({
                 </option>
               ))}
             </select>
-            {isLoading && (
-              <span className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 border-2 border-[#4a154b] border-t-transparent rounded-full animate-spin pointer-events-none" />
-            )}
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none flex items-center justify-center">
+              {isLoading ? (
+                <span className="w-3.5 h-3.5 border-2 border-[#4a154b] border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <ChevronDown className="w-4 h-4 text-[#696969]" />
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -173,9 +179,11 @@ export function PublicDisasterRiskWidget({
           <button
             type="button"
             onClick={() => fetchSummary(selectedSlug)}
-            className="px-3 py-1 bg-white text-[#cc4117] font-bold rounded-lg border border-[#fecaca] hover:bg-[#fee2e2] transition-colors shrink-0 cursor-pointer"
+            disabled={isLoading}
+            className="px-3.5 py-1.5 bg-white text-[#cc4117] font-bold rounded-lg border border-[#fecaca] hover:bg-[#fee2e2] transition-colors shrink-0 cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
           >
-            Coba Lagi
+            <RefreshCw className={cn('w-3.5 h-3.5', isLoading && 'animate-spin')} />
+            <span>{isLoading ? 'Memuat...' : 'Coba Lagi'}</span>
           </button>
         </div>
       )}
