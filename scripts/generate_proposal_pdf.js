@@ -323,7 +323,7 @@ const htmlContent = `<!DOCTYPE html>
 
     <div class="cover-footer">
       <p>Disusun Oleh:</p>
-      <p class="author">TIM PENTOL KABUL ALFAMART WIDURI</p>
+      <p class="author">TIM PRASBARA</p>
       <p>Kategori: <strong>Web Development</strong></p>
       <p>Kompetisi Nasional <strong>INFINITERA 2.0</strong></p>
       <p>Tahun 2026</p>
