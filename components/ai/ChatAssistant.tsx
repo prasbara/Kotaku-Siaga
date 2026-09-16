@@ -371,17 +371,17 @@ export function ChatAssistant() {
         </div>
       )}
 
-      {/* Floating Trigger Pill — Stacked cleanly above bottom nav / SOS */}
+      {/* Floating Trigger Pill — Stacked cleanly above SOS button */}
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom,0px))] sm:bottom-20 right-4 sm:right-6 z-40 min-h-[42px] sm:min-h-[46px] px-3.5 sm:px-4.5 py-2 sm:py-2.5 rounded-full bg-[#4a154b] text-white text-[11px] sm:text-xs font-bold tracking-wide uppercase hover:bg-[#611f69] active:scale-95 transition-all shadow-lg hover:shadow-xl flex items-center gap-2 group cursor-pointer border border-white/20 select-none"
+        className="fixed bottom-[calc(4.25rem+env(safe-area-inset-bottom,0px))] sm:bottom-[4.5rem] right-3 sm:right-6 z-40 min-h-[38px] sm:min-h-[42px] px-3.5 sm:px-4 py-2 rounded-full bg-[#4a154b] text-white text-[11px] sm:text-xs font-bold tracking-wide uppercase hover:bg-[#3d123e] active:scale-95 transition-all shadow-[0_4px_16px_rgba(74,21,75,0.28)] hover:shadow-[0_6px_20px_rgba(74,21,75,0.38)] flex items-center gap-2 group cursor-pointer border border-white/20 select-none"
         aria-label="Toggle Civic AI Copilot"
         title="Buka Asisten Kecerdasan Buatan Civic AI Copilot"
       >
         <div className="relative">
           <Bot className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white shrink-0" />
-          <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-[#007a5a] ring-2 ring-[#4a154b] animate-pulse"></span>
+          <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-[#007a5a] ring-2 ring-[#4a154b] animate-pulse" />
         </div>
         <span className="whitespace-nowrap">{isOpen ? 'Tutup Copilot' : 'Civic AI Copilot'}</span>
       </button>

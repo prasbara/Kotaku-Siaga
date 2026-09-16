@@ -3,20 +3,41 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
-import { ShieldAlert, Menu, X, PhoneCall, ShieldCheck, Radio, Megaphone } from 'lucide-react'
+import {
+  ShieldAlert,
+  Menu,
+  X,
+  PhoneCall,
+  ShieldCheck,
+  Radio,
+  Megaphone,
+  MapPin,
+  Clock,
+  Compass,
+  FileText,
+  Activity,
+  Database,
+  BookOpen,
+  LayoutDashboard,
+} from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { SOSModal } from '@/components/sos/SOSModal'
 import { EmergencyLiteModeToggle } from '@/components/layout/EmergencyLiteModeToggle'
 
-const navItems = [
-  { label: 'Beranda', href: '/' },
-  { label: 'Peta Pemantauan', href: '/peta', badgeDot: true },
-  { label: 'Laporan Warga', href: '/laporan' },
-  { label: 'Lapor Genangan', href: '/laporan/baru', isHighlight: true },
-  { label: 'Matriks Risiko', href: '/priorities' },
-  { label: 'Integritas Data', href: '/data' },
-  { label: 'Edukasi Bencana', href: '/edukasi' },
-  { label: 'Pusat Kendali', href: '/dashboard' },
+interface NavLinkItem {
+  label: string
+  href: string
+  badgeDot?: boolean
+  icon?: React.ComponentType<{ className?: string }>
+}
+
+const mainNavLinks: NavLinkItem[] = [
+  { label: 'Beranda', href: '/', icon: Compass },
+  { label: 'Peta Pemantauan', href: '/peta', badgeDot: true, icon: MapPin },
+  { label: 'Laporan Warga', href: '/laporan', icon: FileText },
+  { label: 'Matriks Risiko', href: '/priorities', icon: Activity },
+  { label: 'Integritas Data', href: '/data', icon: Database },
+  { label: 'Edukasi Bencana', href: '/edukasi', icon: BookOpen },
 ]
 
 export function Navbar() {
@@ -42,175 +63,250 @@ export function Navbar() {
     return () => clearInterval(timer)
   }, [])
 
-  // Auto-close mobile drawer when pathname changes
+  // Auto-close mobile drawer when route changes
   useEffect(() => {
     setMobileOpen(false)
   }, [pathname])
 
+  const isLinkActive = (href: string) => {
+    if (href === '/') return pathname === '/'
+    return pathname === href || pathname.startsWith(href + '/')
+  }
+
   return (
     <>
-    <header className="sticky top-0 w-full z-50 bg-white/95 backdrop-blur-md border-b border-[#e6e6e6] shadow-subtle transition-all">
-      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-4">
-        {/* Brand Logo & Editorial Title */}
-        <div className="flex items-center gap-3">
-          <Link
-            href="/"
-            className="flex items-center gap-3 group focus:outline-none focus:ring-2 focus:ring-[#4a154b] rounded-xl p-1"
+      <header className="sticky top-0 w-full z-50 bg-white/95 backdrop-blur-md border-b border-[#e6e6e6] shadow-[0_2px_12px_rgba(0,0,0,0.04)] transition-all">
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-18 flex items-center justify-between gap-3 lg:gap-4">
+          
+          {/* Brand Logo & Editorial Title */}
+          <div className="flex items-center gap-3 shrink-0">
+            <Link
+              href="/"
+              className="flex items-center gap-2.5 sm:gap-3 group focus:outline-none focus:ring-2 focus:ring-[#4a154b] rounded-xl p-0.5"
+              aria-label="Kembali ke Beranda KotaKu Siaga"
+            >
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-[#4a154b] flex items-center justify-center text-white shadow-sm group-hover:bg-[#3d123e] transition-colors shrink-0">
+                <ShieldAlert className="w-5 h-5 text-[#f4ede4]" />
+              </div>
+              <div className="flex flex-col">
+                <div className="flex items-center gap-1.5">
+                  <span className="font-display font-bold text-base sm:text-lg text-[#1d1d1d] tracking-tight leading-none group-hover:text-[#4a154b] transition-colors">
+                    KotaKu Siaga
+                  </span>
+                  <span className="hidden xl:inline-block px-1.5 py-0.5 rounded text-[9px] font-mono font-bold uppercase tracking-wider bg-[#f4ede4] text-[#4a154b]">
+                    Semarang
+                  </span>
+                </div>
+                <span className="text-[10px] text-[#696969] tracking-tight hidden md:inline truncate font-medium mt-0.5">
+                  Pemantauan Risiko Banjir &amp; Rob Terpadu
+                </span>
+              </div>
+            </Link>
+          </div>
+
+          {/* Desktop Nav Links (Clean, Uncluttered 6-Item Public Navigation) */}
+          <nav
+            aria-label="Navigasi Utama"
+            className="hidden lg:flex items-center gap-1 xl:gap-1.5"
           >
-            <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-[12px] bg-[#4a154b] flex items-center justify-center text-white shadow-subtle group-hover:bg-[#481a54] transition-colors shrink-0">
-              <ShieldAlert className="w-5 h-5 sm:w-6 sm:h-6 text-[#f4ede4]" />
-            </div>
-            <div className="flex flex-col">
-              <span className="font-display font-bold text-lg sm:text-xl text-[#1d1d1d] tracking-tight leading-none group-hover:text-[#4a154b] transition-colors">
-                KotaKu Siaga
-              </span>
-              <span className="text-[10px] sm:text-[11px] text-[#696969] tracking-normal hidden md:inline truncate font-medium">
-                Pemantauan Risiko Banjir &amp; Rob Kota Semarang
-              </span>
-            </div>
-          </Link>
-        </div>
-
-        {/* Desktop Nav Links */}
-        <nav className="hidden xl:flex items-center gap-1.5">
-          {navItems.map((item) => {
-            const isActive =
-              item.href === '/'
-                ? pathname === '/'
-                : pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href))
-
-            if (item.isHighlight) {
+            {mainNavLinks.map((item) => {
+              const active = isLinkActive(item.href)
               return (
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="min-h-[42px] px-5 py-2 rounded-[90px] bg-[#4a154b] text-white hover:bg-[#481a54] active:bg-[#611f69] font-bold text-xs shadow-sm flex items-center gap-1.5 transition-all ml-1.5 mr-1 active:scale-[0.98]"
+                  className={cn(
+                    'min-h-[36px] px-3 xl:px-3.5 py-1.5 text-xs font-semibold rounded-full transition-all duration-150 flex items-center gap-1.5 select-none',
+                    active
+                      ? 'bg-[#f4ede4] text-[#4a154b] font-bold shadow-2xs'
+                      : 'text-[#1d1d1d]/90 hover:text-[#4a154b] hover:bg-[#f9f0ff]'
+                  )}
                 >
-                  <Megaphone className="w-4 h-4 shrink-0" />
-                  {item.label}
+                  <span>{item.label}</span>
+                  {item.badgeDot && (
+                    <span
+                      className="w-2 h-2 rounded-full bg-[#007a5a] animate-pulse shrink-0"
+                      title="Data Langsung"
+                      aria-label="Status data langsung aktif"
+                    />
+                  )}
                 </Link>
               )
-            }
+            })}
+          </nav>
 
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  'min-h-[40px] px-3.5 py-2 text-xs font-semibold rounded-[90px] transition-colors flex items-center gap-1.5',
-                  isActive
-                    ? 'bg-[#f4ede4] text-[#4a154b] font-bold shadow-subtle'
-                    : 'text-[#1d1d1d] hover:text-[#4a154b] hover:bg-[#f9f0ff]'
-                )}
-              >
-                {item.label}
-                {item.badgeDot && (
-                  <span className="w-2 h-2 rounded-full bg-[#007a5a] animate-pulse"></span>
-                )}
-              </Link>
-            )
-          })}
-        </nav>
+          {/* Header Right Action & Utility Cluster */}
+          <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+            {/* Citizen Action: Lapor Genangan */}
+            <Link
+              href="/laporan/baru"
+              className="hidden sm:inline-flex min-h-[38px] px-3.5 sm:px-4 py-2 rounded-full bg-[#4a154b] text-white hover:bg-[#3d123e] active:scale-[0.98] font-bold text-xs shadow-xs items-center gap-1.5 transition-all"
+              title="Kirim Laporan Genangan Banjir Baru"
+            >
+              <Megaphone className="w-3.5 h-3.5 shrink-0" />
+              <span>Lapor Genangan</span>
+            </Link>
 
-        {/* Header Right Actions */}
-        <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
-          {/* Emergency Lite Mode Switch */}
-          <EmergencyLiteModeToggle />
+            {/* Emergency Lite Mode Toggle */}
+            <EmergencyLiteModeToggle />
 
-          {/* EOC Clock */}
-          <div className="hidden 2xl:flex flex-col text-right pr-2">
-            <span className="text-[9px] font-mono text-[#696969] uppercase font-bold tracking-wider">WAKTU SISTEM</span>
-            <span className="text-xs font-mono text-[#1d1d1d] font-semibold">{currentTime || 'WIB'}</span>
-          </div>
+            {/* Emergency SOS Button */}
+            <button
+              type="button"
+              onClick={() => setIsSosOpen(true)}
+              className="min-h-[38px] px-2.5 sm:px-3.5 py-2 rounded-full bg-[#cc4117] text-white hover:bg-[#b03713] active:scale-[0.98] text-xs font-extrabold tracking-wide flex items-center gap-1.5 shadow-xs transition-all cursor-pointer"
+              title="Kirim Sinyal SOS Darurat 1-Klik"
+              aria-label="Kirim Sinyal SOS Darurat 1-Klik"
+            >
+              <Radio className="w-3.5 h-3.5 animate-pulse" />
+              <span className="uppercase">SOS</span>
+            </button>
 
-          {/* SOS Emergency Button */}
-          <button
-            type="button"
-            onClick={() => setIsSosOpen(true)}
-            className="min-h-[40px] sm:min-h-[48px] px-2.5 sm:px-4 py-1.5 sm:py-2.5 rounded-[90px] bg-[#b91c1c] text-white hover:bg-[#991b1b] active:bg-[#7f1d1d] text-[11px] sm:text-xs font-bold tracking-wide flex items-center gap-1.5 sm:gap-2 shadow-sm transition-all active:scale-[0.98] animate-pulse cursor-pointer"
-            title="Kirim Sinyal SOS Darurat 1-Klik"
-            aria-label="Kirim Sinyal SOS Darurat 1-Klik"
-          >
-            <Radio className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-            <span className="font-extrabold uppercase">SOS</span>
-          </button>
-
-          {/* Emergency 112 Dispatch Button */}
-          <a
-            href="tel:112"
-            className="hidden sm:inline-flex min-h-[48px] px-4 py-2.5 rounded-[90px] bg-[#f4ede4] hover:bg-[#e8ded2] text-[#1d1d1d] text-xs font-bold tracking-wide items-center gap-2 shadow-sm transition-all active:scale-[0.98]"
-            title="Hubungi Panggilan Darurat BPBD 112"
-            aria-label="Hubungi Panggilan Darurat BPBD 112"
-          >
-            <PhoneCall className="w-4 h-4 text-[#cc4117]" />
-            <span>112</span>
-          </a>
-
-          {/* Operator / Profile Icon */}
-          <Link
-            href="/dashboard"
-            className="w-9 h-9 sm:w-12 sm:h-12 shrink-0 rounded-[90px] bg-[#f9f0ff] border border-[#eddcf7] flex items-center justify-center text-[#4a154b] hover:bg-[#4a154b] hover:text-white transition-all shadow-subtle"
-            title="Masuk ke Pusat Kendali"
-            aria-label="Masuk ke Pusat Kendali Operator"
-          >
-            <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5" />
-          </Link>
-
-          {/* Mobile Menu Button */}
-          <button
-            onClick={() => setMobileOpen(!mobileOpen)}
-            className="xl:hidden w-9 h-9 sm:w-12 sm:h-12 flex items-center justify-center rounded-[90px] bg-[#f4ede4] text-[#1d1d1d] hover:bg-[#f9f0ff] focus:outline-none cursor-pointer"
-            aria-label={mobileOpen ? 'Tutup menu navigasi' : 'Buka menu navigasi'}
-            aria-expanded={mobileOpen}
-          >
-            {mobileOpen ? <X className="h-4 w-4 sm:h-5 sm:w-5 text-[#4a154b]" /> : <Menu className="h-4 w-4 sm:h-5 sm:w-5" />}
-          </button>
-        </div>
-      </div>
-
-      {/* Mobile Drawer Navigation */}
-      {mobileOpen && (
-        <div className="xl:hidden border-t border-[#e6e6e6] bg-white px-4 py-4 max-h-[calc(100dvh-4.5rem)] overflow-y-auto pb-[max(1.5rem,env(safe-area-inset-bottom))] flex flex-col gap-2 shadow-card animate-in slide-in-from-top-2 duration-150">
-          {navItems.map((item) => {
-            const isActive =
-              item.href === '/'
-                ? pathname === '/'
-                : pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href))
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => setMobileOpen(false)}
-                className={cn(
-                  'min-h-[48px] px-4 py-3 rounded-[90px] text-sm font-semibold transition-colors flex items-center justify-between',
-                  isActive
-                    ? 'bg-[#4a154b] text-white font-bold'
-                    : item.isHighlight
-                    ? 'bg-[#f9f0ff] text-[#4a154b] border border-[#eddcf7]'
-                    : 'text-[#1d1d1d] hover:bg-[#f4ede4]'
-                )}
-              >
-                <span>{item.label}</span>
-                {item.badgeDot && (
-                  <span className="w-2 h-2 rounded-full bg-[#007a5a] animate-pulse"></span>
-                )}
-              </Link>
-            )
-          })}
-          <div className="pt-3 mt-1 border-t border-[#e6e6e6] flex items-center justify-between">
-            <span className="text-xs font-mono text-[#696969]">Waktu Operasional: {currentTime}</span>
+            {/* BPBD 112 Dispatch Hotline */}
             <a
               href="tel:112"
-              className="min-h-[48px] px-5 py-2.5 rounded-[90px] bg-[#cc4117] text-white font-bold text-xs flex items-center gap-1.5"
+              className="hidden md:inline-flex min-h-[38px] px-3 py-2 rounded-full bg-[#f4ede4] hover:bg-[#e8ded2] text-[#1d1d1d] text-xs font-bold items-center gap-1.5 shadow-2xs transition-all"
+              title="Hubungi Panggilan Darurat BPBD 112 Bebas Pulsa"
+              aria-label="Panggilan Darurat BPBD 112 Bebas Pulsa"
             >
-              <PhoneCall className="w-3.5 h-3.5" />
-              112 DARURAT
+              <PhoneCall className="w-3.5 h-3.5 text-[#cc4117]" />
+              <span>112</span>
             </a>
+
+            {/* Operational Dashboard Link */}
+            <Link
+              href="/dashboard"
+              className="w-9 h-9 sm:w-9.5 sm:h-9.5 shrink-0 rounded-full bg-[#f9f0ff] border border-[#eddcf7] flex items-center justify-center text-[#4a154b] hover:bg-[#4a154b] hover:text-white transition-all shadow-2xs"
+              title="Akses Pusat Kendali Operasi"
+              aria-label="Akses Pusat Kendali Operasi"
+            >
+              <LayoutDashboard className="w-4 h-4" />
+            </Link>
+
+            {/* Mobile Hamburger Toggle */}
+            <button
+              type="button"
+              onClick={() => setMobileOpen(!mobileOpen)}
+              className="lg:hidden w-9 h-9 flex items-center justify-center rounded-full bg-[#f4ede4] text-[#1d1d1d] hover:bg-[#f9f0ff] focus:outline-none cursor-pointer transition-colors"
+              aria-label={mobileOpen ? 'Tutup menu navigasi' : 'Buka menu navigasi'}
+              aria-expanded={mobileOpen}
+            >
+              {mobileOpen ? <X className="h-4.5 w-4.5 text-[#4a154b]" /> : <Menu className="h-4.5 w-4.5" />}
+            </button>
           </div>
         </div>
-      )}
-    </header>
-    <SOSModal isOpen={isSosOpen} onClose={() => setIsSosOpen(false)} />
+
+        {/* Mobile Categorized Drawer Navigation */}
+        {mobileOpen && (
+          <div className="lg:hidden border-t border-[#e6e6e6] bg-white px-4 py-5 max-h-[calc(100dvh-4.25rem)] overflow-y-auto pb-[max(2rem,env(safe-area-inset-bottom))] flex flex-col gap-4 shadow-xl animate-in slide-in-from-top-2 duration-150">
+            
+            {/* Quick Urgent Actions */}
+            <div className="grid grid-cols-2 gap-2">
+              <Link
+                href="/laporan/baru"
+                onClick={() => setMobileOpen(false)}
+                className="min-h-[44px] px-3.5 py-2.5 rounded-xl bg-[#4a154b] text-white font-bold text-xs flex items-center justify-center gap-2 shadow-xs"
+              >
+                <Megaphone className="w-4 h-4" />
+                <span>Lapor Genangan</span>
+              </Link>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileOpen(false)
+                  setIsSosOpen(true)
+                }}
+                className="min-h-[44px] px-3.5 py-2.5 rounded-xl bg-[#cc4117] text-white font-extrabold text-xs flex items-center justify-center gap-2 shadow-xs"
+              >
+                <Radio className="w-4 h-4 animate-pulse" />
+                <span>SOS DARURAT</span>
+              </button>
+            </div>
+
+            {/* Public Navigation List */}
+            <div className="space-y-1">
+              <span className="text-[10px] font-mono uppercase font-bold text-[#696969] px-2 tracking-wider">
+                Navigasi Publik
+              </span>
+              <div className="flex flex-col gap-1 pt-1">
+                {mainNavLinks.map((item) => {
+                  const active = isLinkActive(item.href)
+                  const Icon = item.icon || Compass
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={() => setMobileOpen(false)}
+                      className={cn(
+                        'min-h-[44px] px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-colors flex items-center justify-between',
+                        active
+                          ? 'bg-[#4a154b] text-white font-bold'
+                          : 'text-[#1d1d1d] hover:bg-[#f4ede4]'
+                      )}
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <Icon className={cn('w-4 h-4', active ? 'text-white' : 'text-[#4a154b]')} />
+                        <span>{item.label}</span>
+                      </div>
+                      {item.badgeDot && (
+                        <span className="w-2 h-2 rounded-full bg-[#007a5a] animate-pulse" />
+                      )}
+                    </Link>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* Responders & Operational Center */}
+            <div className="space-y-1 pt-2 border-t border-[#e6e6e6]">
+              <span className="text-[10px] font-mono uppercase font-bold text-[#696969] px-2 tracking-wider">
+                Pusat Kendali &amp; Kedaruratan
+              </span>
+              <div className="flex flex-col gap-1 pt-1">
+                <Link
+                  href="/dashboard"
+                  onClick={() => setMobileOpen(false)}
+                  className="min-h-[42px] px-3.5 py-2.5 rounded-xl bg-[#f9f0ff] border border-[#eddcf7] text-[#4a154b] font-bold text-xs flex items-center justify-between"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <LayoutDashboard className="w-4 h-4 text-[#4a154b]" />
+                    <span>Pusat Kendali Operasi</span>
+                  </div>
+                  <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-[#4a154b] text-white">
+                    Operator
+                  </span>
+                </Link>
+
+                <a
+                  href="tel:112"
+                  className="min-h-[42px] px-3.5 py-2.5 rounded-xl bg-[#f4ede4] text-[#1d1d1d] font-bold text-xs flex items-center justify-between"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <PhoneCall className="w-4 h-4 text-[#cc4117]" />
+                    <span>Hotline Darurat BPBD Semarang</span>
+                  </div>
+                  <span className="font-mono font-bold text-[#cc4117]">112</span>
+                </a>
+              </div>
+            </div>
+
+            {/* System Status & Time */}
+            <div className="pt-2 border-t border-[#e6e6e6] flex items-center justify-between text-xs text-[#696969] px-1">
+              <div className="flex items-center gap-1.5">
+                <Clock className="w-3.5 h-3.5 text-[#4a154b]" />
+                <span className="font-mono text-[11px]">{currentTime || 'WIB'}</span>
+              </div>
+              <span className="text-[10px] font-medium text-[#007a5a] bg-[#ebf7f3] px-2 py-0.5 rounded-full">
+                Sistem Aktif &amp; Terbuka
+              </span>
+            </div>
+          </div>
+        )}
+      </header>
+
+      {/* Emergency SOS Modal Container */}
+      <SOSModal isOpen={isSosOpen} onClose={() => setIsSosOpen(false)} />
     </>
   )
 }
