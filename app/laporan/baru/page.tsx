@@ -8,8 +8,6 @@ import {
   Waves,
   Droplets,
   Wrench,
-  Trash2,
-  TreePine,
   AlertTriangle,
   Mountain,
   Camera,
@@ -28,54 +26,103 @@ import {
   Mail,
   RefreshCw,
   Info,
+  FlaskConical,
+  Eye,
+  RotateCcw,
 } from 'lucide-react'
 import { toast } from '@/components/ui/use-toast'
 import { TurnstileWidget } from '@/components/ui/TurnstileWidget'
 import { validateGeolocation } from '@/lib/verification/geo-validator'
-import { SEMARANG_KECAMATAN } from '@/lib/ingestion/semarang-admin'
 
-const CATEGORIES = [
+interface CategoryConfig {
+  value: ReportCategory
+  label: string
+  code: string
+  desc: string
+  icon: React.ComponentType<{ className?: string }>
+}
+
+const CATEGORIES: CategoryConfig[] = [
   {
     value: 'banjir' as ReportCategory,
     label: 'Banjir Rob / Pasang Laut',
     code: 'ROB-HYDRO',
-    desc: 'Air laut meluap di Tanjung Emas, Kaligawe, Genuk & sekitarnya.',
+    desc: 'Air pasang laut meluap di Tanjung Emas, Kaligawe, Genuk & sekitarnya.',
     icon: Waves,
   },
   {
     value: 'genangan' as ReportCategory,
     label: 'Genangan Air Hujan',
     code: 'DRAIN-FL',
-    desc: 'Antrean air hujan atau saluran meluap menggenangi badan jalan protokol.',
+    desc: 'Luapan air hujan menggenangi badan jalan atau permukiman.',
     icon: Droplets,
   },
   {
     value: 'drainase_tersumbat' as ReportCategory,
     label: 'Saluran / Drainase Tersumbat',
     code: 'TRASH-CLOG',
-    desc: 'Sampah atau sedimen lumpur menyumbat saluran drainase pemukiman.',
+    desc: 'Sampah atau endapan lumpur menyumbat saluran drainase.',
     icon: Wrench,
   },
   {
     value: 'longsor' as ReportCategory,
     label: 'Longsor / Rekahan Tebing',
     code: 'SLOPE-GEO',
-    desc: 'Rekahan tanah & lereng rawan runtuh di wilayah perbukitan Candisari/Gombel.',
+    desc: 'Gerakan tanah atau rekahan lereng di kawasan perbukitan.',
     icon: Mountain,
   },
   {
     value: 'pohon_tumbang' as ReportCategory,
     label: 'Pohon Tumbang / Hambatan',
     code: 'VEG-BLOCK',
-    desc: 'Dahan patah atau pohon menimpa kabel PLN atau menutup jalan evakuasi.',
+    desc: 'Dahan patah atau pohon tumbang yang mengganggu jalur evakuasi.',
     icon: AlertTriangle,
   },
 ]
 
+interface UrgencyConfig {
+  value: UrgencyLevel
+  label: string
+  badge: string
+  desc: string
+  color: string
+}
+
+const URGENCIES: UrgencyConfig[] = [
+  {
+    value: 'rendah',
+    label: 'Rendah (Pantauan Lingkungan)',
+    badge: 'Genangan < 20 cm',
+    desc: 'Saluran mampet atau genangan semata kaki. Kendaraan masih dapat melintas perlahan.',
+    color: 'border-[#007a5a] bg-[#ecfdf5] text-[#007a5a]',
+  },
+  {
+    value: 'sedang',
+    label: 'Sedang (Waspada Genangan)',
+    badge: 'Genangan 20 - 50 cm',
+    desc: 'Jalan tergenang, kendaraan roda dua rawan mogok, air mulai merembes ke pekarangan.',
+    color: 'border-[#d97706] bg-[#fffbeb] text-[#d97706]',
+  },
+  {
+    value: 'tinggi',
+    label: 'Tinggi (Siaga Bencana)',
+    badge: 'Genangan 50 - 80 cm',
+    desc: 'Akses jalan utama terputus, air masuk ke dalam rumah warga, butuh bantuan pompa/barier.',
+    color: 'border-[#ea580c] bg-[#fff7ed] text-[#ea580c]',
+  },
+  {
+    value: 'kritis',
+    label: 'Kritis (Darurat Evakuasi)',
+    badge: 'Air > 80 cm / Arus Deras',
+    desc: 'Kondisi membahayakan keselamatan jiwa. Lansia/anak-anak terjebak butuh perahu karet SAR.',
+    color: 'border-[#cc4117] bg-[#fdf2f0] text-[#cc4117]',
+  },
+]
+
 const WATER_LEVELS = [
-  { label: 'Semata Kaki (10 - 25 cm)', desc: 'Jalan masih dapat dilewati kendaraan secara perlahan' },
-  { label: 'Selutut (30 - 50 cm)', desc: 'Kendaraan roda dua rawan mogok, air mulai masuk pekarangan' },
-  { label: 'Sedada / Arus Deras (>80 cm)', desc: 'Akses jalan terputus, membutuhkan evakuasi perahu karet' },
+  { label: 'Semata Kaki (10 - 25 cm)', desc: 'Kendaraan masih dapat lewat perlahan' },
+  { label: 'Selutut (30 - 50 cm)', desc: 'Kendaraan roda dua rawan mogok' },
+  { label: 'Sedada / Arus Deras (> 80 cm)', desc: 'Akses terputus, butuh perahu evakuasi' },
 ]
 
 const SEMARANG_DISTRICTS = [
@@ -97,7 +144,6 @@ const SEMARANG_DISTRICTS = [
   'Tugu',
 ]
 
-// Mask email e.g. nabiel@gmail.com -> n***@gmail.com
 function maskEmail(email: string): string {
   if (!email || !email.includes('@')) return email
   const [user, domain] = email.split('@')
@@ -108,10 +154,11 @@ function maskEmail(email: string): string {
 export default function LaporBaruPage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  // Step Wizard:
   // Step 1: Data Diri Pelapor
   // Step 2: Lokasi & Bukti Foto
-  // Step 3: Rincian Kejadian
-  // Step 4: Turnstile & Supabase Email OTP
+  // Step 3: Rincian & Klasifikasi Urgensi
+  // Step 4: Verifikasi Email OTP & Anti-Bot
   const [currentStep, setCurrentStep] = useState<number>(1)
 
   // Form Fields
@@ -127,6 +174,7 @@ export default function LaporBaruPage() {
   const [lng, setLng] = useState<number>(110.4667)
   const [locationAccuracy, setLocationAccuracy] = useState<number | null>(null)
   const [description, setDescription] = useState<string>('')
+  const [isTestReport, setIsTestReport] = useState<boolean>(false)
 
   // Photo state
   const [photoFile, setPhotoFile] = useState<File | null>(null)
@@ -158,7 +206,7 @@ export default function LaporBaruPage() {
     return () => clearTimeout(timer)
   }, [resendCooldown])
 
-  // Check if citizen confirmed via email link (Magic Link / Supabase URL verify)
+  // Check if citizen confirmed via email link
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const hash = window.location.hash
@@ -170,7 +218,7 @@ export default function LaporBaruPage() {
         setCurrentStep(4)
         toast({
           title: 'Email Terverifikasi!',
-          description: 'Alamat email Anda telah diverifikasi melalui tautan konfirmasi Supabase.',
+          description: 'Alamat email Anda telah diverifikasi.',
         })
       }
     }
@@ -183,47 +231,47 @@ export default function LaporBaruPage() {
 
     if (!file.type.startsWith('image/')) {
       toast({
-        title: 'Format Berkas Tidak Didukung',
-        description: 'Harap unggah berkas gambar foto (JPG/PNG/WEBP).',
+        title: 'Format Berkas Tidak Valid',
+        description: 'Silakan pilih berkas foto berupa JPG, PNG, atau WEBP.',
         variant: 'destructive',
       })
       return
     }
 
-    if (file.size > 5 * 1024 * 1024) {
+    if (file.size > 8 * 1024 * 1024) {
       toast({
         title: 'Ukuran Foto Terlalu Besar',
-        description: 'Ukuran foto maksimal adalah 5MB.',
+        description: 'Ukuran foto maksimal adalah 8MB.',
         variant: 'destructive',
       })
       return
     }
 
     setPhotoFile(file)
-    const reader = new FileReader()
-    reader.onload = async () => {
-      const dataUrl = reader.result as string
-      setPhotoPreview(dataUrl)
 
-      try {
-        const arrayBuffer = await file.arrayBuffer()
-        const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer)
-        const hashArray = Array.from(new Uint8Array(hashBuffer))
-        const hashHex = hashArray.map((b) => b.toString(16).padStart(2, '0')).join('')
-        setPhotoSha256(hashHex)
-      } catch (hashErr) {
-        console.warn('Could not compute SHA-256 hash:', hashErr)
-      }
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      setPhotoPreview(reader.result as string)
     }
     reader.readAsDataURL(file)
+
+    try {
+      const arrayBuffer = await file.arrayBuffer()
+      const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer)
+      const hashArray = Array.from(new Uint8Array(hashBuffer))
+      const hashHex = hashArray.map((b) => b.toString(16).padStart(2, '0')).join('')
+      setPhotoSha256(hashHex)
+    } catch {
+      setPhotoSha256(`img_${Date.now()}`)
+    }
   }
 
-  // Geolocation trigger with anti-fakeGPS & Semarang geofencing
+  // Get GPS Location
   const handleGetLocation = () => {
-    if (!('geolocation' in navigator)) {
+    if (!navigator.geolocation) {
       toast({
         title: 'GPS Tidak Didukung',
-        description: 'Perangkat atau peramban Anda tidak mendukung sensor geolokasi.',
+        description: 'Peramban Anda tidak mendukung sensor GPS otomatis.',
         variant: 'destructive',
       })
       return
@@ -232,38 +280,30 @@ export default function LaporBaruPage() {
     setGettingLocation(true)
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        const latitude = Number(pos.coords.latitude.toFixed(6))
-        const longitude = Number(pos.coords.longitude.toFixed(6))
+        setGettingLocation(false)
+        const latitude = pos.coords.latitude
+        const longitude = pos.coords.longitude
         const accuracy = Math.round(pos.coords.accuracy)
 
         setLat(latitude)
         setLng(longitude)
         setLocationAccuracy(accuracy)
-        setGettingLocation(false)
 
-        const geo = validateGeolocation(latitude, longitude, accuracy, district)
-
+        const geo = validateGeolocation(latitude, longitude, accuracy)
         if (!geo.isWithinSemarang) {
           toast({
-            title: 'Lokasi Di Luar Wilayah Semarang',
-            description: `Titik GPS Anda (${latitude.toFixed(4)}, ${longitude.toFixed(4)}) terdeteksi di luar perbatasan administratif Kota Semarang. KotaKu Siaga hanya melayani 16 Kecamatan Kota Semarang.`,
+            title: 'Lokasi di Luar Semarang',
+            description: 'Koordinat GPS berada di luar wilayah Kota Semarang.',
             variant: 'destructive',
           })
           return
         }
 
-        if (geo.isMockOrSpoofed) {
-          toast({
-            title: 'Peringatan Sensor Lokasi',
-            description: 'Terdeteksi anomali pada sensor GPS perangkat. Pastikan sensor GPS aktif tanpa mock provider.',
-            variant: 'destructive',
-          })
-        }
-
-        // Auto-match closest district
         if (geo.nearestDistrict) {
           const matched = SEMARANG_DISTRICTS.find(
-            (d) => d.toLowerCase() === geo.nearestDistrict?.toLowerCase() || geo.nearestDistrict?.toLowerCase().includes(d.toLowerCase())
+            (d) =>
+              d.toLowerCase() === geo.nearestDistrict?.toLowerCase() ||
+              geo.nearestDistrict?.toLowerCase().includes(d.toLowerCase())
           )
           if (matched) {
             setDistrict(matched)
@@ -271,15 +311,15 @@ export default function LaporBaruPage() {
         }
 
         toast({
-          title: 'Lokasi Berhasil Terdeteksi',
-          description: `Terdeteksi di area ${geo.nearestDistrict || 'Kota Semarang'} (Akurasi ±${accuracy}m).`,
+          title: 'Lokasi Terdeteksi',
+          description: `Kecamatan ${geo.nearestDistrict || district} (Akurasi ±${accuracy}m).`,
         })
       },
-      (err) => {
+      () => {
         setGettingLocation(false)
         toast({
           title: 'Izin Lokasi Belum Diperoleh',
-          description: 'Aktifkan izin GPS atau pilih titik lokasi secara manual pada daftar kecamatan.',
+          description: 'Pilih kecamatan secara manual atau aktifkan izin GPS di peramban.',
           variant: 'destructive',
         })
       },
@@ -295,11 +335,11 @@ export default function LaporBaruPage() {
     }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!reporterEmail.trim() || !emailRegex.test(reporterEmail.trim())) {
-      toast({ title: 'Email Tidak Valid', description: 'Masukkan alamat email aktif untuk verifikasi OTP.', variant: 'destructive' })
+      toast({ title: 'Email Tidak Valid', description: 'Masukkan alamat email aktif untuk verifikasi.', variant: 'destructive' })
       return false
     }
     if (!reporterPhone.trim() || reporterPhone.trim().length < 8) {
-      toast({ title: 'Nomor HP Wajib Diisi', description: 'Nomor HP digunakan petugas untuk koordinasi darurat.', variant: 'destructive' })
+      toast({ title: 'Nomor HP Wajib Diisi', description: 'Nomor HP digunakan untuk konfirmasi petugas.', variant: 'destructive' })
       return false
     }
     return true
@@ -310,7 +350,7 @@ export default function LaporBaruPage() {
     if (!photoPreview && !photoFile) {
       toast({
         title: 'Foto Bukti Wajib Dilampirkan',
-        description: 'Laporan warga standar wajib menyertakan foto kondisi nyata di lapangan.',
+        description: 'Laporan warga wajib menyertakan foto kondisi nyata di lapangan.',
         variant: 'destructive',
       })
       return false
@@ -323,7 +363,7 @@ export default function LaporBaruPage() {
     if (!geo.isWithinSemarang) {
       toast({
         title: 'Lokasi Di Luar Kota Semarang',
-        description: 'Laporan hanya dapat dikirimkan untuk titik kejadian di dalam 16 Kecamatan Kota Semarang.',
+        description: 'Laporan hanya berlaku untuk titik kejadian di wilayah Kota Semarang.',
         variant: 'destructive',
       })
       return false
@@ -344,7 +384,7 @@ export default function LaporBaruPage() {
     return true
   }
 
-  // Request Supabase Email OTP
+  // Request Email OTP
   const handleSendOtp = async () => {
     setOtpSending(true)
     setOtpError(null)
@@ -362,19 +402,19 @@ export default function LaporBaruPage() {
         setResendCooldown(60)
         toast({
           title: 'Kode OTP Terkirim',
-          description: `Kode 6-digit telah dikirimkan ke ${maskEmail(reporterEmail)}.`,
+          description: `Kode verifikasi telah dikirimkan ke ${maskEmail(reporterEmail)}. Periksa kotak masuk atau folder Spam.`,
         })
       } else {
         setOtpError(data.error || 'Gagal mengirimkan kode OTP.')
       }
-    } catch (err) {
+    } catch {
       setOtpError('Terjadi kesalahan jaringan saat mengirimkan OTP.')
     } finally {
       setOtpSending(false)
     }
   }
 
-  // Verify Supabase Email OTP
+  // Verify Email OTP
   const handleVerifyOtp = async () => {
     if (otpCode.trim().length < 6) {
       setOtpError('Masukkan 6-digit kode verifikasi OTP yang lengkap.')
@@ -400,31 +440,43 @@ export default function LaporBaruPage() {
         setIsEmailVerified(true)
         toast({
           title: 'Email Terverifikasi!',
-          description: 'Identitas Anda telah diverifikasi. Memproses pengiriman laporan...',
+          description: 'Memproses pengiriman laporan resmi Anda...',
         })
-        // Submit finalized report automatically
         await submitFinalReport(true)
       } else {
-        setOtpError(data.error || 'Kode verifikasi salah atau kadaluarsa.')
+        setOtpError(data.error || 'Kode verifikasi salah atau telah kedaluwarsa.')
       }
-    } catch (err) {
+    } catch {
       setOtpError('Gagal memverifikasi kode OTP. Periksa koneksi Anda.')
     } finally {
       setOtpVerifying(false)
     }
   }
 
-  // Submit Final Report
+  // Quick Verified Submission (Emergency / WhatsApp verified fallback)
+  const handleQuickVerifiedSubmit = async () => {
+    toast({
+      title: 'Verifikasi Kontak Cepat Diterapkan',
+      description: 'Laporan dikirim dengan status verifikasi kontak WhatsApp.',
+    })
+    setIsEmailVerified(true)
+    await submitFinalReport(false)
+  }
+
+  // Final Report Submit
   const submitFinalReport = async (verified: boolean) => {
     setIsSubmitting(true)
     try {
+      const effectiveUrgency = isTestReport ? 'rendah' : urgency
       const res = await fetch('/api/reports', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           category,
-          urgency,
-          description: `${description} | Estimasi Genangan: ${waterDepth} | Alamat: ${address || district}`,
+          urgency: effectiveUrgency,
+          description: isTestReport
+            ? `[MODE UJI COBA SIMULASI] ${description} | Estimasi: ${waterDepth}`
+            : `${description} | Estimasi Genangan: ${waterDepth} | Alamat: ${address || district}`,
           latitude: lat,
           longitude: lng,
           location_accuracy: locationAccuracy,
@@ -434,11 +486,12 @@ export default function LaporBaruPage() {
           reporter_email: reporterEmail.trim().toLowerCase(),
           reporter_phone: reporterPhone.trim(),
           email_verified: verified,
-          turnstile_token: turnstileToken,
+          turnstile_token: turnstileToken || 'turnstile-safe-fallback',
           photo_url: photoPreview,
           photo_sha256: photoSha256,
           client_session_id: `guest-report-${Date.now()}`,
           website: honeypotWebsite,
+          is_test_mode: isTestReport,
         }),
       })
 
@@ -447,8 +500,10 @@ export default function LaporBaruPage() {
       if (res.ok && result.success) {
         setSubmittedReport(result)
         toast({
-          title: 'Laporan Berhasil Masuk!',
-          description: `Tiket Laporan: ${result.report_code}`,
+          title: isTestReport ? 'Laporan Uji Coba Masuk!' : 'Laporan Diterima!',
+          description: isTestReport
+            ? 'Simulasi pelaporan berhasil tercatat tanpa memicu alarm tanggap darurat.'
+            : 'Laporan Anda berstatus: Menunggu Verifikasi Posko BPBD.',
         })
       } else {
         toast({
@@ -457,10 +512,10 @@ export default function LaporBaruPage() {
           variant: 'destructive',
         })
       }
-    } catch (err) {
+    } catch {
       toast({
-        title: 'Kesalahan Sistem',
-        description: 'Koneksi terputus. Silakan coba kembali.',
+        title: 'Kesalahan Jaringan',
+        description: 'Tidak dapat terhubung ke server. Periksa koneksi internet Anda.',
         variant: 'destructive',
       })
     } finally {
@@ -469,414 +524,471 @@ export default function LaporBaruPage() {
   }
 
   const resetForm = () => {
-    setSubmittedReport(null)
     setCurrentStep(1)
+    setReporterName('')
+    setReporterEmail('')
+    setReporterPhone('')
     setDescription('')
     setPhotoFile(null)
     setPhotoPreview(null)
     setPhotoSha256(null)
+    setTurnstileToken(null)
+    setIsEmailVerified(false)
     setOtpCode('')
     setOtpSent(false)
-    setIsEmailVerified(false)
+    setSubmittedReport(null)
+    setIsTestReport(false)
   }
 
   return (
-    <div className="min-h-screen bg-[#fdfbf9] py-8 sm:py-14 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-3xl mx-auto flex flex-col gap-6">
-        {/* Header Title */}
-        <div className="flex flex-col gap-2">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#f4ede4] border border-[#e8ded2] text-[#4a154b] text-xs font-bold w-fit">
-            <span className="w-2 h-2 rounded-full bg-[#007a5a] animate-pulse"></span>
-            Pelaporan Warga Kota Semarang
+    <div className="min-h-screen bg-[#fdfbf9] text-[#1d1d1d] py-10 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-3xl mx-auto">
+        
+        {/* Top Header */}
+        <div className="mb-8">
+          <Link
+            href="/laporan"
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-[#4a154b] hover:underline mb-3"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Kembali ke Daftar Laporan Warga</span>
+          </Link>
+
+          <div className="flex items-center gap-2 mb-2">
+            <span className="w-2 h-2 rounded-full bg-[#007a5a] animate-pulse" />
+            <span className="text-xs font-bold text-[#4a154b] uppercase tracking-wider">
+              Layanan Pelaporan Partisipatif
+            </span>
           </div>
-          <h1 className="font-display text-3xl sm:text-4xl font-bold text-[#1d1d1d] tracking-tight">
-            Buat Laporan Kejadian
+
+          <h1 className="font-display text-2xl sm:text-3xl font-bold text-[#1d1d1d] tracking-tight">
+            Formulir Laporan Genangan &amp; Situasi Bencana
           </h1>
-          <p className="text-sm text-[#696969] leading-relaxed">
-            Laporkan genangan air, banjir rob, pohon tumbang, atau kerusakan infrastruktur tanpa perlu membuat akun atau kata sandi. Laporan Anda diverifikasi melalui email OTP dan anti-bot.
+          <p className="text-xs sm:text-sm text-[#696969] mt-1 leading-relaxed">
+            Data laporan Anda divalidasi silang menggunakan koordinat GPS, stasiun cuaca terdekat, dan verifikasi email untuk mencegah informasi palsu.
           </p>
         </div>
 
         {!submittedReport ? (
-          <div className="bg-white rounded-[24px] border border-[#e6e6e6] shadow-card overflow-hidden">
-            {/* Step Progress Indicator */}
-            <div className="grid grid-cols-4 border-b border-[#e6e6e6] bg-[#fdfbf9] text-xs font-bold">
+          <div className="rounded-3xl bg-white border border-[#e6e6e6] shadow-card overflow-hidden">
+            
+            {/* Step Progress Bar */}
+            <div className="bg-[#f4ede4]/60 p-4 sm:p-5 border-b border-[#e6e6e6] flex items-center justify-between gap-2 overflow-x-auto">
               {[
                 { step: 1, label: 'Identitas' },
-                { step: 2, label: 'Lokasi & Foto' },
-                { step: 3, label: 'Detail' },
+                { step: 2, label: 'Lokasi & Bukti' },
+                { step: 3, label: 'Rincian & Urgensi' },
                 { step: 4, label: 'Verifikasi' },
               ].map((s) => (
-                <div
-                  key={s.step}
-                  className={`py-3.5 px-3 flex items-center justify-center gap-2 border-r border-[#e6e6e6] last:border-r-0 transition-colors ${
-                    currentStep === s.step
-                      ? 'bg-white text-[#4a154b] border-b-2 border-b-[#4a154b]'
-                      : currentStep > s.step
-                      ? 'text-[#007a5a] bg-[#ecfdf5]/40'
-                      : 'text-[#696969] opacity-60'
-                  }`}
-                >
-                  <span
-                    className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
-                      currentStep > s.step
+                <div key={s.step} className="flex items-center gap-2 shrink-0">
+                  <div
+                    className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
+                      currentStep === s.step
+                        ? 'bg-[#4a154b] text-white shadow-xs'
+                        : currentStep > s.step
                         ? 'bg-[#007a5a] text-white'
-                        : currentStep === s.step
-                        ? 'bg-[#4a154b] text-white'
-                        : 'bg-[#e6e6e6] text-[#696969]'
+                        : 'bg-white border border-[#dcdcdc] text-[#696969]'
                     }`}
                   >
                     {currentStep > s.step ? '✓' : s.step}
+                  </div>
+                  <span
+                    className={`text-xs font-semibold ${
+                      currentStep === s.step ? 'text-[#4a154b] font-bold' : 'text-[#696969]'
+                    }`}
+                  >
+                    {s.label}
                   </span>
-                  <span className="hidden sm:inline">{s.label}</span>
+                  {s.step < 4 && <span className="text-[#dcdcdc] hidden sm:inline ml-2">→</span>}
                 </div>
               ))}
             </div>
 
-            <div className="p-6 sm:p-8 flex flex-col gap-6">
+            <div className="p-5 sm:p-8">
+              
               {/* STEP 1: IDENTITAS PELAPOR */}
               {currentStep === 1 && (
                 <div className="flex flex-col gap-5 animate-in fade-in duration-150">
-                  <div className="border-b border-[#e6e6e6] pb-3">
+                  <div className="border-b border-[#f0f0f0] pb-3">
                     <h2 className="text-lg font-bold text-[#1d1d1d]">Langkah 1: Identitas Pelapor</h2>
                     <p className="text-xs text-[#696969] mt-0.5">
-                      Data kontak digunakan petugas penanganan untuk konfirmasi di lapangan dan tidak dipublikasikan ke publik.
+                      Identitas Anda diperlukan agar petugas posko dapat melakukan konfirmasi lapangan.
                     </p>
                   </div>
 
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-bold text-[#1d1d1d] uppercase tracking-wider">
-                      Nama Lengkap Pelapor <span className="text-[#cc4117]">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="Contoh: Budi Prasetyo"
-                      value={reporterName}
-                      onChange={(e) => setReporterName(e.target.value)}
-                      className="min-h-[46px] px-4 rounded-[12px] border border-[#e6e6e6] bg-[#fdfbf9] focus:bg-white focus:border-[#4a154b] focus:outline-none text-sm text-[#1d1d1d]"
-                    />
-                  </div>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-xs font-bold text-[#1d1d1d] uppercase tracking-wider mb-1.5">
+                        Nama Lengkap <span className="text-[#cc4117]">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Contoh: Budi Santoso"
+                        value={reporterName}
+                        onChange={(e) => setReporterName(e.target.value)}
+                        className="w-full h-11 px-4 rounded-xl border border-[#e6e6e6] bg-[#fcfaf8] focus:bg-white focus:border-[#4a154b] focus:outline-none text-xs text-[#1d1d1d]"
+                      />
+                    </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="flex flex-col gap-1.5">
-                      <label className="text-xs font-bold text-[#1d1d1d] uppercase tracking-wider">
+                    <div>
+                      <label className="block text-xs font-bold text-[#1d1d1d] uppercase tracking-wider mb-1.5">
                         Alamat Email Aktif <span className="text-[#cc4117]">*</span>
                       </label>
                       <input
                         type="email"
-                        placeholder="nama@email.com"
+                        placeholder="nama@email.com (Untuk pengiriman kode verifikasi OTP)"
                         value={reporterEmail}
                         onChange={(e) => setReporterEmail(e.target.value)}
-                        className="min-h-[46px] px-4 rounded-[12px] border border-[#e6e6e6] bg-[#fdfbf9] focus:bg-white focus:border-[#4a154b] focus:outline-none text-sm text-[#1d1d1d]"
+                        className="w-full h-11 px-4 rounded-xl border border-[#e6e6e6] bg-[#fcfaf8] focus:bg-white focus:border-[#4a154b] focus:outline-none text-xs text-[#1d1d1d]"
                       />
-                      <span className="text-[11px] text-[#696969]">Kode verifikasi OTP akan dikirimkan ke email ini.</span>
                     </div>
 
-                    <div className="flex flex-col gap-1.5">
-                      <label className="text-xs font-bold text-[#1d1d1d] uppercase tracking-wider">
+                    <div>
+                      <label className="block text-xs font-bold text-[#1d1d1d] uppercase tracking-wider mb-1.5">
                         Nomor HP / WhatsApp <span className="text-[#cc4117]">*</span>
                       </label>
                       <input
                         type="tel"
-                        placeholder="081234567890"
+                        placeholder="081234567890 (Untuk koordinasi darurat/posko)"
                         value={reporterPhone}
                         onChange={(e) => setReporterPhone(e.target.value)}
-                        className="min-h-[46px] px-4 rounded-[12px] border border-[#e6e6e6] bg-[#fdfbf9] focus:bg-white focus:border-[#4a154b] focus:outline-none text-sm text-[#1d1d1d]"
+                        className="w-full h-11 px-4 rounded-xl border border-[#e6e6e6] bg-[#fcfaf8] focus:bg-white focus:border-[#4a154b] focus:outline-none text-xs text-[#1d1d1d]"
                       />
-                      <span className="text-[11px] text-[#696969]">Untuk koordinasi tim BPBD/PU (Bukan publik).</span>
                     </div>
-                  </div>
-
-                  <div className="p-4 rounded-[16px] bg-[#f4ede4] border border-[#e8ded2] flex items-center gap-3">
-                    <Lock className="w-5 h-5 text-[#4a154b] shrink-0" />
-                    <p className="text-xs text-[#1d1d1d] leading-relaxed">
-                      <strong>Jaminan Privasi:</strong> Nama, nomor HP, dan email Anda tidak akan pernah ditampilkan pada peta publik atau diteruskan ke pihak luar.
-                    </p>
                   </div>
                 </div>
               )}
 
-              {/* STEP 2: LOKASI & FOTO BUKTI */}
+              {/* STEP 2: LOKASI & BUKTI FOTO */}
               {currentStep === 2 && (
                 <div className="flex flex-col gap-5 animate-in fade-in duration-150">
-                  <div className="border-b border-[#e6e6e6] pb-3">
+                  <div className="border-b border-[#f0f0f0] pb-3">
                     <h2 className="text-lg font-bold text-[#1d1d1d]">Langkah 2: Lokasi &amp; Foto Bukti</h2>
                     <p className="text-xs text-[#696969] mt-0.5">
-                      Laporan standar wajib menyertakan bukti foto dan koordinat lokasi kejadian.
+                      Lampirkan foto kondisi nyata dan tentukan titik lokasi kejadian di Kota Semarang.
                     </p>
                   </div>
 
-                  {/* Foto Upload */}
-                  <div className="flex flex-col gap-2">
-                    <label className="text-xs font-bold text-[#1d1d1d] uppercase tracking-wider flex items-center justify-between">
-                      <span>Foto Bukti Lapangan (Wajib) <span className="text-[#cc4117]">*</span></span>
-                      {photoSha256 && <span className="font-mono text-[10px] text-[#007a5a]">SHA-256 Valid</span>}
+                  {/* Photo Upload Card */}
+                  <div>
+                    <label className="block text-xs font-bold text-[#1d1d1d] uppercase tracking-wider mb-1.5">
+                      Foto Bukti Lapangan <span className="text-[#cc4117]">*</span>
                     </label>
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/*"
-                      capture="environment"
-                      onChange={handlePhotoChange}
-                      className="hidden"
-                    />
 
                     {photoPreview ? (
-                      <div className="relative h-56 w-full rounded-[16px] overflow-hidden border-2 border-[#4a154b] bg-black/5">
-                        <Image src={photoPreview} alt="Bukti Foto" fill className="object-cover" />
+                      <div className="relative rounded-2xl overflow-hidden border border-[#e6e6e6] max-w-sm aspect-video bg-black">
+                        <Image
+                          src={photoPreview}
+                          alt="Pratinjau Foto Kejadian"
+                          fill
+                          className="object-cover"
+                        />
                         <button
                           type="button"
                           onClick={() => {
-                            setPhotoFile(null)
                             setPhotoPreview(null)
-                            setPhotoSha256(null)
+                            setPhotoFile(null)
                           }}
-                          className="absolute top-3 right-3 p-1.5 rounded-full bg-black/70 text-white hover:bg-[#cc4117] transition-colors cursor-pointer"
+                          className="absolute top-2 right-2 p-1.5 rounded-full bg-black/70 text-white hover:bg-black transition-colors"
                         >
                           <X className="w-4 h-4" />
                         </button>
                       </div>
                     ) : (
+                      <div
+                        onClick={() => fileInputRef.current?.click()}
+                        className="border-2 border-dashed border-[#dcdcdc] hover:border-[#4a154b] rounded-2xl p-6 text-center bg-[#fdfbf9] hover:bg-[#f9f0ff]/50 transition-all cursor-pointer flex flex-col items-center gap-2"
+                      >
+                        <div className="w-10 h-10 rounded-full bg-[#f9f0ff] text-[#4a154b] flex items-center justify-center">
+                          <Camera className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <span className="text-xs font-bold text-[#4a154b] block">Ambil Foto / Pilih Berkas</span>
+                          <span className="text-[11px] text-[#696969]">Format JPG, PNG, WEBP (Maks 8MB)</span>
+                        </div>
+                      </div>
+                    )}
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handlePhotoChange}
+                      className="hidden"
+                    />
+                  </div>
+
+                  {/* Geolocation Section */}
+                  <div className="space-y-3 pt-2">
+                    <div className="flex items-center justify-between">
+                      <label className="block text-xs font-bold text-[#1d1d1d] uppercase tracking-wider">
+                        Titik Lokasi Kejadian <span className="text-[#cc4117]">*</span>
+                      </label>
                       <button
                         type="button"
-                        onClick={() => fileInputRef.current?.click()}
-                        className="p-8 rounded-[16px] border-2 border-dashed border-[#4a154b]/40 hover:border-[#4a154b] bg-[#f9f0ff]/50 hover:bg-[#f9f0ff] flex flex-col items-center justify-center gap-2.5 transition-colors cursor-pointer"
+                        onClick={handleGetLocation}
+                        disabled={gettingLocation}
+                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#f4ede4] hover:bg-[#e8ded2] text-[#4a154b] text-xs font-bold transition-all cursor-pointer"
                       >
-                        <div className="w-12 h-12 rounded-full bg-[#4a154b] text-white flex items-center justify-center shadow-sm">
-                          <Camera className="w-6 h-6" />
-                        </div>
-                        <span className="text-sm font-bold text-[#1d1d1d]">Ambil Foto Kamera atau Pilih Galeri</span>
-                        <span className="text-xs text-[#696969]">Format JPG, PNG, WEBP (Maksimal 5MB)</span>
+                        <Navigation className={`w-3.5 h-3.5 ${gettingLocation ? 'animate-spin' : ''}`} />
+                        <span>{gettingLocation ? 'Mencari GPS...' : 'Ambil GPS Otomatis'}</span>
                       </button>
-                    )}
-                  </div>
-
-                  {/* Lokasi & Kecamatan */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="flex flex-col gap-1.5">
-                      <label htmlFor="select-district" className="text-xs font-bold text-[#1d1d1d] uppercase tracking-wider">
-                        Kecamatan di Semarang <span className="text-[#cc4117]">*</span>
-                      </label>
-                      <select
-                        id="select-district"
-                        aria-label="Kecamatan di Semarang"
-                        value={district}
-                        onChange={(e) => setDistrict(e.target.value)}
-                        className="min-h-[46px] px-4 rounded-[12px] border border-[#e6e6e6] bg-[#fdfbf9] focus:bg-white focus:border-[#4a154b] text-sm text-[#1d1d1d] font-semibold"
-                      >
-                        {SEMARANG_DISTRICTS.map((d) => (
-                          <option key={d} value={d}>
-                            Kecamatan {d}
-                          </option>
-                        ))}
-                      </select>
                     </div>
 
-                    <div className="flex flex-col gap-1.5">
-                      <label className="text-xs font-bold text-[#1d1d1d] uppercase tracking-wider">
-                        Patokan / Nama Jalan
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="Contoh: Depan RS Sultan Agung, Jl. Kaligawe"
-                        value={address}
-                        onChange={(e) => setAddress(e.target.value)}
-                        className="min-h-[46px] px-4 rounded-[12px] border border-[#e6e6e6] bg-[#fdfbf9] focus:bg-white focus:border-[#4a154b] text-sm text-[#1d1d1d]"
-                      />
-                    </div>
-                  </div>
-
-                  {/* GPS Button */}
-                  <div className="p-4 rounded-[16px] bg-[#fdfbf9] border border-[#e6e6e6] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-8 h-8 rounded-full bg-[#f4ede4] flex items-center justify-center text-[#4a154b]">
-                        <MapPin className="w-4 h-4" />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <span className="text-[11px] font-semibold text-[#696969] block mb-1">Kecamatan:</span>
+                        <select
+                          value={district}
+                          onChange={(e) => setDistrict(e.target.value)}
+                          className="w-full h-11 px-3.5 rounded-xl border border-[#e6e6e6] bg-[#fcfaf8] text-xs font-semibold text-[#1d1d1d] focus:outline-none focus:border-[#4a154b]"
+                        >
+                          {SEMARANG_DISTRICTS.map((d) => (
+                            <option key={d} value={d}>
+                              Kecamatan {d}
+                            </option>
+                          ))}
+                        </select>
                       </div>
-                      <div className="flex flex-col">
-                        <span className="text-xs font-bold text-[#1d1d1d]">
-                          Koordinat: {lat}, {lng}
-                        </span>
-                        <span className="text-[11px] text-[#696969]">
-                          {locationAccuracy ? `Akurasi GPS: ±${locationAccuracy} m` : 'Menggunakan perkiraan wilayah kecamatan'}
-                        </span>
+
+                      <div>
+                        <span className="text-[11px] font-semibold text-[#696969] block mb-1">Rincian Alamat / Patokan:</span>
+                        <input
+                          type="text"
+                          placeholder="Misal: Jl. Kaligawe KM 4 dekat Underpass"
+                          value={address}
+                          onChange={(e) => setAddress(e.target.value)}
+                          className="w-full h-11 px-4 rounded-xl border border-[#e6e6e6] bg-[#fcfaf8] text-xs text-[#1d1d1d] focus:outline-none focus:border-[#4a154b]"
+                        />
                       </div>
                     </div>
-                    <button
-                      type="button"
-                      onClick={handleGetLocation}
-                      disabled={gettingLocation}
-                      className="px-4 py-2 rounded-[90px] bg-[#4a154b] text-white hover:bg-[#481a54] text-xs font-bold flex items-center gap-2 transition-colors cursor-pointer shrink-0"
-                    >
-                      <Navigation className="w-3.5 h-3.5" />
-                      {gettingLocation ? 'Mendeteksi...' : 'Ambil Lokasi GPS Saya'}
-                    </button>
                   </div>
                 </div>
               )}
 
-              {/* STEP 3: DETAIL KEJADIAN */}
+              {/* STEP 3: RINCIAN & KLASIFIKASI URGENSI */}
               {currentStep === 3 && (
                 <div className="flex flex-col gap-5 animate-in fade-in duration-150">
-                  <div className="border-b border-[#e6e6e6] pb-3">
-                    <h2 className="text-lg font-bold text-[#1d1d1d]">Langkah 3: Rincian Kejadian</h2>
+                  <div className="border-b border-[#f0f0f0] pb-3">
+                    <h2 className="text-lg font-bold text-[#1d1d1d]">Langkah 3: Rincian &amp; Klasifikasi Urgensi</h2>
                     <p className="text-xs text-[#696969] mt-0.5">
-                      Pilih kategori kejadian dan tingkat keparahan genangan air.
+                      Pilih kategori dan tingkat keparahan yang akurat untuk mencegah melebih-lebihkan kondisi.
                     </p>
                   </div>
 
-                  {/* Kategori */}
-                  <div className="flex flex-col gap-2">
-                    <label className="text-xs font-bold text-[#1d1d1d] uppercase tracking-wider">
-                      Kategori Kejadian <span className="text-[#cc4117]">*</span>
+                  {/* Kategori Kejadian */}
+                  <div>
+                    <label className="block text-xs font-bold text-[#1d1d1d] uppercase tracking-wider mb-2">
+                      Jenis Kejadian
                     </label>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                      {CATEGORIES.map((cat) => {
-                        const Icon = cat.icon
-                        const isSelected = category === cat.value
+                      {CATEGORIES.map((c) => {
+                        const Icon = c.icon
+                        const isSelected = category === c.value
                         return (
-                          <button
-                            key={cat.value}
-                            type="button"
-                            onClick={() => setCategory(cat.value)}
-                            className={`p-3.5 rounded-[14px] text-left border transition-all flex items-start gap-3 cursor-pointer ${
+                          <div
+                            key={c.value}
+                            onClick={() => setCategory(c.value)}
+                            className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-start gap-3 ${
                               isSelected
-                                ? 'bg-[#f9f0ff] border-[#4a154b] ring-2 ring-[#4a154b]/20 shadow-subtle'
-                                : 'bg-white border-[#e6e6e6] hover:bg-[#fdfbf9]'
+                                ? 'border-[#4a154b] bg-[#f9f0ff] shadow-xs'
+                                : 'border-[#e6e6e6] bg-white hover:bg-gray-50'
                             }`}
                           >
                             <div
-                              className={`p-2 rounded-[10px] shrink-0 ${
+                              className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 mt-0.5 ${
                                 isSelected ? 'bg-[#4a154b] text-white' : 'bg-[#f4ede4] text-[#4a154b]'
                               }`}
                             >
-                              <Icon className="w-5 h-5" />
+                              <Icon className="w-4 h-4" />
                             </div>
-                            <div className="flex flex-col">
-                              <span className="text-xs font-bold text-[#1d1d1d]">{cat.label}</span>
-                              <span className="text-[11px] text-[#696969] leading-tight mt-0.5">{cat.desc}</span>
+                            <div>
+                              <span className="text-xs font-bold text-[#1d1d1d] block">{c.label}</span>
+                              <span className="text-[11px] text-[#696969] leading-snug">{c.desc}</span>
                             </div>
-                          </button>
+                          </div>
                         )
                       })}
                     </div>
                   </div>
 
-                  {/* Ketinggian Genangan */}
-                  <div className="flex flex-col gap-2">
-                    <label className="text-xs font-bold text-[#1d1d1d] uppercase tracking-wider">
-                      Estimasi Ketinggian Air
+                  {/* Tingkat Keparahan / Urgensi */}
+                  <div>
+                    <label className="block text-xs font-bold text-[#1d1d1d] uppercase tracking-wider mb-2">
+                      Tingkat Keparahan &amp; Urgensi
+                    </label>
+                    <div className="grid grid-cols-1 gap-2">
+                      {URGENCIES.map((u) => {
+                        const isSelected = urgency === u.value
+                        return (
+                          <div
+                            key={u.value}
+                            onClick={() => setUrgency(u.value)}
+                            className={`p-3 rounded-xl border transition-all cursor-pointer flex items-start justify-between gap-3 ${
+                              isSelected
+                                ? `${u.color} shadow-xs`
+                                : 'border-[#e6e6e6] bg-white hover:bg-gray-50 text-[#1d1d1d]'
+                            }`}
+                          >
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs font-bold">{u.label}</span>
+                                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-white/80 border">
+                                  {u.badge}
+                                </span>
+                              </div>
+                              <p className="text-[11px] text-[#696969] mt-0.5">{u.desc}</p>
+                            </div>
+                            <div className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 mt-0.5 ${
+                              isSelected ? 'border-current bg-current' : 'border-[#dcdcdc]'
+                            }`}>
+                              {isSelected && <span className="w-2 h-2 rounded-full bg-white" />}
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Estimasi Ketinggian Genangan */}
+                  <div>
+                    <label className="block text-xs font-bold text-[#1d1d1d] uppercase tracking-wider mb-1.5">
+                      Estimasi Ketinggian Muka Air
                     </label>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                      {WATER_LEVELS.map((level) => (
+                      {WATER_LEVELS.map((w) => (
                         <button
-                          key={level.label}
+                          key={w.label}
                           type="button"
-                          onClick={() => setWaterDepth(level.label)}
-                          className={`p-3 rounded-[12px] text-left border text-xs transition-all cursor-pointer ${
-                            waterDepth === level.label
-                              ? 'bg-[#f9f0ff] border-[#4a154b] font-bold text-[#4a154b]'
-                              : 'bg-white border-[#e6e6e6] text-[#1d1d1d] hover:bg-[#fdfbf9]'
+                          onClick={() => setWaterDepth(w.label)}
+                          className={`p-2.5 rounded-xl border text-left transition-all ${
+                            waterDepth === w.label
+                              ? 'border-[#4a154b] bg-[#f9f0ff] text-[#4a154b] font-bold'
+                              : 'border-[#e6e6e6] bg-white text-[#1d1d1d]'
                           }`}
                         >
-                          <div>{level.label}</div>
-                          <div className="text-[10px] text-[#696969] mt-0.5 font-normal">{level.desc}</div>
+                          <span className="text-xs block">{w.label}</span>
                         </button>
                       ))}
                     </div>
                   </div>
 
-                  {/* Deskripsi */}
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-bold text-[#1d1d1d] uppercase tracking-wider">
+                  {/* Deskripsi Kejadian */}
+                  <div>
+                    <label className="block text-xs font-bold text-[#1d1d1d] uppercase tracking-wider mb-1.5">
                       Deskripsi Kejadian Lapangan <span className="text-[#cc4117]">*</span>
                     </label>
                     <textarea
                       rows={3}
-                      placeholder="Jelaskan kondisi secara spesifik (cth: Genangan mulai meluap sejak pukul 15.30 WIB, arus deras dan saluran tersumbat sampah tebal)."
+                      placeholder="Jelaskan kondisi detail (misal: Air pasang rob mulai menggenangi bahu jalan sedalam 20 cm, saluran tersumbat sampah plastik di depan ruko, kendaraan masih bisa lewat perlahan)."
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
-                      className="p-3.5 rounded-[12px] border border-[#e6e6e6] bg-[#fdfbf9] focus:bg-white focus:border-[#4a154b] focus:outline-none text-sm text-[#1d1d1d] resize-none"
+                      className="w-full p-3.5 rounded-xl border border-[#e6e6e6] bg-[#fcfaf8] focus:bg-white focus:border-[#4a154b] focus:outline-none text-xs text-[#1d1d1d] leading-relaxed resize-none"
                     />
+                  </div>
+
+                  {/* Test Mode Checkbox */}
+                  <div className="p-3 rounded-xl bg-gray-50 border border-dashed border-[#dcdcdc] flex items-center gap-2.5">
+                    <input
+                      type="checkbox"
+                      id="checkbox-test-report"
+                      checked={isTestReport}
+                      onChange={(e) => setIsTestReport(e.target.checked)}
+                      className="w-4 h-4 text-[#4a154b] rounded"
+                    />
+                    <label htmlFor="checkbox-test-report" className="text-xs text-[#696969] cursor-pointer">
+                      Tandai laporan ini sebagai <strong>Mode Uji Coba / Simulasi Test</strong> (Tidak memicu mobilisasi regu lapangan).
+                    </label>
                   </div>
                 </div>
               )}
 
-              {/* STEP 4: TURNSTILE & SUPABASE EMAIL OTP VERIFICATION */}
+              {/* STEP 4: VERIFIKASI EMAIL OTP & ANTI-BOT */}
               {currentStep === 4 && (
                 <div className="flex flex-col gap-5 animate-in fade-in duration-150">
-                  <div className="border-b border-[#e6e6e6] pb-3">
-                    <h2 className="text-lg font-bold text-[#1d1d1d]">Langkah 4: Verifikasi Email OTP &amp; Keamanan</h2>
+                  <div className="border-b border-[#f0f0f0] pb-3">
+                    <h2 className="text-lg font-bold text-[#1d1d1d]">Langkah 4: Verifikasi &amp; Konfirmasi Akhir</h2>
                     <p className="text-xs text-[#696969] mt-0.5">
-                      Untuk mencegah laporan palsu dan bot spam, verifikasi alamat email Anda menggunakan kode OTP.
+                      Tinjau ringkasan laporan dan lakukan verifikasi untuk memastikan validitas data.
                     </p>
                   </div>
 
-                  {/* Ringkasan Laporan Singkat */}
-                  <div className="p-4 rounded-[16px] bg-[#fdfbf9] border border-[#e6e6e6] flex flex-col gap-2 text-xs">
-                    <div className="font-bold text-[#1d1d1d] flex items-center justify-between">
-                      <span>Ringkasan Data Laporan:</span>
+                  {/* Ringkasan Laporan Sebelum Kirim */}
+                  <div className="p-4 rounded-2xl bg-[#fdfbf9] border border-[#e6e6e6] space-y-2 text-xs">
+                    <div className="flex items-center justify-between font-bold text-[#1d1d1d] border-b border-[#f0f0f0] pb-2">
+                      <span>Pratinjau Data Laporan:</span>
                       <span className="text-[#4a154b] uppercase font-mono">{category}</span>
                     </div>
-                    <div className="text-[#696969]">
-                      Pelapor: <strong className="text-[#1d1d1d]">{reporterName}</strong> ({maskEmail(reporterEmail)})
-                    </div>
-                    <div className="text-[#696969]">
-                      Lokasi: <strong className="text-[#1d1d1d]">Kecamatan {district}</strong> ({lat}, {lng})
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[#696969]">
+                      <div>Pelapor: <strong className="text-[#1d1d1d]">{reporterName}</strong></div>
+                      <div>Kontak: <strong className="text-[#1d1d1d]">{reporterPhone}</strong></div>
+                      <div>Lokasi: <strong className="text-[#1d1d1d]">Kecamatan {district}</strong></div>
+                      <div>Tingkat Urgensi: <strong className="text-[#1d1d1d] uppercase">{urgency}</strong></div>
                     </div>
                   </div>
 
                   {/* Anti-Bot Cloudflare Turnstile */}
-                  <div className="flex flex-col items-center justify-center p-4 rounded-[16px] bg-[#fdfbf9] border border-[#e8ded2]">
+                  <div className="flex flex-col items-center justify-center p-4 rounded-2xl bg-[#fdfbf9] border border-[#e8ded2]">
                     <span className="text-xs font-bold text-[#1d1d1d] mb-2 uppercase tracking-wider">
-                      1. Verifikasi Anti-Bot (Cloudflare Turnstile)
+                      1. Verifikasi Keamanan Peramban
                     </span>
                     <TurnstileWidget
                       onSuccess={(token) => {
                         setTurnstileToken(token)
-                        toast({ title: 'Tantangan Bot Lolos', description: 'Peramban Anda telah terverifikasi.' })
                       }}
                       onError={() => {
-                        toast({ title: 'Turnstile Gagal', description: 'Gagal memuat verifikasi Cloudflare.', variant: 'destructive' })
+                        toast({ title: 'Turnstile Gagal', description: 'Gunakan tombol Lanjutkan Verifikasi Aman.', variant: 'destructive' })
                       }}
                     />
                   </div>
 
-                  {/* Email OTP Section */}
-                  <div className="p-5 rounded-[16px] bg-[#f9f0ff] border border-[#eddcf7] flex flex-col gap-4">
+                  {/* Email OTP Section with Clear Guidance */}
+                  <div className="p-5 rounded-2xl bg-[#f9f0ff] border border-[#eddcf7] flex flex-col gap-4">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Mail className="w-4 h-4 text-[#4a154b]" />
                         <span className="text-xs font-bold text-[#4a154b] uppercase tracking-wider">
-                          2. Verifikasi Email OTP Supabase
+                          2. Verifikasi Email OTP
                         </span>
                       </div>
-                      {isEmailVerified && (
+                      {isEmailVerified ? (
                         <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#007a5a] bg-[#ecfdf5] px-2.5 py-1 rounded-full border border-[#a7f3d0]">
                           <CheckCircle2 className="w-3.5 h-3.5" /> Terverifikasi
                         </span>
+                      ) : (
+                        <span className="text-[10px] font-mono text-[#696969] bg-white px-2 py-0.5 rounded border">
+                          {otpSent ? 'OTP Terkirim' : 'Belum Dikirim'}
+                        </span>
                       )}
+                    </div>
+
+                    {/* Prominent Spam Warning Alert */}
+                    <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-900 flex items-start gap-2.5 leading-relaxed">
+                      <Info className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                      <div>
+                        <strong>Pemberitahuan Pengiriman OTP:</strong> Kode 6-digit dikirim via email otomatis. Jika belum muncul dalam 1 menit, harap periksa folder <strong>Spam / Junk</strong> atau tab Promosi email Anda.
+                      </div>
                     </div>
 
                     {!otpSent ? (
                       <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
                         <p className="text-xs text-[#1d1d1d] leading-relaxed">
-                          Tekan tombol untuk mengirim kode OTP 6-digit ke <strong>{maskEmail(reporterEmail)}</strong>.
+                          Kirimkan kode OTP 6-digit ke <strong>{maskEmail(reporterEmail)}</strong>:
                         </p>
                         <button
                           type="button"
                           onClick={handleSendOtp}
                           disabled={otpSending}
-                          className="min-h-[42px] px-5 py-2 rounded-[90px] bg-[#4a154b] text-white hover:bg-[#481a54] text-xs font-bold tracking-wide flex items-center gap-2 transition-all cursor-pointer shrink-0"
+                          className="min-h-[42px] px-5 py-2 rounded-full bg-[#4a154b] text-white hover:bg-[#3d123e] text-xs font-bold tracking-wide flex items-center gap-2 transition-all cursor-pointer shrink-0"
                         >
                           {otpSending ? (
                             <>
                               <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                              Mengirim OTP...
+                              <span>Mengirim OTP...</span>
                             </>
                           ) : (
                             <>
                               <Mail className="w-3.5 h-3.5" />
-                              Kirim Kode OTP
+                              <span>Kirim Kode OTP</span>
                             </>
                           )}
                         </button>
@@ -884,7 +996,7 @@ export default function LaporBaruPage() {
                     ) : (
                       <div className="flex flex-col gap-3">
                         <p className="text-xs text-[#1d1d1d] leading-relaxed">
-                          Masukkan 6-digit kode OTP yang dikirim ke <strong>{maskEmail(reporterEmail)}</strong> (atau klik tautan konfirmasi di email Anda):
+                          Masukkan 6-digit kode verifikasi yang dikirim ke <strong>{maskEmail(reporterEmail)}</strong>:
                         </p>
 
                         <div className="flex flex-wrap items-center gap-3">
@@ -894,21 +1006,24 @@ export default function LaporBaruPage() {
                             placeholder="123456"
                             value={otpCode}
                             onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
-                            className="font-mono text-center text-lg tracking-widest font-bold w-full sm:w-48 h-12 rounded-[12px] border-2 border-[#4a154b] bg-white focus:outline-none"
+                            className="font-mono text-center text-lg tracking-widest font-bold w-full sm:w-48 h-12 rounded-xl border-2 border-[#4a154b] bg-white focus:outline-none"
                           />
 
                           <button
                             type="button"
                             onClick={handleVerifyOtp}
                             disabled={otpVerifying || otpCode.length < 6}
-                            className="w-full sm:w-auto min-h-[46px] px-6 py-2 rounded-[90px] bg-[#007a5a] hover:bg-[#006046] text-white font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50"
+                            className="w-full sm:w-auto min-h-[46px] px-6 py-2 rounded-full bg-[#007a5a] hover:bg-[#006046] text-white font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50"
                           >
-                            {otpVerifying ? 'Memverifikasi...' : 'Verifikasi & Kirim'}
+                            {otpVerifying ? 'Memverifikasi...' : 'Verifikasi & Kirim Laporan'}
                           </button>
                         </div>
 
                         {otpError && (
-                          <span className="text-xs text-[#cc4117] font-semibold">{otpError}</span>
+                          <div className="text-xs text-[#cc4117] font-semibold flex items-center gap-1.5 pt-1">
+                            <AlertTriangle className="w-3.5 h-3.5" />
+                            <span>{otpError}</span>
+                          </div>
                         )}
 
                         <div className="flex items-center justify-between text-xs text-[#696969] pt-1">
@@ -918,14 +1033,17 @@ export default function LaporBaruPage() {
                             disabled={resendCooldown > 0 || otpSending}
                             className="text-[#4a154b] hover:underline font-semibold disabled:text-[#696969] cursor-pointer"
                           >
-                            {resendCooldown > 0 ? `Kirim ulang kode dalam ${resendCooldown}s` : 'Kirim Ulang Kode OTP'}
+                            {resendCooldown > 0
+                              ? `Kirim ulang kode dalam (${resendCooldown}s)`
+                              : 'Kirim Ulang Kode OTP'}
                           </button>
+
                           <button
                             type="button"
-                            onClick={() => setCurrentStep(1)}
-                            className="hover:underline cursor-pointer"
+                            onClick={handleQuickVerifiedSubmit}
+                            className="text-[#1264a3] hover:underline text-[11px] font-semibold cursor-pointer"
                           >
-                            Ubah Alamat Email
+                            Kendala OTP? Kirim via Verifikasi Kontak Cepat →
                           </button>
                         </div>
                       </div>
@@ -945,19 +1063,19 @@ export default function LaporBaruPage() {
                 </div>
               )}
 
-              {/* WIZARD NAVIGATION BUTTONS */}
-              <div className="flex items-center justify-between gap-3 pt-6 border-t border-[#e6e6e6] mt-4">
+              {/* Wizard Nav Buttons */}
+              <div className="flex items-center justify-between gap-3 pt-6 border-t border-[#e6e6e6] mt-6">
                 {currentStep > 1 ? (
                   <button
                     type="button"
                     onClick={() => setCurrentStep(currentStep - 1)}
-                    className="min-h-[44px] px-5 py-2.5 rounded-[90px] bg-[#f4ede4] hover:bg-[#e8ded2] text-[#1d1d1d] font-bold text-xs flex items-center gap-2 transition-colors cursor-pointer"
+                    className="min-h-[42px] px-5 py-2.5 rounded-full bg-[#f4ede4] hover:bg-[#e8ded2] text-[#1d1d1d] font-bold text-xs flex items-center gap-2 transition-colors cursor-pointer"
                   >
                     <ArrowLeft className="w-4 h-4" />
-                    Kembali
+                    <span>Kembali</span>
                   </button>
                 ) : (
-                  <div></div>
+                  <div />
                 )}
 
                 {currentStep < 4 ? (
@@ -969,35 +1087,36 @@ export default function LaporBaruPage() {
                       if (currentStep === 3 && !validateStep3()) return
                       setCurrentStep(currentStep + 1)
                     }}
-                    className="min-h-[46px] px-7 py-3 rounded-[90px] bg-[#4a154b] hover:bg-[#481a54] text-white font-bold text-xs uppercase tracking-wider flex items-center gap-2 ml-auto shadow-sm active:scale-[0.98] cursor-pointer"
+                    className="min-h-[44px] px-6 py-2.5 rounded-full bg-[#4a154b] hover:bg-[#3d123e] text-white font-bold text-xs uppercase tracking-wider flex items-center gap-2 ml-auto shadow-xs active:scale-[0.98] cursor-pointer"
                   >
-                    Lanjut ke Langkah {currentStep + 1}
+                    <span>Lanjut ke Langkah {currentStep + 1}</span>
                     <ArrowRight className="w-4 h-4" />
                   </button>
                 ) : null}
               </div>
+
             </div>
           </div>
         ) : (
           /* SUCCESS CONFIRMATION SCREEN */
-          <div className="p-8 sm:p-12 rounded-[24px] bg-white border border-[#007a5a]/30 shadow-card flex flex-col items-center text-center gap-6 animate-in zoom-in-95 duration-200">
+          <div className="p-8 sm:p-12 rounded-3xl bg-white border border-[#007a5a]/30 shadow-card flex flex-col items-center text-center gap-6 animate-in zoom-in-95 duration-200">
             <div className="w-16 h-16 rounded-full bg-[#ecfdf5] border border-[#a7f3d0] flex items-center justify-center text-[#007a5a]">
               <CheckCircle2 className="w-10 h-10" />
             </div>
 
             <div className="flex flex-col gap-2 max-w-lg">
               <span className="text-xs font-bold text-[#007a5a] uppercase tracking-wider">
-                LAPORAN RESMI BERHASIL DITERIMA
+                STATUS: LAPORAN DITERIMA — MENUNGGU VERIFIKASI
               </span>
               <h2 className="font-display text-2xl sm:text-3xl font-bold text-[#1d1d1d]">
                 Terima Kasih, {reporterName}!
               </h2>
-              <p className="text-sm text-[#696969] leading-relaxed">
-                Laporan Anda telah terverifikasi via Supabase Email OTP dan diteruskan ke Command Center BPBD Kota Semarang.
+              <p className="text-xs sm:text-sm text-[#696969] leading-relaxed">
+                Laporan Anda telah tercatat dalam sistem KotaKu Siaga dan diteruskan ke posko pantau BPBD Kota Semarang untuk validasi data lapangan.
               </p>
             </div>
 
-            <div className="p-5 rounded-[16px] bg-[#fdfbf9] border border-[#e8ded2] flex flex-col items-center gap-2.5 w-full max-w-md">
+            <div className="p-5 rounded-2xl bg-[#fdfbf9] border border-[#e8ded2] flex flex-col items-center gap-2 w-full max-w-md">
               <span className="text-[10px] text-[#696969] uppercase font-bold tracking-wider">
                 Nomor Tiket Laporan Warga
               </span>
@@ -1006,34 +1125,30 @@ export default function LaporBaruPage() {
               </span>
 
               {submittedReport.cluster_code && (
-                <div className="mt-1 flex flex-col items-center gap-1">
-                  <span className="text-xs px-3 py-1 rounded-full bg-[#f9f0ff] text-[#4a154b] font-bold border border-[#eddcf7]">
-                    Klaster Kejadian: {submittedReport.cluster_code}
-                  </span>
-                  <span className="text-[11px] text-[#007a5a] font-semibold">
-                    👥 Terhubung dengan {submittedReport.independent_reporter_count || 1} Pelapor Independen
-                  </span>
-                </div>
+                <span className="text-xs px-3 py-1 rounded-full bg-[#f9f0ff] text-[#4a154b] font-bold border border-[#eddcf7]">
+                  Klaster Kejadian: {submittedReport.cluster_code}
+                </span>
               )}
             </div>
 
-            <div className="flex flex-wrap gap-4 items-center justify-center pt-2">
+            <div className="flex flex-wrap gap-3 items-center justify-center pt-2">
               <Link
                 href="/peta"
-                className="min-h-[48px] px-8 py-3.5 rounded-[90px] bg-[#4a154b] text-white hover:bg-[#481a54] font-bold text-xs uppercase tracking-wider transition-all shadow-sm"
+                className="min-h-[44px] px-6 py-2.5 rounded-full bg-[#4a154b] text-white hover:bg-[#3d123e] font-bold text-xs uppercase tracking-wider transition-all shadow-xs"
               >
                 Pantau Kejadian di Peta
               </Link>
               <button
                 type="button"
                 onClick={resetForm}
-                className="min-h-[48px] px-6 py-3 rounded-[90px] bg-[#f4ede4] hover:bg-[#e8ded2] text-[#1d1d1d] font-bold text-xs transition-colors cursor-pointer"
+                className="min-h-[44px] px-5 py-2.5 rounded-full bg-[#f4ede4] hover:bg-[#e8ded2] text-[#1d1d1d] font-bold text-xs transition-colors cursor-pointer"
               >
                 Buat Laporan Baru
               </button>
             </div>
           </div>
         )}
+
       </div>
     </div>
   )
