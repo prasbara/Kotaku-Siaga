@@ -369,6 +369,8 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
 
           const reporterPhoto = report.verification_photo_url || meta?.verification_photo_url || null
           const evidencePhoto = report.photo_url || null
+          const rawEvidence = (report as any)?.evidence_photos || meta?.evidence_photos || []
+          const evidenceCount = rawEvidence.length > 0 ? rawEvidence.length : (evidencePhoto ? 1 : 0)
 
           // Scores & Metrics (Real from DB/Backend)
           const validityScore = report.credibility_score ?? 80
@@ -467,9 +469,15 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
                             className="object-cover group-hover:scale-105 transition-transform duration-200"
                             unoptimized
                           />
+                          {evidenceCount > 1 && (
+                            <div className="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-[#1d1d1d]/85 backdrop-blur-xs text-white text-[10px] font-mono font-bold flex items-center gap-1 z-10 border border-white/20 shadow-xs">
+                              <Camera className="w-3 h-3 text-amber-400" />
+                              <span>{evidenceCount} Foto Bukti</span>
+                            </div>
+                          )}
                           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white font-mono text-xs font-bold gap-1.5">
                             <Camera className="w-4 h-4" />
-                            <span>Buka Penampil Bukti</span>
+                            <span>Buka Penampil Bukti ({evidenceCount} Foto)</span>
                           </div>
                         </>
                       ) : (
@@ -484,6 +492,27 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
                         </div>
                       )}
                     </div>
+
+                    {rawEvidence.length > 1 && (
+                      <div className="flex items-center gap-1.5 overflow-x-auto py-1">
+                        {rawEvidence.slice(0, 5).map((p: any, pIdx: number) => (
+                          <div
+                            key={pIdx}
+                            onClick={() => openDetailModal(report)}
+                            className="relative w-9 h-9 rounded-md overflow-hidden border border-[#d0c8be] flex-shrink-0 cursor-pointer hover:border-[#4a154b] transition-all"
+                            title={`Foto #${pIdx + 1}`}
+                          >
+                            <Image
+                              src={p.photo_url || p.photoUrl || (typeof p === 'string' ? p : evidencePhoto)}
+                              alt={`Foto #${pIdx + 1}`}
+                              fill
+                              className="object-cover"
+                              unoptimized
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    )}
 
                     <div className="flex items-center justify-between text-[11px] font-mono text-[#696969]">
                       <span>

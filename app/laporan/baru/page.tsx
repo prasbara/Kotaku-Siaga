@@ -384,7 +384,17 @@ export default function LaporBaruPage() {
   const [landslideRoadBlocked, setLandslideRoadBlocked] = useState<string>('sebagian')
   const [landslideThreat, setLandslideThreat] = useState<boolean>(false)
 
-  // Photo state
+  // Multi-Photo Evidence State (1 to 5 photos)
+  interface EvidencePhotoItem {
+    id: string
+    file: File
+    preview: string
+    name: string
+    sizeFormatted: string
+    sha256?: string
+    status: 'ready' | 'checking' | 'valid'
+  }
+  const [evidencePhotos, setEvidencePhotos] = useState<EvidencePhotoItem[]>([])
   const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [photoPreview, setPhotoPreview] = useState<string | null>(null)
   const [photoSha256, setPhotoSha256] = useState<string | null>(null)
@@ -446,47 +456,103 @@ export default function LaporBaruPage() {
     )
   }
 
-  // Compute SHA-256 hash when photo is chosen
-  const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-
-    if (!file.type.startsWith('image/')) {
-      toast({
-        title: 'Format Berkas Tidak Valid',
-        description: 'Silakan pilih berkas foto berupa JPG, PNG, atau WEBP.',
-        variant: 'destructive',
-      })
-      return
-    }
-
-    if (file.size > 8 * 1024 * 1024) {
-      toast({
-        title: 'Ukuran Foto Terlalu Besar',
-        description: 'Ukuran foto maksimal adalah 8MB.',
-        variant: 'destructive',
-      })
-      return
-    }
-
-    setPhotoFile(file)
-
-    const reader = new FileReader()
-    reader.onloadend = () => {
-      setPhotoPreview(reader.result as string)
-    }
-    reader.readAsDataURL(file)
-
-    try {
-      const arrayBuffer = await file.arrayBuffer()
-      const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer)
-      const hashArray = Array.from(new Uint8Array(hashBuffer))
-      const hashHex = hashArray.map((b) => b.toString(16).padStart(2, '0')).join('')
-      setPhotoSha256(hashHex)
-    } catch {
-      setPhotoSha256(`img_${Date.now()}`)
-    }
+  const formatFileSize = (bytes: number): string => {
+    if (bytes < 1024) return `${bytes} B`
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
   }
+
+  // Handle Multi-Photo selection (1 to 5 photos)
+  const handleAddPhotos = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || [])
+    if (files.length === 0) return
+
+    if (evidencePhotos.length + files.length > 5) {
+      toast({
+        title: 'Batas Maksimal Foto Terlampaui',
+        description: `Anda hanya dapat mengunggah maksimal 5 foto bukti kejadian (saat ini sudah ada ${evidencePhotos.length} foto).`,
+        variant: 'destructive',
+      })
+      if (fileInputRef.current) fileInputRef.current.value = ''
+      return
+    }
+
+    for (const file of files) {
+      if (!file.type.startsWith('image/')) {
+        toast({
+          title: 'Format Berkas Tidak Valid',
+          description: `Berkas "${file.name}" bukan format gambar valid (gunakan JPG, PNG, WEBP).`,
+          variant: 'destructive',
+        })
+        continue
+      }
+
+      if (file.size > 8 * 1024 * 1024) {
+        toast({
+          title: 'Ukuran Berkas Terlalu Besar',
+          description: `Foto "${file.name}" melebihi ukuran maksimal 8MB.`,
+          variant: 'destructive',
+        })
+        continue
+      }
+
+      const tempId = `photo_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`
+
+      const reader = new FileReader()
+      reader.onloadend = async () => {
+        const previewUrl = reader.result as string
+        let sha256 = `img_${Date.now()}`
+        try {
+          const arrayBuffer = await file.arrayBuffer()
+          const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer)
+          const hashArray = Array.from(new Uint8Array(hashBuffer))
+          sha256 = hashArray.map((b) => b.toString(16).padStart(2, '0')).join('')
+        } catch {
+          // fallback
+        }
+
+        const newItem: EvidencePhotoItem = {
+          id: tempId,
+          file,
+          preview: previewUrl,
+          name: file.name,
+          sizeFormatted: formatFileSize(file.size),
+          sha256,
+          status: 'valid',
+        }
+
+        setEvidencePhotos((prev) => {
+          if (prev.length >= 5) return prev
+          const updated = [...prev, newItem]
+          if (updated.length > 0) {
+            setPhotoPreview(updated[0].preview)
+            setPhotoSha256(updated[0].sha256 || null)
+          }
+          return updated
+        })
+      }
+      reader.readAsDataURL(file)
+    }
+
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
+
+  const handleRemovePhoto = (id: string) => {
+    setEvidencePhotos((prev) => {
+      const updated = prev.filter((p) => p.id !== id)
+      if (updated.length > 0) {
+        setPhotoPreview(updated[0].preview)
+        setPhotoSha256(updated[0].sha256 || null)
+      } else {
+        setPhotoPreview(null)
+        setPhotoSha256(null)
+      }
+      return updated
+    })
+  }
+
+  // Backward-compatible alias
+  const handlePhotoChange = handleAddPhotos
 
   // Get GPS Location
   const handleGetLocation = () => {
@@ -567,12 +633,20 @@ export default function LaporBaruPage() {
     return true
   }
 
-  // Step 2 Validation
+  // Step 2 Validation (1 <= photos <= 5)
   const validateStep2 = () => {
-    if (!photoPreview && !photoFile) {
+    if (evidencePhotos.length === 0 && !photoPreview) {
       toast({
-        title: 'Foto Bukti Wajib Dilampirkan',
-        description: 'Laporan warga wajib menyertakan foto kondisi nyata di lapangan.',
+        title: 'Bukti Foto Wajib Dilampirkan',
+        description: 'Laporan warga wajib menyertakan minimal 1 foto (maksimal 5 foto) kondisi nyata di lapangan.',
+        variant: 'destructive',
+      })
+      return false
+    }
+    if (evidencePhotos.length > 5) {
+      toast({
+        title: 'Jumlah Foto Melebihi Batas',
+        description: 'Maksimal 5 foto bukti kejadian yang dapat diunggah.',
         variant: 'destructive',
       })
       return false
@@ -778,8 +852,9 @@ export default function LaporBaruPage() {
           spoof_risk: verificationMethod === 'camera' ? cameraSpoofRisk : null,
           quality_score: verificationMethod === 'camera' ? cameraQualityScore : null,
           turnstile_token: turnstileToken || 'turnstile-safe-fallback',
-          photo_url: photoPreview,
-          photo_sha256: photoSha256,
+          photos: evidencePhotos.length > 0 ? evidencePhotos.map((p) => p.preview) : (photoPreview ? [photoPreview] : []),
+          photo_url: evidencePhotos[0]?.preview || photoPreview,
+          photo_sha256: evidencePhotos[0]?.sha256 || photoSha256,
           client_session_id: `guest-report-${Date.now()}`,
           website: honeypotWebsite,
           is_test_mode: isTestReport,
@@ -972,50 +1047,99 @@ export default function LaporBaruPage() {
                     </p>
                   </div>
 
-                  {/* Photo Upload Card */}
-                  <div>
-                    <label className="block text-xs font-bold text-[#1d1d1d] uppercase tracking-wider mb-1.5">
-                      Foto Bukti Lapangan <span className="text-[#cc4117]">*</span>
-                    </label>
-
-                    {photoPreview ? (
-                      <div className="relative rounded-2xl overflow-hidden border border-[#e6e6e6] max-w-sm aspect-video bg-black">
-                        <Image
-                          src={photoPreview}
-                          alt="Pratinjau Foto Kejadian"
-                          fill
-                          className="object-cover"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setPhotoPreview(null)
-                            setPhotoFile(null)
-                          }}
-                          className="absolute top-2 right-2 p-1.5 rounded-full bg-black/70 text-white hover:bg-black transition-colors"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
+                  {/* Photo Upload Section: 1 to 5 Photos */}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <label className="block text-xs font-bold text-[#1d1d1d] uppercase tracking-wider">
+                          Bukti Foto <span className="text-[#cc4117]">*</span>
+                        </label>
+                        <p className="text-xs text-[#696969] mt-0.5">
+                          Upload 1–5 foto kondisi kejadian.
+                        </p>
                       </div>
-                    ) : (
-                      <div
-                        onClick={() => fileInputRef.current?.click()}
-                        className="border-2 border-dashed border-[#dcdcdc] hover:border-[#4a154b] rounded-2xl p-6 text-center bg-[#fdfbf9] hover:bg-[#f9f0ff]/50 transition-all cursor-pointer flex flex-col items-center gap-2"
-                      >
-                        <div className="w-10 h-10 rounded-full bg-[#f9f0ff] text-[#4a154b] flex items-center justify-center">
-                          <Camera className="w-5 h-5" />
-                        </div>
-                        <div>
-                          <span className="text-xs font-bold text-[#4a154b] block">Ambil Foto / Pilih Berkas</span>
-                          <span className="text-[11px] text-[#696969]">Format JPG, PNG, WEBP (Maks 8MB)</span>
-                        </div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-xs font-bold px-2.5 py-1 rounded-full bg-[#f4ede4] text-[#4a154b] border border-[#d0c8be]">
+                          {evidencePhotos.length} / 5 Foto
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Previews Grid for all uploaded photos */}
+                    {evidencePhotos.length > 0 && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                        {evidencePhotos.map((item, idx) => (
+                          <div
+                            key={item.id}
+                            className="relative flex items-center gap-3 p-2.5 rounded-xl border border-[#e6e6e6] bg-white shadow-xs hover:border-[#4a154b]/40 transition-all"
+                          >
+                            <div className="relative w-16 h-16 rounded-lg overflow-hidden bg-black flex-shrink-0 border border-neutral-200">
+                              <Image
+                                src={item.preview}
+                                alt={`Foto Bukti ${idx + 1}`}
+                                fill
+                                className="object-cover"
+                                unoptimized
+                              />
+                            </div>
+                            <div className="flex-1 min-w-0 pr-6">
+                              <p className="text-xs font-bold text-[#1d1d1d] truncate" title={item.name}>
+                                {item.name}
+                              </p>
+                              <span className="text-[11px] text-[#696969] block">
+                                {item.sizeFormatted}
+                              </span>
+                              <div className="mt-1 flex items-center gap-1 text-[10px] font-semibold text-[#007a5a]">
+                                <CheckCircle2 className="w-3 h-3 text-[#059669]" />
+                                <span>✓ Foto siap</span>
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => handleRemovePhoto(item.id)}
+                              className="absolute top-2 right-2 p-1 rounded-full bg-neutral-100 hover:bg-red-50 text-neutral-500 hover:text-red-600 transition-colors"
+                              title="Hapus foto ini"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        ))}
                       </div>
                     )}
+
+                    {/* Add Photo Button / Dropzone */}
+                    {evidencePhotos.length < 5 ? (
+                      <div
+                        onClick={() => fileInputRef.current?.click()}
+                        className="border-2 border-dashed border-[#dcdcdc] hover:border-[#4a154b] rounded-2xl p-5 text-center bg-[#fdfbf9] hover:bg-[#f9f0ff]/50 transition-all cursor-pointer flex items-center justify-center gap-3"
+                      >
+                        <div className="w-9 h-9 rounded-full bg-[#f9f0ff] text-[#4a154b] flex items-center justify-center flex-shrink-0">
+                          <Plus className="w-5 h-5" />
+                        </div>
+                        <div className="text-left">
+                          <span className="text-xs font-bold text-[#4a154b] block">
+                            {evidencePhotos.length === 0 ? '[ + Tambah Foto ]' : '[ + Tambah Foto Lagi ]'}
+                          </span>
+                          <span className="text-[11px] text-[#696969]">
+                            {evidencePhotos.length === 0
+                              ? 'Upload 1–5 foto kondisi kejadian (JPG, PNG, WEBP maks 8MB)'
+                              : `Tersisa slot ${5 - evidencePhotos.length} foto lagi`}
+                          </span>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="p-3 rounded-xl bg-[#ecfdf5] border border-[#a7f3d0] flex items-center gap-2 text-xs text-[#065f46] font-medium">
+                        <CheckCircle2 className="w-4 h-4 text-[#059669]" />
+                        <span>Maksimal 5 foto telah dipilih. Seluruh bukti siap diunggah.</span>
+                      </div>
+                    )}
+
                     <input
                       ref={fileInputRef}
                       type="file"
-                      accept="image/*"
-                      onChange={handlePhotoChange}
+                      accept="image/jpeg,image/png,image/webp"
+                      multiple
+                      onChange={handleAddPhotos}
                       className="hidden"
                     />
                   </div>

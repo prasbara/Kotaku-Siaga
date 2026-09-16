@@ -11,6 +11,7 @@ import {
 import { getUserRole, sanitizeReportForRole } from '@/lib/auth/session'
 import { processAndValidateImage } from '@/lib/verification/image-validator'
 import { extractAndValidateExifTimestamp } from '@/lib/verification/exif-validator'
+import { analyzeMultipleEvidencePhotos } from '@/lib/verification/evidence-analyzer'
 
 // Helper to safely extract IP
 function getClientIp(request: NextRequest): string {
@@ -157,6 +158,8 @@ export async function GET(request: NextRequest) {
             ? 'Dalam peninjauan posko'
             : 'Laporan ditolak'),
         validity_breakdown: meta?.validity_breakdown || null,
+        evidence_summary: meta?.evidence_summary || null,
+        evidence_photos: meta?.evidence_photos || (report.photo_url ? [{ index: 1, photo_url: report.photo_url }] : []),
       }
     })
 
@@ -215,6 +218,7 @@ export async function POST(request: NextRequest) {
       email_verified = false,
       turnstile_token,
       photo_url,
+      photos,
       photo_taken_at,
       photo_dhash,
       photo_sha256,
@@ -317,48 +321,23 @@ export async function POST(request: NextRequest) {
       incident_details.water_height_cm = null
     }
 
-    // Photo is mandatory for standard report
-    if (!photo_url && !photo_sha256) {
+    // 2b. Multi-Photo Extraction & Validation (1 to 5 photos)
+    const rawPhotos: string[] = Array.isArray(photos) && photos.length > 0
+      ? photos.filter((p: any) => typeof p === 'string' && p.trim().length > 0)
+      : (photo_url && typeof photo_url === 'string' && photo_url.trim().length > 0 ? [photo_url] : [])
+
+    if (rawPhotos.length === 0 && !photo_sha256) {
       return NextResponse.json(
-        { error: 'Foto bukti lapangan wajib dilampirkan untuk laporan warga standar.' },
+        { error: 'Bukti foto kondisi lapangan wajib dilampirkan (minimal 1 foto, maksimal 5 foto).' },
         { status: 400 }
       )
     }
 
-    // 2b. Image MIME, Signature & EXIF 24-Hour Rule Validation
-    let validatedPhotoSha256 = photo_sha256 || null
-    let validatedPhotoDhash = photo_dhash || null
-    let exifTimestampResult: any = {
-      capture_timestamp: null,
-      capture_timestamp_wib: null,
-      capture_timestamp_source: 'none',
-      capture_timestamp_status: 'timestamp_unavailable',
-      capture_timestamp_age_hours: null,
-      risk_warning: null,
-    }
-
-    if (photo_url && typeof photo_url === 'string' && photo_url.startsWith('data:image/')) {
-      try {
-        const matches = photo_url.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/)
-        if (matches && matches.length === 3) {
-          const clientMime = matches[1]
-          const imageBuffer = Buffer.from(matches[2], 'base64')
-          const imgValidation = await processAndValidateImage(imageBuffer, clientMime)
-          if (!imgValidation.isValid) {
-            return NextResponse.json(
-              { error: `Validasi file bukti gagal: ${imgValidation.error || 'Format gambar rusak'}` },
-              { status: 400 }
-            )
-          }
-          validatedPhotoSha256 = imgValidation.sha256
-          validatedPhotoDhash = imgValidation.dhash
-          if (imgValidation.exifValidation) {
-            exifTimestampResult = imgValidation.exifValidation
-          }
-        }
-      } catch (imgErr) {
-        console.warn('Image EXIF/Signature parsing warning:', imgErr)
-      }
+    if (rawPhotos.length > 5) {
+      return NextResponse.json(
+        { error: 'Jumlah bukti foto melebihi batas maksimal (maksimal 5 foto per laporan).' },
+        { status: 400 }
+      )
     }
 
     // 3. Turnstile Server-Side Validation
@@ -374,8 +353,10 @@ export async function POST(request: NextRequest) {
     const normalizedEmail = reporter_email.trim().toLowerCase()
     const clientIpHash = Buffer.from(clientIp).toString('base64').slice(0, 16)
 
-    // 4. Verification Pipeline Execution
+    // 4. Verification Pipeline & Multi-Photo Evidence Analysis
     let recentReports: any[] = []
+    let existingEvidenceHashes: Array<{ sha256: string; phash: string; report_code?: string }> = []
+
     if (isSupabaseConfigured()) {
       try {
         const supabase = await createAdminClient()
@@ -392,9 +373,47 @@ export async function POST(request: NextRequest) {
             category: r.verification_metadata?.actual_category || r.category,
           }))
         }
+
+        const { data: recentEvidence } = await supabase
+          .from('report_evidence')
+          .select('sha256, phash, report_id, reports(report_code)')
+          .order('created_at', { ascending: false })
+          .limit(100)
+
+        if (recentEvidence) {
+          existingEvidenceHashes = recentEvidence.map((e: any) => ({
+            sha256: e.sha256,
+            phash: e.phash,
+            report_code: e.reports?.report_code,
+          }))
+        }
       } catch (fetchErr) {
-        console.warn('Could not fetch recent reports for corroboration:', fetchErr)
+        console.warn('Could not fetch recent reports or evidence for corroboration:', fetchErr)
       }
+    }
+
+    // Run multi-layer photo analysis: SHA-256, pHash, EXIF timestamp, GPS consistency, and AI Vision
+    const evidenceSummary = await analyzeMultipleEvidencePhotos({
+      photos: rawPhotos,
+      reportCode: `SMG-${new Date().getFullYear()}-${Math.floor(100000 + Math.random() * 900000)}`,
+      category,
+      description,
+      latitude,
+      longitude,
+      submissionTime: reported_at ? new Date(reported_at) : new Date(),
+      existingEvidenceHashes,
+    })
+
+    const primaryEvidence = evidenceSummary.evidenceList[0] || null
+    let validatedPhotoSha256 = primaryEvidence?.sha256 || photo_sha256 || null
+    let validatedPhotoDhash = primaryEvidence?.phash || photo_dhash || null
+    let exifTimestampResult: any = primaryEvidence?.exif || {
+      capture_timestamp: null,
+      capture_timestamp_wib: null,
+      capture_timestamp_source: 'none',
+      capture_timestamp_status: 'timestamp_unavailable',
+      capture_timestamp_age_hours: null,
+      risk_warning: null,
     }
 
     const verification = await runVerificationPipeline(
@@ -405,7 +424,7 @@ export async function POST(request: NextRequest) {
         longitude,
         locationAccuracy: location_accuracy,
         reportedAt: reported_at,
-        photoUrl: photo_url,
+        photoUrl: primaryEvidence?.photoUrl || photo_url || (rawPhotos[0] ?? null),
         photoTakenAt: exifTimestampResult?.capture_timestamp || photo_taken_at,
         photoDhash: validatedPhotoDhash,
         photoSha256: validatedPhotoSha256,
@@ -418,6 +437,53 @@ export async function POST(request: NextRequest) {
       },
       recentReports
     )
+
+    // Update evidence storage paths with final report code
+    evidenceSummary.evidenceList.forEach((e) => {
+      e.storagePath = `evidence/${verification.reportCode}/${e.index}_${e.sha256.slice(0, 10)}.jpg`
+    })
+
+    // Merge multi-photo evidence summary into verification metadata
+    verification.metadata.evidence_summary = {
+      total_photos: evidenceSummary.totalPhotos,
+      valid_photos: evidenceSummary.validPhotos,
+      timestamp_consistent_count: evidenceSummary.timestampConsistentCount,
+      gps_consistent_count: evidenceSummary.gpsConsistentCount,
+      similar_evidence_count: evidenceSummary.similarEvidenceCount,
+      ai_relevant_count: evidenceSummary.aiRelevantCount,
+      overall_authenticity_score: evidenceSummary.overallAuthenticityScore,
+      overall_verdict: evidenceSummary.overallVerdict,
+      overall_recommendation: evidenceSummary.overallRecommendation,
+    }
+    verification.metadata.evidence_photos = evidenceSummary.evidenceList.map((e) => ({
+      index: e.index,
+      storage_path: e.storagePath,
+      photo_url: e.photoUrl,
+      mime_type: e.mimeType,
+      file_size: e.fileSizeBytes,
+      width: e.width,
+      height: e.height,
+      sha256: e.sha256,
+      phash: e.phash,
+      capture_timestamp: e.exif.capture_timestamp,
+      capture_timestamp_wib: e.exif.capture_timestamp_wib,
+      capture_timestamp_source: e.exif.capture_timestamp_source,
+      capture_timestamp_status: e.exif.capture_timestamp_status,
+      capture_timestamp_age_hours: e.exif.capture_timestamp_age_hours,
+      exif_latitude: e.exif.exif_latitude,
+      exif_longitude: e.exif.exif_longitude,
+      gps_status: e.exif.gps_status,
+      gps_distance_meters: e.exif.gps_distance_meters,
+      ai_status: e.ai.status,
+      ai_provider: e.ai.provider,
+      ai_category: e.ai.detected_category,
+      ai_confidence: e.ai.confidence,
+      ai_anomaly_flags: e.ai.flags,
+      ai_reason: e.ai.reason,
+      verdict: e.verdict,
+      evidence_score: e.evidenceScore,
+      signals: e.signals,
+    }))
 
     // Merge EXIF validation result into verification metadata
     if (exifTimestampResult) {
@@ -502,7 +568,7 @@ export async function POST(request: NextRequest) {
           cluster_code: clusterResult.clusterCode,
           independent_reporter_count: clusterResult.independentReporterCount,
         },
-        photo_url: photo_url || null,
+        photo_url: primaryEvidence?.photoUrl || photo_url || (rawPhotos[0] ?? null),
         reporter_name,
         reporter_contact: normalizedPhone,
         is_demo: isSimulationReport,
@@ -563,9 +629,9 @@ export async function POST(request: NextRequest) {
         spoof_risk: typeof body.spoof_risk === 'number' ? body.spoof_risk : null,
         quality_score: typeof body.quality_score === 'number' ? body.quality_score : null,
       },
-      photo_url: photo_url || null,
-      photo_hash: photo_sha256 || null,
-      photo_taken_at: photo_taken_at || null,
+      photo_url: primaryEvidence?.photoUrl || photo_url || (rawPhotos[0] ?? null),
+      photo_hash: validatedPhotoSha256,
+      photo_taken_at: exifTimestampResult?.capture_timestamp || photo_taken_at || null,
       reporter_name,
       reporter_contact: normalizedPhone,
       is_demo: isSimulationReport,
@@ -594,6 +660,43 @@ export async function POST(request: NextRequest) {
         { error: 'Gagal menyimpan laporan ke database.', detail: error.message },
         { status: 503 }
       )
+    }
+
+    // Insert individual evidence items into report_evidence table
+    if (data?.id && evidenceSummary.evidenceList.length > 0) {
+      try {
+        const evidenceRows = evidenceSummary.evidenceList.map((item) => ({
+          report_id: data.id,
+          storage_path: item.storagePath,
+          mime_type: item.mimeType,
+          file_size: item.fileSizeBytes,
+          width: item.width,
+          height: item.height,
+          sha256: item.sha256,
+          phash: item.phash,
+          phash_version: 'dhash_v1',
+          capture_timestamp: item.exif.capture_timestamp,
+          capture_timestamp_source: item.exif.capture_timestamp_source,
+          capture_timestamp_status: item.exif.capture_timestamp_status,
+          capture_timestamp_age_hours: item.exif.capture_timestamp_age_hours,
+          exif_latitude: item.exif.exif_latitude,
+          exif_longitude: item.exif.exif_longitude,
+          gps_status: item.exif.gps_status,
+          gps_distance_meters: item.exif.gps_distance_meters,
+          ai_status: item.ai.status,
+          ai_provider: item.ai.provider,
+          ai_category: item.ai.detected_category,
+          ai_confidence: item.ai.confidence,
+          ai_anomaly_flags: item.ai.flags,
+          verification_status: item.verdict,
+        }))
+        const { error: evInsertErr } = await supabase.from('report_evidence').insert(evidenceRows)
+        if (evInsertErr) {
+          console.warn('Could not insert report_evidence rows:', evInsertErr.message)
+        }
+      } catch (evErr: any) {
+        console.warn('report_evidence insertion error (non-fatal):', evErr?.message || evErr)
+      }
     }
 
     const returnedData = data

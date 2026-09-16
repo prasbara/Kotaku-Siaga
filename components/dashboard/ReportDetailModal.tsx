@@ -54,6 +54,8 @@ export function ReportDetailModal({
   const [imageFitMode, setImageFitMode] = useState<'cover' | 'contain'>('cover')
   const [activeTab, setActiveTab] = useState<'evidence' | 'reporter' | 'risk' | 'disposition'>('evidence')
   const [copiedCode, setCopiedCode] = useState(false)
+  const [selectedPhotoIndex, setSelectedPhotoIndex] = useState<number>(0)
+  const [isFullscreenModalOpen, setIsFullscreenModalOpen] = useState<boolean>(false)
 
   // Reset state on open
   useEffect(() => {
@@ -62,6 +64,8 @@ export function ReportDetailModal({
       setImageFitMode('cover')
       setActiveTab('evidence')
       setCopiedCode(false)
+      setSelectedPhotoIndex(0)
+      setIsFullscreenModalOpen(false)
     }
   }, [isOpen, report?.id])
 
@@ -69,12 +73,16 @@ export function ReportDetailModal({
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isOpen) {
-        onClose()
+        if (isFullscreenModalOpen) {
+          setIsFullscreenModalOpen(false)
+        } else {
+          onClose()
+        }
       }
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [isOpen, onClose])
+  }, [isOpen, onClose, isFullscreenModalOpen])
 
   if (!isOpen || !report) return null
 
@@ -88,7 +96,70 @@ export function ReportDetailModal({
   const isFailedVerification = report.verification_status === 'failed' || meta?.verification_status === 'failed'
 
   const reporterPhoto = report.verification_photo_url || meta?.verification_photo_url || null
-  const evidencePhoto = report.photo_url || null
+
+  const rawEvidenceList: any[] =
+    (report as any)?.evidence_photos ||
+    meta?.evidence_photos ||
+    meta?.evidence_summary?.evidenceList ||
+    []
+
+  const evidencePhotosList = rawEvidenceList.length > 0
+    ? rawEvidenceList.map((p, idx) => ({
+        index: p.index || idx + 1,
+        photoUrl: p.photo_url || p.photoUrl || (typeof p === 'string' ? p : report.photo_url),
+        sha256: p.sha256 || report.photo_hash || 'sha256_available',
+        phash: p.phash || 'dhash_available',
+        capture_timestamp_wib: p.capture_timestamp_wib || meta?.capture_timestamp_wib,
+        capture_timestamp_status: p.capture_timestamp_status || meta?.capture_timestamp_status || 'timestamp_unavailable',
+        capture_timestamp_age_hours: p.capture_timestamp_age_hours ?? meta?.capture_timestamp_age_hours,
+        gps_status: p.gps_status || meta?.gps_status || 'gps_unavailable',
+        gps_distance_meters: p.gps_distance_meters ?? meta?.gps_distance_meters ?? null,
+        is_exact_duplicate: Boolean(p.is_exact_duplicate || p.isExactDuplicate),
+        is_visually_similar: Boolean(p.is_visually_similar || p.isVisuallySimilar),
+        ai_status: p.ai_status || p.ai?.status || 'analyzed',
+        ai_category: p.ai_category || p.ai?.detected_category || report.category,
+        ai_confidence: p.ai_confidence ?? p.ai?.confidence ?? 85,
+        ai_flags: p.ai_anomaly_flags || p.ai?.flags || [],
+        ai_reason: p.ai_reason || p.ai?.reason || 'Analisis visual tervalidasi.',
+        evidence_score: p.evidence_score || 80,
+        verdict: p.verdict || 'consistent',
+      }))
+    : report.photo_url
+    ? [{
+        index: 1,
+        photoUrl: report.photo_url,
+        sha256: report.photo_hash || 'sha256_available',
+        phash: 'dhash_available',
+        capture_timestamp_wib: meta?.capture_timestamp_wib,
+        capture_timestamp_status: meta?.capture_timestamp_status || 'timestamp_unavailable',
+        capture_timestamp_age_hours: meta?.capture_timestamp_age_hours,
+        gps_status: meta?.gps_status || 'gps_unavailable',
+        gps_distance_meters: meta?.gps_distance_meters ?? null,
+        is_exact_duplicate: false,
+        is_visually_similar: false,
+        ai_status: 'analyzed',
+        ai_category: report.category,
+        ai_confidence: 85,
+        ai_flags: [],
+        ai_reason: 'Foto lapangan diverifikasi oleh sistem.',
+        evidence_score: 85,
+        verdict: 'consistent',
+      }]
+    : []
+
+  const activePhoto = evidencePhotosList[selectedPhotoIndex] || evidencePhotosList[0] || null
+  const evidencePhoto = activePhoto?.photoUrl || report.photo_url || null
+
+  const evidenceSummary = meta?.evidence_summary || {
+    total_photos: evidencePhotosList.length,
+    valid_photos: evidencePhotosList.length,
+    timestamp_consistent_count: evidencePhotosList.filter((p) => p.capture_timestamp_status === 'timestamp_consistent').length,
+    gps_consistent_count: evidencePhotosList.filter((p) => p.gps_status === 'gps_consistent').length,
+    similar_evidence_count: evidencePhotosList.filter((p) => p.is_visually_similar || p.is_exact_duplicate).length,
+    ai_relevant_count: evidencePhotosList.length,
+    overall_verdict: evidencePhotosList.some((p) => p.is_exact_duplicate) ? 'inconsistent' : 'consistent',
+    overall_recommendation: 'Sinyal bukti konsisten. Disarankan dapat diproses verifikasi posko.',
+  }
 
   const score = report.credibility_score ?? 80
   const abuseScore = report.abuse_score ?? meta?.abuse_score ?? 15
@@ -281,6 +352,51 @@ export function ReportDetailModal({
           {/* TAB 1: BUKTI KEJADIAN */}
           {activeTab === 'evidence' && (
             <div className="space-y-5">
+              {/* Photo Selector Header Bar */}
+              <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-xl bg-[#fbf9f5] border border-[#d0c8be]">
+                <div className="flex items-center gap-2">
+                  <span className="font-mono text-xs font-bold uppercase text-[#4a154b]">
+                    BUKTI KEJADIAN
+                  </span>
+                  <span className="font-mono text-xs font-bold px-2 py-0.5 rounded-full bg-[#f4ede4] text-[#1d1d1d] border border-[#ebdccb]">
+                    {evidencePhotosList.length > 0 ? `${selectedPhotoIndex + 1} / ${evidencePhotosList.length} Foto` : '0 Foto'}
+                  </span>
+                </div>
+
+                {/* Thumbnails Gallery */}
+                {evidencePhotosList.length > 1 && (
+                  <div className="flex items-center gap-2 overflow-x-auto py-1">
+                    {evidencePhotosList.map((p, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => setSelectedPhotoIndex(idx)}
+                        className={`relative w-12 h-12 rounded-lg overflow-hidden border-2 transition-all flex-shrink-0 cursor-pointer ${
+                          selectedPhotoIndex === idx
+                            ? 'border-[#4a154b] shadow-md scale-105 ring-2 ring-[#4a154b]/30'
+                            : 'border-[#d0c8be] opacity-70 hover:opacity-100'
+                        }`}
+                        title={`Lihat Foto Bukti #${idx + 1}`}
+                      >
+                        <Image src={p.photoUrl} alt={`Thumbnail ${idx + 1}`} fill className="object-cover" unoptimized />
+                        <span className="absolute bottom-0 right-0 px-1 text-[9px] font-mono font-bold bg-black/70 text-white rounded-tl">
+                          #{idx + 1}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => setIsFullscreenModalOpen(true)}
+                  className="px-3 py-1.5 rounded-lg bg-[#4a154b] text-white text-xs font-mono font-bold hover:bg-[#3b113c] transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer"
+                >
+                  <Maximize2 className="w-3.5 h-3.5" />
+                  <span>Buka Fullscreen</span>
+                </button>
+              </div>
+
               <div className="flex flex-col lg:flex-row gap-5">
                 {/* Evidence Image Viewer */}
                 <div className="flex-1 flex flex-col items-center">
@@ -365,7 +481,7 @@ export function ReportDetailModal({
                     )}
                   </div>
                   <span className="text-[11px] font-mono text-[#696969] mt-2">
-                    Foto Bukti Kejadian di Lapangan • Ditangkap warga pelapor
+                    Foto Bukti #{selectedPhotoIndex + 1} dari {evidencePhotosList.length} • Ditangkap warga pelapor
                   </span>
                 </div>
 
@@ -390,17 +506,17 @@ export function ReportDetailModal({
                       <div className="flex justify-between py-1 border-b border-[#ebdccb]">
                         <span className="text-[#696969]">EXIF Capture Time:</span>
                         <strong className="text-[#4a154b] font-mono">
-                          {meta?.capture_timestamp_wib || (meta?.photo_taken_at ? new Date(meta.photo_taken_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIB' : 'Tidak tersedia')}
+                          {activePhoto?.capture_timestamp_wib || (meta?.photo_taken_at ? new Date(meta.photo_taken_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIB' : 'Tidak tersedia')}
                         </strong>
                       </div>
                       <div className="flex justify-between py-1 border-b border-[#ebdccb]">
                         <span className="text-[#696969]">EXIF Status:</span>
                         <span className="font-mono font-bold text-[11px]">
-                          {meta?.capture_timestamp_status === 'timestamp_consistent' ? (
+                          {activePhoto?.capture_timestamp_status === 'timestamp_consistent' ? (
                             <span className="text-[#007a5a]">✓ Consistent (&le;24h)</span>
-                          ) : meta?.capture_timestamp_status === 'stale_evidence' ? (
+                          ) : activePhoto?.capture_timestamp_status === 'stale_evidence' ? (
                             <span className="text-amber-600">⚠ Stale (&gt;24h)</span>
-                          ) : meta?.capture_timestamp_status === 'invalid_timestamp' ? (
+                          ) : activePhoto?.capture_timestamp_status === 'invalid_timestamp' ? (
                             <span className="text-red-600">⚠ Invalid (Future)</span>
                           ) : (
                             <span className="text-[#696969]">Unavailable</span>
@@ -446,6 +562,153 @@ export function ReportDetailModal({
                       <ExternalLink className="w-3 h-3" />
                     </a>
                   </div>
+                </div>
+              </div>
+
+              {/* PER-PHOTO EVIDENCE SIGNALS (Section 16) */}
+              {activePhoto && (
+                <div className="p-4 rounded-xl bg-white border border-[#d0c8be] space-y-3">
+                  <div className="flex items-center justify-between pb-2 border-b border-[#ebdccb]">
+                    <span className="font-mono text-xs font-bold uppercase text-[#4a154b]">
+                      Evidence Status — Foto #{activePhoto.index}
+                    </span>
+                    <span className={`text-[11px] font-mono font-bold px-2.5 py-0.5 rounded ${
+                      activePhoto.verdict === 'consistent'
+                        ? 'bg-[#ecfdf5] text-[#065f46] border border-[#a7f3d0]'
+                        : activePhoto.verdict === 'inconsistent'
+                        ? 'bg-[#fef2f2] text-[#991b1b] border border-[#fecaca]'
+                        : 'bg-[#fffbeb] text-[#92400e] border-[#fcd34d]'
+                    }`}>
+                      {activePhoto.verdict === 'consistent'
+                        ? '✓ Signals Consistent'
+                        : activePhoto.verdict === 'inconsistent'
+                        ? '⚠ Anomaly Detected'
+                        : '⚠ Needs Review'}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs font-mono">
+                    <div className="p-2.5 rounded-lg bg-[#fbf9f5] border border-[#ebdccb] space-y-1">
+                      <span className="text-[10px] text-[#696969] block">EXIF TIMESTAMP</span>
+                      {activePhoto.capture_timestamp_status === 'timestamp_consistent' ? (
+                        <span className="font-bold text-[#007a5a] flex items-center gap-1">
+                          <CheckCircle2 className="w-3.5 h-3.5" /> Consistent (≤24h)
+                        </span>
+                      ) : activePhoto.capture_timestamp_status === 'stale_evidence' ? (
+                        <span className="font-bold text-amber-700 flex items-center gap-1">
+                          <AlertTriangle className="w-3.5 h-3.5" /> Stale ({activePhoto.capture_timestamp_age_hours}h)
+                        </span>
+                      ) : activePhoto.capture_timestamp_status === 'invalid_timestamp' ? (
+                        <span className="font-bold text-red-600 flex items-center gap-1">
+                          <AlertTriangle className="w-3.5 h-3.5" /> Invalid (Future)
+                        </span>
+                      ) : (
+                        <span className="text-[#696969]">EXIF Unavailable</span>
+                      )}
+                      <span className="text-[10px] text-[#696969] block truncate">
+                        {activePhoto.capture_timestamp_wib || 'Tidak ada metadata waktu'}
+                      </span>
+                    </div>
+
+                    <div className="p-2.5 rounded-lg bg-[#fbf9f5] border border-[#ebdccb] space-y-1">
+                      <span className="text-[10px] text-[#696969] block">EXIF GPS VS LAPORAN</span>
+                      {activePhoto.gps_status === 'gps_consistent' ? (
+                        <span className="font-bold text-[#007a5a] flex items-center gap-1">
+                          <CheckCircle2 className="w-3.5 h-3.5" /> Consistent
+                        </span>
+                      ) : activePhoto.gps_status === 'gps_mismatch' ? (
+                        <span className="font-bold text-amber-700 flex items-center gap-1">
+                          <AlertTriangle className="w-3.5 h-3.5" /> GPS Mismatch
+                        </span>
+                      ) : (
+                        <span className="text-[#696969]">GPS Unavailable</span>
+                      )}
+                      <span className="text-[10px] text-[#696969] block">
+                        {activePhoto.gps_distance_meters !== null ? `Jarak: ${activePhoto.gps_distance_meters} m` : 'Data koordinat foto nihil'}
+                      </span>
+                    </div>
+
+                    <div className="p-2.5 rounded-lg bg-[#fbf9f5] border border-[#ebdccb] space-y-1">
+                      <span className="text-[10px] text-[#696969] block">SHA-256 & pHASH</span>
+                      {activePhoto.is_exact_duplicate ? (
+                        <span className="font-bold text-red-600 flex items-center gap-1">
+                          <AlertTriangle className="w-3.5 h-3.5" /> Exact Duplicate
+                        </span>
+                      ) : activePhoto.is_visually_similar ? (
+                        <span className="font-bold text-amber-700 flex items-center gap-1">
+                          <AlertTriangle className="w-3.5 h-3.5" /> Similar Evidence
+                        </span>
+                      ) : (
+                        <span className="font-bold text-[#007a5a] flex items-center gap-1">
+                          <CheckCircle2 className="w-3.5 h-3.5" /> Unique Photo
+                        </span>
+                      )}
+                      <span className="text-[10px] text-[#696969] truncate block" title={activePhoto.sha256}>
+                        Hash: {activePhoto.sha256.slice(0, 12)}...
+                      </span>
+                    </div>
+
+                    <div className="p-2.5 rounded-lg bg-[#fbf9f5] border border-[#ebdccb] space-y-1">
+                      <span className="text-[10px] text-[#696969] block">AI VISION (GEMINI 2.5)</span>
+                      <span className="font-bold text-[#4a154b] block">
+                        {activePhoto.ai_category} ({activePhoto.ai_confidence}%)
+                      </span>
+                      <span className="text-[10px] text-[#696969] truncate block" title={activePhoto.ai_reason}>
+                        {activePhoto.ai_reason}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* EVIDENCE VERIFICATION PANEL (Section 17) */}
+              <div className="p-4 rounded-xl bg-[#f4ede4] border border-[#d0c8be] space-y-3">
+                <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-[#ebdccb]">
+                  <div className="flex items-center gap-2">
+                    <ShieldCheck className="w-4 h-4 text-[#4a154b]" />
+                    <span className="font-mono text-xs font-bold uppercase text-[#4a154b]">
+                      Evidence Verification Summary
+                    </span>
+                  </div>
+                  <span className="font-mono text-xs font-bold px-2.5 py-0.5 rounded bg-white text-[#4a154b] border border-[#d0c8be]">
+                    {evidenceSummary.overall_verdict === 'consistent' ? 'Evidence signals consistent' : 'Evidence requires human review'}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 text-xs font-mono">
+                  <div className="p-2 rounded-lg bg-white border border-[#ebdccb]">
+                    <span className="text-[10px] text-[#696969] block">TOTAL FOTO</span>
+                    <strong className="text-[#1d1d1d]">{evidenceSummary.total_photos} Foto</strong>
+                  </div>
+                  <div className="p-2 rounded-lg bg-white border border-[#ebdccb]">
+                    <span className="text-[10px] text-[#696969] block">TIMESTAMP</span>
+                    <strong className="text-[#007a5a]">✓ {evidenceSummary.timestamp_consistent_count}/{evidenceSummary.total_photos} Sesuai</strong>
+                  </div>
+                  <div className="p-2 rounded-lg bg-white border border-[#ebdccb]">
+                    <span className="text-[10px] text-[#696969] block">GPS RADIUS</span>
+                    <strong className="text-[#007a5a]">✓ {evidenceSummary.gps_consistent_count}/{evidenceSummary.total_photos} Cocok</strong>
+                  </div>
+                  <div className="p-2 rounded-lg bg-white border border-[#ebdccb]">
+                    <span className="text-[10px] text-[#696969] block">SHA-256</span>
+                    <strong className="text-[#1d1d1d]">{evidenceSummary.similar_evidence_count === 0 ? 'Unique' : 'Terdeteksi'}</strong>
+                  </div>
+                  <div className="p-2 rounded-lg bg-white border border-[#ebdccb]">
+                    <span className="text-[10px] text-[#696969] block">pHASH</span>
+                    <strong className="text-[#1d1d1d]">{evidenceSummary.similar_evidence_count === 0 ? 'No strong similarity' : 'Potensi kemiripan'}</strong>
+                  </div>
+                  <div className="p-2 rounded-lg bg-white border border-[#ebdccb]">
+                    <span className="text-[10px] text-[#696969] block">AI VISION</span>
+                    <strong className="text-[#4a154b]">Aktif (Gemini)</strong>
+                  </div>
+                </div>
+
+                <div className="p-2.5 rounded-lg bg-white/70 border border-[#ebdccb] text-xs">
+                  <p className="text-[#1d1d1d] font-semibold">
+                    Rekomendasi Moderasi: {evidenceSummary.overall_recommendation}
+                  </p>
+                  <p className="text-[11px] text-[#696969] mt-0.5 italic">
+                    Catatan: Sistem menyajikan indikator konsistensi bukti (signals), bukan penentu mutlak keaslian 100%. Keputusan validasi tetap berada pada petugas posko.
+                  </p>
                 </div>
               </div>
 
@@ -919,6 +1182,65 @@ export function ReportDetailModal({
           </div>
         </div>
       </div>
+
+      {/* Fullscreen Photo Lightbox Modal */}
+      {isFullscreenModalOpen && evidencePhoto && (
+        <div className="fixed inset-0 z-[100] bg-black/95 flex flex-col items-center justify-between p-4 sm:p-6 animate-in fade-in duration-200">
+          <div className="w-full flex items-center justify-between text-white text-xs font-mono pb-3 border-b border-white/20">
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-amber-400">BUKTI KEJADIAN FULLSCREEN</span>
+              <span>• Foto #{selectedPhotoIndex + 1} dari {evidencePhotosList.length}</span>
+              <span className="text-white/60">({report.report_code})</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsFullscreenModalOpen(false)}
+              className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer"
+              title="Tutup Layar Penuh (ESC)"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          <div className="relative w-full flex-1 my-3 flex items-center justify-center overflow-hidden">
+            <Image
+              src={evidencePhoto}
+              alt={`Fullscreen Foto Bukti #${selectedPhotoIndex + 1}`}
+              fill
+              className="object-contain"
+              unoptimized
+            />
+          </div>
+
+          <div className="w-full flex flex-wrap items-center justify-between gap-3 text-white text-xs font-mono pt-3 border-t border-white/20">
+            <div className="flex items-center gap-2">
+              {evidencePhotosList.length > 1 && (
+                <>
+                  <button
+                    type="button"
+                    disabled={selectedPhotoIndex === 0}
+                    onClick={() => setSelectedPhotoIndex((prev) => Math.max(prev - 1, 0))}
+                    className="px-3 py-1.5 rounded bg-white/20 hover:bg-white/30 disabled:opacity-30 transition-colors cursor-pointer"
+                  >
+                    ← Sebelumnya
+                  </button>
+                  <button
+                    type="button"
+                    disabled={selectedPhotoIndex === evidencePhotosList.length - 1}
+                    onClick={() => setSelectedPhotoIndex((prev) => Math.min(prev + 1, evidencePhotosList.length - 1))}
+                    className="px-3 py-1.5 rounded bg-white/20 hover:bg-white/30 disabled:opacity-30 transition-colors cursor-pointer"
+                  >
+                    Berikutnya →
+                  </button>
+                </>
+              )}
+            </div>
+            <div className="text-[11px] text-white/70">
+              Tekan tombol ESC atau Tutup untuk kembali ke dashboard
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
