@@ -9,6 +9,8 @@ import {
   processReportClustering,
 } from '@/lib/verification/corroboration-engine'
 import { getUserRole, sanitizeReportForRole } from '@/lib/auth/session'
+import { processAndValidateImage } from '@/lib/verification/image-validator'
+import { extractAndValidateExifTimestamp } from '@/lib/verification/exif-validator'
 
 // Helper to safely extract IP
 function getClientIp(request: NextRequest): string {
@@ -323,6 +325,42 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // 2b. Image MIME, Signature & EXIF 24-Hour Rule Validation
+    let validatedPhotoSha256 = photo_sha256 || null
+    let validatedPhotoDhash = photo_dhash || null
+    let exifTimestampResult: any = {
+      capture_timestamp: null,
+      capture_timestamp_wib: null,
+      capture_timestamp_source: 'none',
+      capture_timestamp_status: 'timestamp_unavailable',
+      capture_timestamp_age_hours: null,
+      risk_warning: null,
+    }
+
+    if (photo_url && typeof photo_url === 'string' && photo_url.startsWith('data:image/')) {
+      try {
+        const matches = photo_url.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/)
+        if (matches && matches.length === 3) {
+          const clientMime = matches[1]
+          const imageBuffer = Buffer.from(matches[2], 'base64')
+          const imgValidation = await processAndValidateImage(imageBuffer, clientMime)
+          if (!imgValidation.isValid) {
+            return NextResponse.json(
+              { error: `Validasi file bukti gagal: ${imgValidation.error || 'Format gambar rusak'}` },
+              { status: 400 }
+            )
+          }
+          validatedPhotoSha256 = imgValidation.sha256
+          validatedPhotoDhash = imgValidation.dhash
+          if (imgValidation.exifValidation) {
+            exifTimestampResult = imgValidation.exifValidation
+          }
+        }
+      } catch (imgErr) {
+        console.warn('Image EXIF/Signature parsing warning:', imgErr)
+      }
+    }
+
     // 3. Turnstile Server-Side Validation
     const turnstileResult = await verifyTurnstileToken(turnstile_token, clientIp)
     if (!turnstileResult.success) {
@@ -368,9 +406,9 @@ export async function POST(request: NextRequest) {
         locationAccuracy: location_accuracy,
         reportedAt: reported_at,
         photoUrl: photo_url,
-        photoTakenAt: photo_taken_at,
-        photoDhash: photo_dhash,
-        photoSha256: photo_sha256,
+        photoTakenAt: exifTimestampResult?.capture_timestamp || photo_taken_at,
+        photoDhash: validatedPhotoDhash,
+        photoSha256: validatedPhotoSha256,
         website,
         company,
         phoneNumberConfirm: phone_number_confirm,
@@ -380,6 +418,21 @@ export async function POST(request: NextRequest) {
       },
       recentReports
     )
+
+    // Merge EXIF validation result into verification metadata
+    if (exifTimestampResult) {
+      verification.metadata.capture_timestamp = exifTimestampResult.capture_timestamp
+      verification.metadata.capture_timestamp_wib = exifTimestampResult.capture_timestamp_wib
+      verification.metadata.capture_timestamp_source = exifTimestampResult.capture_timestamp_source
+      verification.metadata.capture_timestamp_status = exifTimestampResult.capture_timestamp_status
+      verification.metadata.capture_timestamp_age_hours = exifTimestampResult.capture_timestamp_age_hours
+      if (exifTimestampResult.risk_warning) {
+        verification.metadata.warnings = [
+          ...(verification.metadata.warnings || []),
+          exifTimestampResult.risk_warning,
+        ]
+      }
+    }
 
     // 5. Strict Semarang Geofencing & Anti-FakeGPS Enforcement
     if (verification.metadata.is_within_semarang === false) {

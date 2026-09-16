@@ -129,6 +129,12 @@ export interface VerificationMetadata {
   is_within_semarang?: boolean
   is_mock_spoofed?: boolean
   district_mismatch?: boolean
+  capture_timestamp?: string | null
+  capture_timestamp_wib?: string | null
+  capture_timestamp_source?: string
+  capture_timestamp_status?: string
+  capture_timestamp_age_hours?: number | null
+  exif_risk_warning?: string | null
 }
 
 export interface VerificationPipelineInput {

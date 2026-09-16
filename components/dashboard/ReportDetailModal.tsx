@@ -292,7 +292,7 @@ export function ReportDetailModal({
                     </span>
                     <div className="space-y-1.5 text-xs">
                       <div className="flex justify-between py-1 border-b border-[#ebdccb]">
-                        <span className="text-[#696969]">Waktu Pengambilan:</span>
+                        <span className="text-[#696969]">Waktu Laporan:</span>
                         <strong className="text-[#1d1d1d] font-mono">
                           {new Date(report.created_at).toLocaleTimeString('id-ID', {
                             timeZone: 'Asia/Jakarta',
@@ -301,6 +301,26 @@ export function ReportDetailModal({
                           })}{' '}
                           WIB
                         </strong>
+                      </div>
+                      <div className="flex justify-between py-1 border-b border-[#ebdccb]">
+                        <span className="text-[#696969]">EXIF Capture Time:</span>
+                        <strong className="text-[#4a154b] font-mono">
+                          {meta?.capture_timestamp_wib || (meta?.photo_taken_at ? new Date(meta.photo_taken_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) + ' WIB' : 'Tidak tersedia')}
+                        </strong>
+                      </div>
+                      <div className="flex justify-between py-1 border-b border-[#ebdccb]">
+                        <span className="text-[#696969]">EXIF Status:</span>
+                        <span className="font-mono font-bold text-[11px]">
+                          {meta?.capture_timestamp_status === 'timestamp_consistent' ? (
+                            <span className="text-[#007a5a]">✓ Consistent (&le;24h)</span>
+                          ) : meta?.capture_timestamp_status === 'stale_evidence' ? (
+                            <span className="text-amber-600">⚠ Stale (&gt;24h)</span>
+                          ) : meta?.capture_timestamp_status === 'invalid_timestamp' ? (
+                            <span className="text-red-600">⚠ Invalid (Future)</span>
+                          ) : (
+                            <span className="text-[#696969]">Unavailable</span>
+                          )}
+                        </span>
                       </div>
                       <div className="flex justify-between py-1 border-b border-[#ebdccb]">
                         <span className="text-[#696969]">Akurasi Koordinat:</span>

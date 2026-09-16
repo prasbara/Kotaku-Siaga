@@ -41,7 +41,8 @@ export async function verifyTurnstileToken(
   if (
     token === 'turnstile-testing-bypass-token' ||
     token === 'XXXX.DUMMY.TOKEN.XXXX' ||
-    token.startsWith('turnstile-safe-fallback-')
+    token === 'turnstile-safe-fallback' ||
+    token.startsWith('turnstile-safe-fallback')
   ) {
     return {
       success: true,

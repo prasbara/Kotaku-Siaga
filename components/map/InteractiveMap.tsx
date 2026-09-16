@@ -292,8 +292,22 @@ export function InteractiveMap({
           iconAnchor: [size / 2, size / 2],
         })
 
-        const reportLat = report.latitude ?? report.lat ?? DEFAULT_CENTER[0]
-        const reportLng = report.longitude ?? report.lng ?? DEFAULT_CENTER[1]
+        const reportLat = report.latitude ?? report.lat
+        const reportLng = report.longitude ?? report.lng
+
+        // Strict Coordinate Validation (Requirement #16: Zero fake 0,0 fallback, validate -90..90 and -180..180)
+        if (
+          typeof reportLat !== 'number' ||
+          typeof reportLng !== 'number' ||
+          isNaN(reportLat) ||
+          isNaN(reportLng) ||
+          Math.abs(reportLat) > 90 ||
+          Math.abs(reportLng) > 180 ||
+          (reportLat === 0 && reportLng === 0)
+        ) {
+          // Invalid coordinate - do not render marker or displace silently
+          return
+        }
 
         if (viewMode === 'markers' || viewMode === 'both') {
           const marker = L.marker([reportLat, reportLng], { icon })
@@ -407,6 +421,18 @@ export function InteractiveMap({
             iconSize: [cctvSize, cctvSize],
             iconAnchor: [cctvSize / 2, cctvSize / 2],
           })
+
+          if (
+            typeof cctv.latitude !== 'number' ||
+            typeof cctv.longitude !== 'number' ||
+            isNaN(cctv.latitude) ||
+            isNaN(cctv.longitude) ||
+            Math.abs(cctv.latitude) > 90 ||
+            Math.abs(cctv.longitude) > 180 ||
+            (cctv.latitude === 0 && cctv.longitude === 0)
+          ) {
+            return
+          }
 
           const cctvMarker = L.marker([cctv.latitude, cctv.longitude], { icon: cctvIcon })
 
@@ -569,6 +595,18 @@ export function InteractiveMap({
             iconAnchor: [sosSize / 2, sosSize / 2],
           })
 
+          if (
+            typeof sos.latitude !== 'number' ||
+            typeof sos.longitude !== 'number' ||
+            isNaN(sos.latitude) ||
+            isNaN(sos.longitude) ||
+            Math.abs(sos.latitude) > 90 ||
+            Math.abs(sos.longitude) > 180 ||
+            (sos.latitude === 0 && sos.longitude === 0)
+          ) {
+            return
+          }
+
           const marker = L.marker([sos.latitude, sos.longitude], { icon: sosIcon })
           const popupContent = document.createElement('div')
           popupContent.className = 'text-xs'
@@ -704,6 +742,18 @@ export function InteractiveMap({
             iconSize: [obsSize, obsSize],
             iconAnchor: [obsSize / 2, obsSize / 2],
           })
+
+          if (
+            typeof obs.latitude !== 'number' ||
+            typeof obs.longitude !== 'number' ||
+            isNaN(obs.latitude) ||
+            isNaN(obs.longitude) ||
+            Math.abs(obs.latitude) > 90 ||
+            Math.abs(obs.longitude) > 180 ||
+            (obs.latitude === 0 && obs.longitude === 0)
+          ) {
+            return
+          }
 
           const marker = L.marker([obs.latitude, obs.longitude], { icon: fireObsIcon })
           const popupContent = document.createElement('div')

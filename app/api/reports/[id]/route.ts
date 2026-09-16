@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient, isSupabaseConfigured } from '@/lib/supabase/server'
-import { isRequestAuthorizedAdmin } from '@/lib/auth/session'
+import { isRequestAuthorizedAdmin, getUserRole, sanitizeReportForRole } from '@/lib/auth/session'
 import { localReportStore } from '@/lib/services/local-report-store'
 
 export async function GET(

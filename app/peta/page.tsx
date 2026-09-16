@@ -44,6 +44,7 @@ export default function PetaPage() {
   const [isWeatherLoading, setIsWeatherLoading] = useState(true)
   const [showInfoModal, setShowInfoModal] = useState(false)
   const [showWindyLegend, setShowWindyLegend] = useState(true)
+  const [windyFailed, setWindyFailed] = useState<boolean>(false)
 
   // Direct In-Map Mode & PantauSemar CCTV States
   const [mapCanvasMode, setMapCanvasMode] = useState<MapCanvasMode>('gis')
@@ -660,11 +661,34 @@ export default function PetaPage() {
                 </button>
               </div>
 
-              <iframe
-                src={`https://embed.windy.com/embed.html?lat=-6.96&lon=110.42&zoom=11&level=surface&overlay=${mapCanvasMode}&menu=&message=true&marker=&calendar=&pressure=&type=map&location=coordinates&detail=&detailLat=-6.96&detailLon=110.42&metricWind=km%2Fh&metricTemp=%C2%B0C&radarRange=-1`}
-                title="Windy Live Spatial Radar"
-                className="w-full h-full border-0"
-              />
+              {windyFailed ? (
+                <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center bg-[#f4ede4]">
+                  <AlertCircle className="w-12 h-12 text-[#cc4117] mb-3" />
+                  <h3 className="font-bold text-base text-[#1d1d1d]">
+                    Windy data unavailable
+                  </h3>
+                  <p className="text-xs text-[#696969] max-w-md mt-1 mb-4">
+                    Koneksi ke server satelit cuaca Windy mengalami kendala atau sedang dalam pemeliharaan. Sistem tidak menyajikan radar tiruan.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setWindyFailed(false)
+                      handleModeChange('gis')
+                    }}
+                    className="px-4 py-2 rounded-full bg-[#4a154b] text-white font-bold text-xs"
+                  >
+                    Kembali ke Peta Spasial GIS Semarang
+                  </button>
+                </div>
+              ) : (
+                <iframe
+                  src={`https://embed.windy.com/embed.html?lat=-6.9667&lon=110.4167&zoom=11&level=surface&overlay=${mapCanvasMode}&menu=&message=true&marker=&calendar=&pressure=&type=map&location=coordinates&detail=&detailLat=-6.9667&detailLon=110.4167&metricWind=km%2Fh&metricTemp=%C2%B0C&radarRange=-1`}
+                  title="Windy Live Spatial Radar"
+                  className="w-full h-full border-0"
+                  onError={() => setWindyFailed(true)}
+                />
+              )}
             </div>
           )}
         </div>

@@ -479,11 +479,36 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
 
                     <div className="flex items-center justify-between text-[11px] font-mono text-[#696969]">
                       <span>
-                        Captured: {new Date(report.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} WIB
+                        Waktu: {meta?.capture_timestamp_wib || `${new Date(report.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })} WIB`}
                       </span>
                       <span className="text-[#007a5a] font-semibold">
                         Akurasi: ±{Math.round(report.location_accuracy || meta?.location_accuracy || 12)}m
                       </span>
+                    </div>
+
+                    {/* EXIF Timestamp Consistency Risk Signal */}
+                    <div className="pt-1">
+                      {meta?.capture_timestamp_status === 'timestamp_consistent' ? (
+                        <span className="w-full inline-flex items-center justify-center gap-1 text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-[#ecfdf5] text-[#065f46] border border-[#a7f3d0]">
+                          <CheckCircle2 className="w-3 h-3 text-[#059669]" />
+                          <span>EXIF: Timestamp Consistent (&le;24h)</span>
+                        </span>
+                      ) : meta?.capture_timestamp_status === 'stale_evidence' ? (
+                        <span className="w-full inline-flex items-center justify-center gap-1 text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-300">
+                          <AlertTriangle className="w-3 h-3 text-amber-600" />
+                          <span>⚠ Evidence appears older than 24h</span>
+                        </span>
+                      ) : meta?.capture_timestamp_status === 'invalid_timestamp' ? (
+                        <span className="w-full inline-flex items-center justify-center gap-1 text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-red-50 text-red-800 border border-red-300">
+                          <AlertTriangle className="w-3 h-3 text-red-600" />
+                          <span>Timestamp consistency warning</span>
+                        </span>
+                      ) : (
+                        <span className="w-full inline-flex items-center justify-center gap-1 text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-[#f4ede4] text-[#696969] border border-[#d0c8be]">
+                          <Clock className="w-3 h-3" />
+                          <span>EXIF timestamp unavailable</span>
+                        </span>
+                      )}
                     </div>
 
                     <button

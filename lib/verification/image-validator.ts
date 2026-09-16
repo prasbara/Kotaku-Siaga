@@ -6,6 +6,7 @@
 import crypto from 'crypto'
 import sharp from 'sharp'
 import type { ImageValidationResult } from './types'
+import { extractAndValidateExifTimestamp, type ExifTimestampValidationResult } from './exif-validator'
 
 // Allowed MIME types & file magic signatures
 export const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp']
@@ -145,22 +146,8 @@ export async function processAndValidateImage(
   const sha256 = crypto.createHash('sha256').update(buffer).digest('hex')
   const dhash = await computeDHash(buffer)
 
-  // Extract EXIF timestamp if present
-  let photoTakenAt: string | null = null
-  try {
-    const metadata = await sharp(buffer).metadata()
-    if (metadata.exif) {
-      // Look for standard EXIF date format YYYY:MM:DD HH:MM:SS
-      const exifStr = metadata.exif.toString('binary')
-      const dateMatch = exifStr.match(/(\d{4}):(\d{2}):(\d{2}) (\d{2}):(\d{2}):(\d{2})/)
-      if (dateMatch) {
-        const [_, year, month, day, hour, min, sec] = dateMatch
-        photoTakenAt = new Date(`${year}-${month}-${day}T${hour}:${min}:${sec}Z`).toISOString()
-      }
-    }
-  } catch {
-    // Non-fatal if EXIF not present
-  }
+  // Extract EXIF timestamp and validate with 24-hour rule
+  const exifValidation = await extractAndValidateExifTimestamp(buffer)
 
   return {
     isValid: true,
@@ -168,7 +155,8 @@ export async function processAndValidateImage(
     sizeBytes,
     sha256,
     dhash,
-    photoTakenAt,
+    photoTakenAt: exifValidation.capture_timestamp,
+    exifValidation,
   }
 }
 
