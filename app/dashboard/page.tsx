@@ -60,8 +60,11 @@ export default function DashboardPage() {
 
     try {
       const [statsRes, reportsRes, weatherRes] = await Promise.all([
-        fetch('/api/dashboard/stats'),
-        fetch('/api/reports?limit=100'),
+        fetch('/api/dashboard/stats', { credentials: 'include' }),
+        fetch('/api/reports?limit=100&view=operator', {
+          credentials: 'include',
+          headers: { 'x-operator-view': 'true' },
+        }),
         fetch('/api/weather'),
       ])
 

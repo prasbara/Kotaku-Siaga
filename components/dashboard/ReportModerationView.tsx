@@ -29,6 +29,9 @@ import {
   Tag,
   Lightbulb,
   RefreshCw,
+  User,
+  Phone,
+  Mail,
 } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -84,7 +87,12 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
   const fetchReports = React.useCallback(async () => {
     setIsRefreshing(true)
     try {
-      const res = await fetch('/api/reports?limit=100')
+      const res = await fetch('/api/reports?limit=100&view=operator', {
+        credentials: 'include',
+        headers: {
+          'x-operator-view': 'true',
+        },
+      })
       const data = await res.json()
       if (data.success && Array.isArray(data.data)) {
         setLocalReports(data.data)
@@ -453,19 +461,58 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
                               {report.description}
                             </p>
 
-                            <div className="flex items-center gap-2 mt-1.5">
+                            {/* Identitas Pelapor (Nama, HP, Email) */}
+                            <div className="flex flex-wrap items-center gap-1.5 mt-2 pt-1.5 border-t border-[#e8ded2]/60 text-[11px] font-mono">
+                              <span className="inline-flex items-center gap-1 font-bold text-[#1d1d1d] bg-[#f4ede4] px-2 py-0.5 rounded border border-[#d0c8be]" title="Nama Pelapor">
+                                <User className="w-3 h-3 text-[#4a154b] shrink-0" />
+                                <span className="max-w-[150px] truncate">{report.reporter_name || 'Pelapor Anonim'}</span>
+                              </span>
+
+                              {(report.reporter_phone || report.reporter_contact) && (
+                                <a
+                                  href={`https://wa.me/${String(report.reporter_phone || report.reporter_contact).replace(/[^0-9]/g, '')}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 text-[#007a5a] bg-[#ebf7f3] hover:bg-[#d8f0e8] px-2 py-0.5 rounded border border-[#a8e0d1] font-semibold transition-colors"
+                                  title="Hubungi No HP / WhatsApp Pelapor"
+                                >
+                                  <Phone className="w-3 h-3 text-[#007a5a] shrink-0" />
+                                  <span>{report.reporter_phone || report.reporter_contact}</span>
+                                </a>
+                              )}
+
+                              {report.reporter_email && (
+                                <a
+                                  href={`mailto:${report.reporter_email}`}
+                                  className="inline-flex items-center gap-1 text-[#1264a3] bg-[#f0f6fc] hover:bg-[#e1effe] px-2 py-0.5 rounded border border-[#bae0fd] font-medium transition-colors"
+                                  title="Kirim Email ke Pelapor"
+                                >
+                                  <Mail className="w-3 h-3 text-[#1264a3] shrink-0" />
+                                  <span className="max-w-[180px] truncate">{report.reporter_email}</span>
+                                </a>
+                              )}
+                            </div>
+
+                            {/* Action Buttons: Tutup Bukti & Bantuan Ringkasan */}
+                            <div className="flex items-center gap-2 mt-2">
                               <button
                                 type="button"
                                 onClick={() => setExpandedReportId(isExpanded ? null : report.id)}
-                                className="inline-flex items-center gap-1 text-[10px] font-mono font-bold text-secondary hover:underline"
+                                className={`inline-flex items-center gap-1.5 text-[11px] font-mono font-bold px-2.5 py-1 rounded-md border transition-all shadow-xs cursor-pointer ${
+                                  isExpanded
+                                    ? 'bg-[#4a154b] text-white border-[#4a154b] hover:bg-[#3d123e]'
+                                    : 'bg-[#f4ede4] text-[#4a154b] border-[#d0c8be] hover:bg-[#e8ded2]'
+                                }`}
                               >
                                 {isExpanded ? (
                                   <>
-                                    <ChevronUp className="w-3 h-3" /> Tutup Bukti
+                                    <ChevronUp className="w-3.5 h-3.5 text-white" />
+                                    <span>Tutup Bukti</span>
                                   </>
                                 ) : (
                                   <>
-                                    <ChevronDown className="w-3 h-3" /> Periksa Bukti Lengkap
+                                    <ChevronDown className="w-3.5 h-3.5 text-[#4a154b]" />
+                                    <span>Periksa Bukti Lengkap</span>
                                   </>
                                 )}
                               </button>
@@ -474,10 +521,10 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
                                 type="button"
                                 disabled={loadingAiId === report.id}
                                 onClick={() => handleAnalyzeReportAI(report)}
-                                className="inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded border border-primary/40 text-primary hover:bg-primary/10 transition-colors"
+                                className="inline-flex items-center gap-1.5 text-[11px] font-mono font-bold px-2.5 py-1 rounded-md border border-[#c4a8d4] bg-[#fdf9ff] text-[#4a154b] hover:bg-[#eddcf7] transition-all shadow-xs disabled:opacity-50 cursor-pointer"
                               >
-                                <Bot className="w-3 h-3" />
-                                {loadingAiId === report.id ? 'Menganalisis...' : aiInsights[report.id] ? 'Ringkasan Siap' : 'Bantuan Ringkasan'}
+                                <Bot className="w-3.5 h-3.5 text-[#4a154b]" />
+                                <span>{loadingAiId === report.id ? 'Menganalisis...' : aiInsights[report.id] ? 'Ringkasan Siap' : 'Bantuan Ringkasan'}</span>
                               </button>
                             </div>
                           </div>
@@ -710,34 +757,102 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
 
                     {/* EXPANDABLE EXPLAINABLE VERIFICATION DRAWER */}
                     {isExpanded && (
-                      <tr className="bg-surface-container-lowest/80">
-                        <td colSpan={5} className="p-4 sm:p-5 border-b border-outline-variant/30">
-                          <div className="space-y-4 rounded-xl bg-surface-container p-4 border border-outline-variant/40 shadow-inner">
+                      <tr className="bg-[#fbf9f5]">
+                        <td colSpan={5} className="p-4 sm:p-5 border-b border-[#d0c8be]">
+                          <div className="space-y-4 rounded-xl bg-[#f4ede4] p-4 sm:p-5 border border-[#d0c8be] shadow-inner">
                             {/* Header Evidence */}
-                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-outline-variant/20 pb-3">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#d0c8be]/80 pb-3">
                               <div className="flex items-center gap-2">
-                                <ShieldCheck className="w-4 h-4 text-secondary" />
-                                <span className="font-headline font-bold text-sm text-on-surface">
+                                <ShieldCheck className="w-4 h-4 text-[#007a5a]" />
+                                <span className="font-headline font-bold text-sm text-[#1d1d1d]">
                                   Rincian Bukti Lokasi, Sensor & Cuaca
                                 </span>
-                                <span className="font-mono text-xs px-2 py-0.5 rounded bg-surface-container-high border border-outline-variant/30">
+                                <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-white text-[#1d1d1d] border border-[#d0c8be]">
                                   Skor: {score}/100
                                 </span>
                               </div>
-                              <span className="font-mono text-[11px] text-on-surface-variant">
+                              <span className="font-mono text-xs font-bold text-[#4a154b]">
                                 Koordinat: {(report.lat ?? report.latitude)?.toFixed(5)}, {(report.lng ?? report.longitude)?.toFixed(5)}
                               </span>
                             </div>
 
+                            {/* IDENTITAS & KONTAK LENGKAP PELAPOR */}
+                            <div className="p-4 rounded-xl bg-white border border-[#d0c8be] shadow-xs">
+                              <div className="flex items-center justify-between mb-3 pb-2.5 border-b border-[#f0ece5]">
+                                <span className="font-mono text-xs uppercase tracking-wider text-[#4a154b] font-bold flex items-center gap-1.5">
+                                  <User className="w-4 h-4 text-[#4a154b]" />
+                                  <span>Identitas & Kontak Pelapor Terdaftar</span>
+                                </span>
+                                {report.email_verified || meta?.email_verified ? (
+                                  <span className="inline-flex items-center gap-1 text-[11px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-[#ecfdf5] text-[#065f46] border border-[#a7f3d0]">
+                                    <CheckCircle2 className="w-3.5 h-3.5 text-[#059669]" />
+                                    <span>OTP Email Terverifikasi</span>
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center gap-1 text-[11px] font-mono font-semibold px-2.5 py-0.5 rounded-full bg-[#fef3c7] text-[#92400e] border border-[#fcd34d]">
+                                    <Clock className="w-3.5 h-3.5 text-[#d97706]" />
+                                    <span>Menunggu Konfirmasi OTP</span>
+                                  </span>
+                                )}
+                              </div>
+
+                              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                                <div className="p-3 rounded-lg bg-[#fbf9f5] border border-[#ebdccb]">
+                                  <span className="text-[10px] font-mono font-semibold uppercase text-[#696969] block mb-1">
+                                    Nama Lengkap Pelapor
+                                  </span>
+                                  <strong className="text-sm font-bold text-[#1d1d1d] block">
+                                    {report.reporter_name || 'Warga Anonim (Tanpa Nama)'}
+                                  </strong>
+                                </div>
+
+                                <div className="p-3 rounded-lg bg-[#fbf9f5] border border-[#ebdccb]">
+                                  <span className="text-[10px] font-mono font-semibold uppercase text-[#696969] block mb-1">
+                                    Nomor Telepon / WhatsApp
+                                  </span>
+                                  {report.reporter_phone || report.reporter_contact ? (
+                                    <a
+                                      href={`https://wa.me/${String(report.reporter_phone || report.reporter_contact).replace(/[^0-9]/g, '')}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="inline-flex items-center gap-1.5 font-bold text-sm text-[#007a5a] hover:underline"
+                                    >
+                                      <Phone className="w-3.5 h-3.5 text-[#007a5a]" />
+                                      <span>{report.reporter_phone || report.reporter_contact}</span>
+                                    </a>
+                                  ) : (
+                                    <span className="text-[#696969] italic">Tidak dicantumkan</span>
+                                  )}
+                                </div>
+
+                                <div className="p-3 rounded-lg bg-[#fbf9f5] border border-[#ebdccb]">
+                                  <span className="text-[10px] font-mono font-semibold uppercase text-[#696969] block mb-1">
+                                    Alamat Email
+                                  </span>
+                                  {report.reporter_email ? (
+                                    <a
+                                      href={`mailto:${report.reporter_email}`}
+                                      className="inline-flex items-center gap-1.5 font-bold text-sm text-[#1264a3] hover:underline truncate max-w-full"
+                                    >
+                                      <Mail className="w-3.5 h-3.5 text-[#1264a3] shrink-0" />
+                                      <span className="truncate">{report.reporter_email}</span>
+                                    </a>
+                                  ) : (
+                                    <span className="text-[#696969] italic">Tidak dicantumkan</span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+
                             {/* Duplicate Advisory Alert */}
                             {meta?.possible_duplicate && (
-                              <div className="p-3 rounded-lg bg-cyan-500/15 border border-cyan-500/30 text-xs flex items-start gap-2 text-cyan-200 font-mono">
-                                <AlertTriangle className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
+                              <div className="p-3.5 rounded-lg bg-[#e0f2fe] border border-[#7dd3fc] text-xs flex items-start gap-2 text-[#0369a1] font-mono">
+                                <AlertTriangle className="w-4 h-4 text-[#0284c7] shrink-0 mt-0.5" />
                                 <div>
-                                  <strong className="block text-cyan-300">Indikasi Laporan Kemungkinan Duplikasi:</strong>
-                                  <span>{meta.duplicate_warning || 'Terdeteksi laporan serupa dalam radius 300m & selang waktu 60 menit.'}</span>
+                                  <strong className="block text-[#0369a1] font-bold">Indikasi Laporan Kemungkinan Duplikasi:</strong>
+                                  <span className="text-[#075985]">{meta.duplicate_warning || 'Terdeteksi laporan serupa dalam radius 300m & selang waktu 60 menit.'}</span>
                                   {meta.suspected_duplicate_of && meta.suspected_duplicate_of.length > 0 && (
-                                    <span className="block mt-0.5 text-[10px] text-cyan-400 font-bold">
+                                    <span className="block mt-0.5 text-[11px] text-[#0284c7] font-bold">
                                       Kode Laporan Serupa: {meta.suspected_duplicate_of.join(', ')}
                                     </span>
                                   )}
@@ -753,35 +868,35 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
                               const catName = inc.category || inc.incident_type || report.category
 
                               return (
-                                <div className="p-3 rounded-lg bg-surface-container-low border border-outline-variant/20">
-                                  <span className="font-mono text-[10px] uppercase tracking-wider text-primary font-bold block mb-2">
+                                <div className="p-3.5 rounded-lg bg-white border border-[#d0c8be]">
+                                  <span className="font-mono text-xs uppercase tracking-wider text-[#4a154b] font-bold block mb-2.5">
                                     Atribut Terstruktur ({String(catName).toUpperCase()})
                                   </span>
                                   {fDet && (
-                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
-                                      <div className="p-2 rounded bg-surface-container border border-outline-variant/20">
-                                        <span className="text-[10px] text-on-surface-variant font-mono block">Kondisi Api</span>
-                                        <strong className="text-on-surface">{fDet.fire_condition || 'Terlihat'}</strong>
+                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs">
+                                      <div className="p-2.5 rounded bg-[#fbf9f5] border border-[#ebdccb]">
+                                        <span className="text-[10px] text-[#696969] font-mono block">Kondisi Api</span>
+                                        <strong className="text-[#1d1d1d]">{fDet.fire_condition || 'Terlihat'}</strong>
                                       </div>
-                                      <div className="p-2 rounded bg-surface-container border border-outline-variant/20">
-                                        <span className="text-[10px] text-on-surface-variant font-mono block">Lokasi Subtipe</span>
-                                        <strong className="text-on-surface">{fDet.location_subtype || 'Bangunan'}</strong>
+                                      <div className="p-2.5 rounded bg-[#fbf9f5] border border-[#ebdccb]">
+                                        <span className="text-[10px] text-[#696969] font-mono block">Lokasi Subtipe</span>
+                                        <strong className="text-[#1d1d1d]">{fDet.location_subtype || 'Bangunan'}</strong>
                                       </div>
-                                      <div className="p-2 rounded bg-surface-container border border-outline-variant/20">
-                                        <span className="text-[10px] text-on-surface-variant font-mono block">Intensitas Asap</span>
-                                        <strong className="text-on-surface">{fDet.smoke_intensity || 'Sedang'}</strong>
+                                      <div className="p-2.5 rounded bg-[#fbf9f5] border border-[#ebdccb]">
+                                        <span className="text-[10px] text-[#696969] font-mono block">Intensitas Asap</span>
+                                        <strong className="text-[#1d1d1d]">{fDet.smoke_intensity || 'Sedang'}</strong>
                                       </div>
-                                      <div className="p-2 rounded bg-surface-container border border-outline-variant/20">
-                                        <span className="text-[10px] text-on-surface-variant font-mono block">Potensi Korban</span>
-                                        <strong className="text-on-surface">{fDet.casualty_potential || 'Nihil'}</strong>
+                                      <div className="p-2.5 rounded bg-[#fbf9f5] border border-[#ebdccb]">
+                                        <span className="text-[10px] text-[#696969] font-mono block">Potensi Korban</span>
+                                        <strong className="text-[#1d1d1d]">{fDet.casualty_potential || 'Nihil'}</strong>
                                       </div>
                                       {fDet.additional_hazards && fDet.additional_hazards.length > 0 && (
-                                        <div className="col-span-2 sm:col-span-4 p-2 rounded bg-red-500/10 border border-red-500/20 text-red-200 text-xs">
-                                          <span className="text-[10px] font-mono font-bold uppercase text-red-400 block mb-1">Bahaya Tambahan:</span>
-                                          <div className="flex flex-wrap gap-1">
+                                        <div className="col-span-2 sm:col-span-4 p-2.5 rounded bg-[#fef2f2] border border-[#fecaca] text-[#991b1b] text-xs">
+                                          <span className="text-[10px] font-mono font-bold uppercase text-[#dc2626] block mb-1">Bahaya Tambahan:</span>
+                                          <div className="flex flex-wrap gap-1.5">
                                             {(fDet.additional_hazards as string[]).map((h: string, i: number) => (
-                                              <span key={i} className="px-1.5 py-0.5 rounded bg-red-500/20 text-[10px] inline-flex items-center gap-1">
-                                                <AlertTriangle className="w-2.5 h-2.5 text-red-400 shrink-0" />
+                                              <span key={i} className="px-2 py-0.5 rounded bg-white text-[#991b1b] border border-[#fca5a5] text-[10px] font-semibold inline-flex items-center gap-1">
+                                                <AlertTriangle className="w-3 h-3 text-[#dc2626] shrink-0" />
                                                 <span>{h}</span>
                                               </span>
                                             ))}
@@ -791,18 +906,18 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
                                     </div>
                                   )}
                                   {tDet && (
-                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
-                                      <div className="p-2 rounded bg-surface-container border border-outline-variant/20">
-                                        <span className="text-[10px] text-on-surface-variant font-mono block">Ukuran Pohon</span>
-                                        <strong className="text-on-surface">{tDet.tree_size || 'Terdampak'}</strong>
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-xs">
+                                      <div className="p-2.5 rounded bg-[#fbf9f5] border border-[#ebdccb]">
+                                        <span className="text-[10px] text-[#696969] font-mono block">Ukuran Pohon</span>
+                                        <strong className="text-[#1d1d1d]">{tDet.tree_size || 'Terdampak'}</strong>
                                       </div>
-                                      <div className="p-2 rounded bg-surface-container border border-outline-variant/20">
-                                        <span className="text-[10px] text-on-surface-variant font-mono block">Jalan Terhalang</span>
-                                        <strong className="text-on-surface">{tDet.road_blocked || 'Tercatat'}</strong>
+                                      <div className="p-2.5 rounded bg-[#fbf9f5] border border-[#ebdccb]">
+                                        <span className="text-[10px] text-[#696969] font-mono block">Jalan Terhalang</span>
+                                        <strong className="text-[#1d1d1d]">{tDet.road_blocked || 'Tercatat'}</strong>
                                       </div>
-                                      <div className="p-2 rounded bg-surface-container border border-outline-variant/20">
-                                        <span className="text-[10px] text-on-surface-variant font-mono block">Kabel Listrik</span>
-                                        <strong className="text-on-surface">{tDet.electricity_impact || 'Status terpantau'}</strong>
+                                      <div className="p-2.5 rounded bg-[#fbf9f5] border border-[#ebdccb]">
+                                        <span className="text-[10px] text-[#696969] font-mono block">Kabel Listrik</span>
+                                        <strong className="text-[#1d1d1d]">{tDet.electricity_impact || 'Status terpantau'}</strong>
                                       </div>
                                     </div>
                                   )}
@@ -814,20 +929,20 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               {/* Positive Evidence List */}
                               <div className="space-y-2">
-                                <span className="font-mono text-[10px] uppercase tracking-wider text-emerald-400 font-bold flex items-center gap-1">
-                                  <CheckCircle2 className="w-3.5 h-3.5" /> Pemeriksaan Terpenuhi
+                                <span className="font-mono text-xs uppercase tracking-wider text-[#065f46] font-bold flex items-center gap-1.5">
+                                  <CheckCircle2 className="w-4 h-4 text-[#059669]" /> Pemeriksaan Terpenuhi
                                 </span>
-                                <div className="space-y-1.5 bg-surface-container-low p-3 rounded-lg border border-outline-variant/20 text-xs">
+                                <div className="space-y-2 bg-white p-3.5 rounded-lg border border-[#a7f3d0] text-xs">
                                   {meta?.positive_evidence && meta.positive_evidence.length > 0 ? (
                                     meta.positive_evidence.map((ev: string, idx: number) => (
-                                      <div key={idx} className="flex items-start gap-1.5 text-on-surface font-body">
-                                        <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
+                                      <div key={idx} className="flex items-start gap-2 text-[#14532d] font-body font-medium">
+                                        <Check className="w-4 h-4 text-[#059669] shrink-0 mt-0.5" />
                                         <span>{ev}</span>
                                       </div>
                                     ))
                                   ) : (
-                                    <div className="text-on-surface-variant text-[11px] font-mono flex items-center gap-1.5">
-                                      <Check className="w-3 h-3 text-emerald-400 shrink-0" />
+                                    <div className="text-[#14532d] text-xs font-mono font-medium flex items-center gap-2">
+                                      <Check className="w-4 h-4 text-[#059669] shrink-0" />
                                       <span>Lokasi GPS valid di wilayah Kota Semarang</span>
                                     </div>
                                   )}
@@ -836,20 +951,20 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
 
                               {/* Warnings & Anomalies List */}
                               <div className="space-y-2">
-                                <span className="font-mono text-[10px] uppercase tracking-wider text-amber-400 font-bold flex items-center gap-1">
-                                  <AlertTriangle className="w-3.5 h-3.5" /> Catatan Peringatan
+                                <span className="font-mono text-xs uppercase tracking-wider text-[#92400e] font-bold flex items-center gap-1.5">
+                                  <AlertTriangle className="w-4 h-4 text-[#d97706]" /> Catatan Peringatan
                                 </span>
-                                <div className="space-y-1.5 bg-surface-container-low p-3 rounded-lg border border-outline-variant/20 text-xs">
+                                <div className="space-y-2 bg-white p-3.5 rounded-lg border border-[#fde68a] text-xs">
                                   {meta?.warnings && meta.warnings.length > 0 ? (
                                     meta.warnings.map((warn: string, idx: number) => (
-                                      <div key={idx} className="flex items-start gap-1.5 text-amber-300 font-body">
-                                        <span className="text-amber-400 font-bold font-mono">!</span>
+                                      <div key={idx} className="flex items-start gap-2 text-[#78350f] font-body font-medium">
+                                        <span className="text-[#b45309] font-bold font-mono text-sm leading-none mt-0.5">!</span>
                                         <span>{warn}</span>
                                       </div>
                                     ))
                                   ) : (
-                                    <div className="text-emerald-400 text-[11px] font-mono flex items-center gap-1.5">
-                                      <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                                    <div className="text-[#065f46] text-xs font-mono font-medium flex items-center gap-2">
+                                      <Check className="w-4 h-4 text-[#059669] shrink-0" />
                                       <span>Tidak ada catatan anomali atau kecurigaan pada laporan ini</span>
                                     </div>
                                   )}
@@ -858,58 +973,58 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
                             </div>
 
                             {/* Cross-Reference Data: CCTV & Weather & Crowd */}
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1 border-t border-outline-variant/20">
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 border-t border-[#d0c8be]/80">
                               {/* CCTV Corroboration */}
-                              <div className="p-2.5 rounded-lg bg-surface-container-low border border-outline-variant/20 space-y-1">
-                                <span className="font-mono text-[10px] text-on-surface-variant uppercase font-semibold flex items-center gap-1">
-                                  <Video className="w-3 h-3 text-secondary" /> CCTV PantauSemar
+                              <div className="p-3 rounded-lg bg-white border border-[#d0c8be] space-y-1">
+                                <span className="font-mono text-[10px] text-[#4a154b] uppercase font-bold flex items-center gap-1">
+                                  <Video className="w-3 h-3 text-[#007a5a]" /> CCTV PantauSemar
                                 </span>
                                 {meta?.nearest_cctv ? (
                                   <div className="text-xs">
-                                    <div className="font-bold text-on-surface truncate">
+                                    <div className="font-bold text-[#1d1d1d] truncate">
                                       {meta.nearest_cctv.name}
                                     </div>
-                                    <div className="text-[10px] font-mono text-secondary">
+                                    <div className="text-[10px] font-mono text-[#007a5a] font-semibold">
                                       Jarak: {meta.nearest_cctv.distance_meters}m • {meta.nearest_cctv.category}
                                     </div>
                                   </div>
                                 ) : (
-                                  <div className="text-[11px] text-on-surface-variant font-mono">
+                                  <div className="text-xs text-[#696969] font-mono">
                                     Tidak ada CCTV &lt;1km
                                   </div>
                                 )}
                               </div>
 
                               {/* Weather Corroboration */}
-                              <div className="p-2.5 rounded-lg bg-surface-container-low border border-outline-variant/20 space-y-1">
-                                <span className="font-mono text-[10px] text-on-surface-variant uppercase font-semibold flex items-center gap-1">
-                                  <CloudRain className="w-3 h-3 text-primary" /> Data Cuaca Terkini
+                              <div className="p-3 rounded-lg bg-white border border-[#d0c8be] space-y-1">
+                                <span className="font-mono text-[10px] text-[#4a154b] uppercase font-bold flex items-center gap-1">
+                                  <CloudRain className="w-3 h-3 text-[#1264a3]" /> Data Cuaca Terkini
                                 </span>
                                 {meta?.weather_snapshot ? (
                                   <div className="text-xs">
-                                    <div className="font-bold text-on-surface">
+                                    <div className="font-bold text-[#1d1d1d]">
                                       {meta.weather_snapshot.condition} ({meta.weather_snapshot.temperature_c}°C)
                                     </div>
-                                    <div className="text-[10px] font-mono text-primary">
+                                    <div className="text-[10px] font-mono text-[#1264a3] font-semibold">
                                       Curah Hujan: {meta.weather_snapshot.precipitation_mm} mm/jam
                                     </div>
                                   </div>
                                 ) : (
-                                  <div className="text-[11px] text-on-surface-variant font-mono">
+                                  <div className="text-xs text-[#696969] font-mono">
                                     Data BMKG Terhubung
                                   </div>
                                 )}
                               </div>
 
                               {/* Crowd Corroboration */}
-                              <div className="p-2.5 rounded-lg bg-surface-container-low border border-outline-variant/20 space-y-1">
-                                <span className="font-mono text-[10px] text-on-surface-variant uppercase font-semibold flex items-center gap-1">
-                                  <Users className="w-3 h-3 text-tertiary" /> Laporan Warga Sekitar
+                              <div className="p-3 rounded-lg bg-white border border-[#d0c8be] space-y-1">
+                                <span className="font-mono text-[10px] text-[#4a154b] uppercase font-bold flex items-center gap-1">
+                                  <Users className="w-3 h-3 text-[#4a154b]" /> Laporan Warga Sekitar
                                 </span>
-                                <div className="text-xs font-bold text-on-surface">
+                                <div className="text-xs font-bold text-[#1d1d1d]">
                                   {meta?.corroboration_count ? `${meta.corroboration_count} Laporan Terkait di Sekitar` : 'Laporan Tunggal'}
                                 </div>
-                                <div className="text-[10px] font-mono text-on-surface-variant">
+                                <div className="text-[10px] font-mono text-[#696969]">
                                   Radius ≤300m / Rentang 30 Menit
                                 </div>
                               </div>

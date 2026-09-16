@@ -42,7 +42,21 @@ export async function GET(
       return NextResponse.json({ error: 'Laporan tidak ditemukan.' }, { status: 404 })
     }
 
-    return NextResponse.json({ success: true, data })
+    const meta = data.verification_metadata
+    const isFire = meta?.actual_category === 'kebakaran' || meta?.incident_details?.incident_type === 'kebakaran'
+    const reportData = {
+      ...data,
+      category: isFire ? 'kebakaran' : data.category,
+      reporter_name: data.reporter_name || meta?.reporter_name || 'Pelapor Anonim',
+      reporter_phone: data.reporter_phone || data.reporter_contact || meta?.reporter_phone || null,
+      reporter_email: data.reporter_email || meta?.reporter_email || null,
+      email_verified: data.email_verified ?? meta?.email_verified ?? false,
+    }
+
+    const role = await getUserRole(request)
+    const sanitized = sanitizeReportForRole(reportData, role)
+
+    return NextResponse.json({ success: true, data: sanitized })
   } catch (error) {
     console.error('GET /api/reports/[id] error:', error)
     return NextResponse.json({ error: 'Gagal mengambil laporan.' }, { status: 500 })

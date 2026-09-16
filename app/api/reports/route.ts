@@ -108,10 +108,15 @@ export async function GET(request: NextRequest) {
 
     const mappedData = (data || []).map((report) => {
       const meta = report.verification_metadata
-      if (meta?.actual_category === 'kebakaran' || meta?.incident_details?.incident_type === 'kebakaran') {
-        return { ...report, category: 'kebakaran' }
+      const isFire = meta?.actual_category === 'kebakaran' || meta?.incident_details?.incident_type === 'kebakaran'
+      return {
+        ...report,
+        category: isFire ? 'kebakaran' : report.category,
+        reporter_name: report.reporter_name || meta?.reporter_name || 'Pelapor Anonim',
+        reporter_phone: report.reporter_phone || report.reporter_contact || meta?.reporter_phone || null,
+        reporter_email: report.reporter_email || meta?.reporter_email || null,
+        email_verified: report.email_verified ?? meta?.email_verified ?? false,
       }
-      return report
     })
 
     const finalFiltered = category === 'kebakaran'
