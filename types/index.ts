@@ -157,6 +157,26 @@ export interface Report {
   event_type?: string | null
   client_session_id?: string | null
   client_ip_hash?: string | null
+  // Reporter Verification & Liveness Audit
+  verification_method?: 'camera_liveness' | 'otp' | 'none' | null
+  verification_status?: 'verified' | 'failed' | 'pending' | null
+  verification_photo_url?: string | null
+  verification_timestamp?: string | null
+  liveness_score?: number | null
+  spoof_risk?: number | null
+  quality_score?: number | null
+  // Disposition & Scoring Breakdown
+  assigned_agency?: string | null
+  disposition_action?: string | null
+  reviewed_by?: string | null
+  reviewed_at?: string | null
+  validity_breakdown?: {
+    evidence_quality?: number
+    gps_consistency?: number
+    reporter_verification?: number
+    report_completeness?: number
+    abuse_risk?: number
+  } | null
   // Joined fields
   ai_analysis?: AIAnalysis | null
 }

@@ -109,6 +109,23 @@ export async function GET(request: NextRequest) {
     const mappedData = (data || []).map((report) => {
       const meta = report.verification_metadata
       const isFire = meta?.actual_category === 'kebakaran' || meta?.incident_details?.incident_type === 'kebakaran'
+
+      const isCameraVerified = meta?.verification_method === 'camera_liveness' || Boolean(meta?.verification_photo_url)
+      const isOtpVerified = Boolean(report.email_verified || meta?.email_verified)
+      const verificationMethod = meta?.verification_method || (isCameraVerified ? 'camera_liveness' : isOtpVerified ? 'otp' : 'none')
+      const verificationStatus = meta?.verification_status || (isCameraVerified || isOtpVerified ? 'verified' : 'pending')
+
+      const assignedAgency =
+        report.assigned_agency ||
+        meta?.assigned_agency ||
+        (isFire || report.category === 'kebakaran'
+          ? 'Dinas Pemadam Kebakaran (Damkar)'
+          : report.category === 'pohon_tumbang'
+          ? 'Dinas Lingkungan Hidup (DLH)'
+          : ['banjir', 'genangan', 'rob'].includes(report.category)
+          ? 'BPBD & DPU Kota Semarang'
+          : 'BPBD Kota Semarang')
+
       return {
         ...report,
         category: isFire ? 'kebakaran' : report.category,
@@ -116,6 +133,28 @@ export async function GET(request: NextRequest) {
         reporter_phone: report.reporter_phone || report.reporter_contact || meta?.reporter_phone || null,
         reporter_email: report.reporter_email || meta?.reporter_email || null,
         email_verified: report.email_verified ?? meta?.email_verified ?? false,
+        verification_method: verificationMethod,
+        verification_status: verificationStatus,
+        verification_photo_url: meta?.verification_photo_url || null,
+        verification_timestamp: meta?.verification_timestamp || report.created_at,
+        liveness_score: meta?.liveness_score ?? null,
+        spoof_risk: meta?.spoof_risk ?? null,
+        quality_score: meta?.quality_score ?? null,
+        assigned_agency: assignedAgency,
+        disposition_action:
+          meta?.disposition_action ||
+          (report.status === 'submitted'
+            ? 'Menunggu tindak lanjut posko'
+            : report.status === 'verified'
+            ? 'Telah diverifikasi posko'
+            : report.status === 'in_progress'
+            ? 'Petugas ditugaskan ke lokasi'
+            : report.status === 'resolved'
+            ? 'Penanganan selesai di lapangan'
+            : report.status === 'under_review'
+            ? 'Dalam peninjauan posko'
+            : 'Laporan ditolak'),
+        validity_breakdown: meta?.validity_breakdown || null,
       }
     })
 
@@ -463,6 +502,13 @@ export async function POST(request: NextRequest) {
         reporter_phone: normalizedPhone,
         email_verified: Boolean(email_verified),
         turnstile_verified: true,
+        verification_method: body.verification_method || (body.verification_photo_url ? 'camera_liveness' : email_verified ? 'otp' : 'none'),
+        verification_status: body.verification_status || (body.verification_photo_url || email_verified ? 'verified' : 'pending'),
+        verification_photo_url: body.verification_photo_url || null,
+        verification_timestamp: body.verification_timestamp || new Date().toISOString(),
+        liveness_score: typeof body.liveness_score === 'number' ? body.liveness_score : null,
+        spoof_risk: typeof body.spoof_risk === 'number' ? body.spoof_risk : null,
+        quality_score: typeof body.quality_score === 'number' ? body.quality_score : null,
       },
       photo_url: photo_url || null,
       photo_hash: photo_sha256 || null,

@@ -44,6 +44,23 @@ export async function GET(
 
     const meta = data.verification_metadata
     const isFire = meta?.actual_category === 'kebakaran' || meta?.incident_details?.incident_type === 'kebakaran'
+
+    const isCameraVerified = meta?.verification_method === 'camera_liveness' || Boolean(meta?.verification_photo_url)
+    const isOtpVerified = Boolean(data.email_verified || meta?.email_verified)
+    const verificationMethod = meta?.verification_method || (isCameraVerified ? 'camera_liveness' : isOtpVerified ? 'otp' : 'none')
+    const verificationStatus = meta?.verification_status || (isCameraVerified || isOtpVerified ? 'verified' : 'pending')
+
+    const assignedAgency =
+      data.assigned_agency ||
+      meta?.assigned_agency ||
+      (isFire || data.category === 'kebakaran'
+        ? 'Dinas Pemadam Kebakaran (Damkar)'
+        : data.category === 'pohon_tumbang'
+        ? 'Dinas Lingkungan Hidup (DLH)'
+        : ['banjir', 'genangan', 'rob'].includes(data.category)
+        ? 'BPBD & DPU Kota Semarang'
+        : 'BPBD Kota Semarang')
+
     const reportData = {
       ...data,
       category: isFire ? 'kebakaran' : data.category,
@@ -51,6 +68,28 @@ export async function GET(
       reporter_phone: data.reporter_phone || data.reporter_contact || meta?.reporter_phone || null,
       reporter_email: data.reporter_email || meta?.reporter_email || null,
       email_verified: data.email_verified ?? meta?.email_verified ?? false,
+      verification_method: verificationMethod,
+      verification_status: verificationStatus,
+      verification_photo_url: meta?.verification_photo_url || null,
+      verification_timestamp: meta?.verification_timestamp || data.created_at,
+      liveness_score: meta?.liveness_score ?? null,
+      spoof_risk: meta?.spoof_risk ?? null,
+      quality_score: meta?.quality_score ?? null,
+      assigned_agency: assignedAgency,
+      disposition_action:
+        meta?.disposition_action ||
+        (data.status === 'submitted'
+          ? 'Menunggu tindak lanjut posko'
+          : data.status === 'verified'
+          ? 'Telah diverifikasi posko'
+          : data.status === 'in_progress'
+          ? 'Petugas ditugaskan ke lokasi'
+          : data.status === 'resolved'
+          ? 'Penanganan selesai di lapangan'
+          : data.status === 'under_review'
+          ? 'Dalam peninjauan posko'
+          : 'Laporan ditolak'),
+      validity_breakdown: meta?.validity_breakdown || null,
     }
 
     const role = await getUserRole(request)
