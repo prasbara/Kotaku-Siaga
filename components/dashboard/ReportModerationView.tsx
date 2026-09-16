@@ -164,6 +164,7 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
       const res = await fetch(`/api/reports/${reportId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ status: newStatus }),
       })
       const data = await res.json()

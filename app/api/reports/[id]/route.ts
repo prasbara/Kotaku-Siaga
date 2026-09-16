@@ -95,23 +95,36 @@ export async function PATCH(
       .single()
 
     if (error) {
-      // If not in Supabase, check local report store
+      console.warn(`PATCH /api/reports/${id} Supabase error [${error.code}]: ${error.message}`)
+
+      // Always try local store fallback on ANY Supabase error
+      // (e.g., report exists in localStore but not yet synced to Supabase,
+      //  or UUID format mismatch on local test IDs, or Supabase RLS/network errors)
       const localUpdated = localReportStore.update(id, updateData)
       if (localUpdated) {
         return NextResponse.json({ success: true, data: localUpdated, is_local_store: true })
       }
 
+      // Report not found anywhere
       if (error.code === 'PGRST116') {
         return NextResponse.json({ error: 'Laporan tidak ditemukan.' }, { status: 404 })
       }
-      console.error('PATCH /api/reports/[id] database error:', error.message)
+
+      // PostgreSQL invalid UUID syntax — ID format mismatch
+      if (error.code === '22P02') {
+        return NextResponse.json(
+          { error: 'ID laporan tidak valid.', detail: 'Format ID tidak sesuai dengan basis data.' },
+          { status: 400 }
+        )
+      }
+
       return NextResponse.json(
-        { error: 'Database update failed.', detail: error.message },
+        { error: 'Gagal memperbarui status laporan di basis data.', detail: error.message },
         { status: 503 }
       )
     }
 
-    // Also update local store if present
+    // Also update local store mirror if present
     localReportStore.update(id, updateData)
 
     return NextResponse.json({ success: true, data })
