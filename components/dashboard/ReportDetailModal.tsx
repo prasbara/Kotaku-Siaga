@@ -31,6 +31,7 @@ import {
   Layers,
   Activity,
   UserCheck,
+  Maximize2,
 } from 'lucide-react'
 import Image from 'next/image'
 
@@ -50,6 +51,7 @@ export function ReportDetailModal({
   isUpdating = false,
 }: ReportDetailModalProps) {
   const [zoomLevel, setZoomLevel] = useState<number>(1)
+  const [imageFitMode, setImageFitMode] = useState<'cover' | 'contain'>('cover')
   const [activeTab, setActiveTab] = useState<'evidence' | 'reporter' | 'risk' | 'disposition'>('evidence')
   const [copiedCode, setCopiedCode] = useState(false)
 
@@ -57,6 +59,7 @@ export function ReportDetailModal({
   useEffect(() => {
     if (isOpen) {
       setZoomLevel(1)
+      setImageFitMode('cover')
       setActiveTab('evidence')
       setCopiedCode(false)
     }
@@ -90,40 +93,51 @@ export function ReportDetailModal({
   const score = report.credibility_score ?? 80
   const abuseScore = report.abuse_score ?? meta?.abuse_score ?? 15
 
-  const copyReportCode = () => {
+  const copyCode = () => {
     navigator.clipboard.writeText(report.report_code)
     setCopiedCode(true)
     setTimeout(() => setCopiedCode(false), 2000)
   }
 
+  const assignedAgency =
+    report.assigned_agency ||
+    meta?.assigned_agency ||
+    (report.category === 'kebakaran'
+      ? 'Dinas Pemadam Kebakaran (Damkar)'
+      : report.category === 'pohon_tumbang'
+      ? 'Dinas Lingkungan Hidup (DLH)'
+      : ['banjir', 'genangan', 'rob'].includes(report.category)
+      ? 'BPBD & DPU Kota Semarang'
+      : 'BPBD Kota Semarang')
+
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose()
-      }}
-    >
-      <div className="relative w-full max-w-4xl max-h-[92vh] flex flex-col bg-white rounded-2xl shadow-2xl border border-[#d0c8be] overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/60 backdrop-blur-sm overflow-y-auto">
+      <div
+        className="relative w-full max-w-4xl bg-white rounded-2xl shadow-2xl border border-[#d0c8be] overflow-hidden flex flex-col max-h-[92vh] animate-in fade-in zoom-in-95 duration-150"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Modal Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[#ebdccb] bg-[#f4ede4]/80">
+        <div className="flex items-center justify-between px-5 py-3.5 bg-[#f4ede4] border-b border-[#ebdccb]">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-xl bg-[#4a154b] text-white">
-              <ShieldCheck className="w-5 h-5" />
+              <ShieldAlert className="w-5 h-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="font-mono text-base sm:text-lg font-bold text-[#1d1d1d]">
+                <span className="font-mono text-base sm:text-lg font-bold text-[#1d1d1d]">
                   {report.report_code}
-                </h2>
+                </span>
                 <button
                   type="button"
-                  onClick={copyReportCode}
+                  onClick={copyCode}
                   className="text-[#696969] hover:text-[#4a154b] transition-colors"
                   title="Salin Kode Laporan"
                 >
-                  {copiedCode ? <Check className="w-3.5 h-3.5 text-[#007a5a]" /> : <Copy className="w-3.5 h-3.5" />}
+                  {copiedCode ? (
+                    <Check className="w-3.5 h-3.5 text-[#007a5a]" />
+                  ) : (
+                    <Copy className="w-3.5 h-3.5" />
+                  )}
                 </button>
                 <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded bg-white text-[#4a154b] border border-[#d0c8be]">
                   {report.district_name || 'Kota Semarang'}
@@ -152,6 +166,56 @@ export function ReportDetailModal({
           >
             <X className="w-5 h-5" />
           </button>
+        </div>
+
+        {/* PROMINENT REPORTER INFO BANNER (Always visible across all tabs) */}
+        <div className="px-5 py-2.5 bg-[#fdf9ff] border-b border-[#eddcf7] flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-[#4a154b] px-2 py-0.5 rounded bg-[#f4ede4] border border-[#d0c8be]">
+              PELAPOR WARGA
+            </span>
+            <span className="font-bold text-[#1d1d1d] flex items-center gap-1.5">
+              <User className="w-3.5 h-3.5 text-[#4a154b]" />
+              <span>{report.reporter_name || meta?.reporter_name || 'Pelapor Anonim'}</span>
+            </span>
+
+            {(report.reporter_phone || report.reporter_contact || meta?.reporter_phone || meta?.reporter_contact) && (
+              <a
+                href={`https://wa.me/${String(report.reporter_phone || report.reporter_contact || meta?.reporter_phone || meta?.reporter_contact).replace(/[^0-9]/g, '')}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-[#007a5a] bg-[#ebf7f3] hover:bg-[#d8f0e8] px-2.5 py-0.5 rounded-md border border-[#a8e0d1] font-bold transition-colors"
+                title="Hubungi WhatsApp Pelapor"
+              >
+                <Phone className="w-3 h-3 text-[#007a5a]" />
+                <span>{report.reporter_phone || report.reporter_contact || meta?.reporter_phone || meta?.reporter_contact}</span>
+              </a>
+            )}
+
+            {(report.reporter_email || meta?.reporter_email) && (
+              <a
+                href={`mailto:${report.reporter_email || meta?.reporter_email}`}
+                className="inline-flex items-center gap-1 text-[#1264a3] bg-[#f0f6fc] hover:bg-[#e1effe] px-2.5 py-0.5 rounded-md border border-[#bae0fd] font-semibold transition-colors"
+                title="Kirim Email ke Pelapor"
+              >
+                <Mail className="w-3 h-3 text-[#1264a3]" />
+                <span>{report.reporter_email || meta?.reporter_email}</span>
+              </a>
+            )}
+          </div>
+
+          <div className="flex items-center gap-1.5">
+            <span className="text-[10px] text-[#696969]">Verifikasi:</span>
+            <span className={`px-2 py-0.5 rounded font-bold text-[10px] ${
+              isCameraVerified
+                ? 'bg-[#ecfdf5] text-[#065f46] border border-[#a7f3d0]'
+                : isOtpVerified
+                ? 'bg-blue-50 text-[#1264a3] border border-blue-200'
+                : 'bg-neutral-100 text-[#696969] border border-neutral-300'
+            }`}>
+              {isCameraVerified ? '📷 Camera Liveness' : isOtpVerified ? '✉️ OTP Terverifikasi' : '⏳ Belum Terverifikasi'}
+            </span>
+          </div>
         </div>
 
         {/* Modal Navigation Tabs */}
@@ -220,42 +284,63 @@ export function ReportDetailModal({
               <div className="flex flex-col lg:flex-row gap-5">
                 {/* Evidence Image Viewer */}
                 <div className="flex-1 flex flex-col items-center">
-                  <div className="relative w-full h-72 sm:h-96 rounded-xl bg-[#1d1d1d] overflow-hidden border border-[#d0c8be] flex items-center justify-center group">
+                  <div className="relative w-full h-72 sm:h-96 rounded-xl bg-[#f4ede4] overflow-hidden border border-[#d0c8be] flex items-center justify-center group shadow-inner">
                     {evidencePhoto ? (
-                      <div
-                        className="relative w-full h-full flex items-center justify-center transition-transform duration-200"
-                        style={{ transform: `scale(${zoomLevel})` }}
-                      >
+                      <>
+                        {/* Ambient background to eliminate black borders completely */}
                         <Image
                           src={evidencePhoto}
-                          alt={`Bukti Laporan ${report.report_code}`}
+                          alt="Ambient background"
                           fill
-                          className="object-contain"
+                          className="object-cover blur-2xl opacity-40 scale-125 pointer-events-none"
                           unoptimized
+                          aria-hidden="true"
                         />
-                      </div>
+                        <div
+                          className="relative w-full h-full flex items-center justify-center transition-transform duration-200"
+                          style={{ transform: `scale(${zoomLevel})` }}
+                        >
+                          <Image
+                            src={evidencePhoto}
+                            alt={`Bukti Laporan ${report.report_code}`}
+                            fill
+                            className={imageFitMode === 'cover' ? 'object-cover' : 'object-contain drop-shadow-md'}
+                            unoptimized
+                          />
+                        </div>
+                      </>
                     ) : (
-                      <div className="text-center p-6 text-[#a8a8a8]">
-                        <Camera className="w-12 h-12 mx-auto mb-2 text-[#696969]" />
-                        <p className="font-mono text-sm font-bold text-white">
+                      <div className="text-center p-6 text-[#696969]">
+                        <Camera className="w-12 h-12 mx-auto mb-2 text-[#4a154b]" />
+                        <p className="font-mono text-sm font-bold text-[#1d1d1d]">
                           Laporan Tanpa Lampiran Foto
                         </p>
-                        <p className="text-xs text-[#a8a8a8] mt-1">
+                        <p className="text-xs text-[#696969] mt-1">
                           Laporan dikirim menggunakan telemetri GPS dan sensor lapangan.
                         </p>
                       </div>
                     )}
 
-                    {/* Floating Zoom Controls */}
+                    {/* Floating Zoom & Fit Mode Controls */}
                     {evidencePhoto && (
-                      <div className="absolute bottom-3 right-3 flex items-center gap-1.5 bg-black/70 backdrop-blur-sm p-1.5 rounded-lg border border-white/20 text-white z-10">
+                      <div className="absolute bottom-3 right-3 flex items-center gap-1.5 bg-[#1d1d1d]/85 backdrop-blur-md p-1.5 rounded-lg border border-white/20 text-white z-10 text-xs font-mono">
+                        <button
+                          type="button"
+                          onClick={() => setImageFitMode((m) => (m === 'cover' ? 'contain' : 'cover'))}
+                          className="px-2 py-1 rounded bg-white/20 hover:bg-white/30 text-[10px] font-bold flex items-center gap-1 transition-colors cursor-pointer"
+                          title="Ubah Mode Tampilan: Penuh (Cover) vs Sesuai Asli (Fit)"
+                        >
+                          <Maximize2 className="w-3 h-3" />
+                          <span>{imageFitMode === 'cover' ? 'Penuh (Cover)' : 'Sesuai Asli (Fit)'}</span>
+                        </button>
+                        <div className="w-px h-3.5 bg-white/30" />
                         <button
                           type="button"
                           onClick={() => setZoomLevel((z) => Math.min(z + 0.25, 3))}
-                          className="p-1 rounded hover:bg-white/20 transition-colors"
+                          className="p-1 rounded hover:bg-white/20 transition-colors cursor-pointer"
                           title="Perbesar (Zoom In)"
                         >
-                          <ZoomIn className="w-4 h-4" />
+                          <ZoomIn className="w-3.5 h-3.5" />
                         </button>
                         <span className="text-[10px] font-mono font-bold px-1">
                           {Math.round(zoomLevel * 100)}%
@@ -263,18 +348,18 @@ export function ReportDetailModal({
                         <button
                           type="button"
                           onClick={() => setZoomLevel((z) => Math.max(z - 0.25, 1))}
-                          className="p-1 rounded hover:bg-white/20 transition-colors"
+                          className="p-1 rounded hover:bg-white/20 transition-colors cursor-pointer"
                           title="Perkecil (Zoom Out)"
                         >
-                          <ZoomOut className="w-4 h-4" />
+                          <ZoomOut className="w-3.5 h-3.5" />
                         </button>
                         <button
                           type="button"
                           onClick={() => setZoomLevel(1)}
-                          className="p-1 rounded hover:bg-white/20 transition-colors"
+                          className="p-1 rounded hover:bg-white/20 transition-colors cursor-pointer"
                           title="Reset Skala"
                         >
-                          <RotateCcw className="w-4 h-4" />
+                          <RotateCcw className="w-3.5 h-3.5" />
                         </button>
                       </div>
                     )}

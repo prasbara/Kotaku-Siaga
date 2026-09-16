@@ -447,11 +447,19 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
                     </span>
 
                     <div
-                      className="relative w-full h-52 sm:h-56 rounded-xl bg-[#1d1d1d] overflow-hidden border border-[#d0c8be] flex items-center justify-center cursor-pointer group"
+                      className="relative w-full h-52 sm:h-56 rounded-xl bg-[#f4ede4] overflow-hidden border border-[#d0c8be] flex items-center justify-center cursor-pointer group shadow-inner"
                       onClick={() => openDetailModal(report)}
                     >
                       {evidencePhoto ? (
                         <>
+                          <Image
+                            src={evidencePhoto}
+                            alt="Ambient backdrop"
+                            fill
+                            className="object-cover blur-xl opacity-40 scale-110 pointer-events-none"
+                            unoptimized
+                            aria-hidden="true"
+                          />
                           <Image
                             src={evidencePhoto}
                             alt={`Bukti Laporan ${report.report_code}`}
@@ -465,12 +473,12 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
                           </div>
                         </>
                       ) : (
-                        <div className="text-center p-4 text-[#a8a8a8]">
-                          <Camera className="w-8 h-8 mx-auto mb-1 text-[#696969]" />
-                          <p className="font-mono text-xs font-bold text-white">
+                        <div className="text-center p-4 text-[#696969]">
+                          <Camera className="w-8 h-8 mx-auto mb-1 text-[#4a154b]" />
+                          <p className="font-mono text-xs font-bold text-[#1d1d1d]">
                             Laporan Tanpa Foto Lapangan
                           </p>
-                          <p className="text-[10px] text-[#a8a8a8] mt-0.5">
+                          <p className="text-[10px] text-[#696969] mt-0.5">
                             Menggunakan telemetri sensor & GPS
                           </p>
                         </div>
@@ -577,33 +585,34 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
                       </div>
 
                       {/* Reporter Contact Strip */}
-                      <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-[#ebdccb] text-xs font-mono">
+                      <div className="flex flex-wrap items-center gap-2 pt-2.5 pb-1 border-t border-[#ebdccb] text-xs font-mono">
+                        <span className="text-[10px] uppercase font-bold text-[#696969]">Pelapor:</span>
                         <span className="inline-flex items-center gap-1.5 font-bold text-[#1d1d1d] bg-[#fbf9f5] px-2.5 py-1 rounded-md border border-[#d0c8be]">
                           <User className="w-3.5 h-3.5 text-[#4a154b]" />
-                          <span>{report.reporter_name || 'Pelapor Anonim'}</span>
+                          <span>{report.reporter_name || meta?.reporter_name || 'Pelapor Anonim'}</span>
                         </span>
 
-                        {(report.reporter_phone || report.reporter_contact) && (
+                        {(report.reporter_phone || report.reporter_contact || meta?.reporter_phone || meta?.reporter_contact) && (
                           <a
-                            href={`https://wa.me/${String(report.reporter_phone || report.reporter_contact).replace(/[^0-9]/g, '')}`}
+                            href={`https://wa.me/${String(report.reporter_phone || report.reporter_contact || meta?.reporter_phone || meta?.reporter_contact).replace(/[^0-9]/g, '')}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 text-[#007a5a] bg-[#ebf7f3] hover:bg-[#d8f0e8] px-2.5 py-1 rounded-md border border-[#a8e0d1] font-semibold transition-colors"
+                            className="inline-flex items-center gap-1.5 text-[#007a5a] bg-[#ebf7f3] hover:bg-[#d8f0e8] px-2.5 py-1 rounded-md border border-[#a8e0d1] font-bold transition-colors"
                             title="Hubungi WhatsApp Pelapor"
                           >
                             <Phone className="w-3.5 h-3.5 text-[#007a5a]" />
-                            <span>{report.reporter_phone || report.reporter_contact}</span>
+                            <span>{report.reporter_phone || report.reporter_contact || meta?.reporter_phone || meta?.reporter_contact}</span>
                           </a>
                         )}
 
-                        {report.reporter_email && (
+                        {(report.reporter_email || meta?.reporter_email) && (
                           <a
-                            href={`mailto:${report.reporter_email}`}
-                            className="inline-flex items-center gap-1.5 text-[#1264a3] bg-[#f0f6fc] hover:bg-[#e1effe] px-2.5 py-1 rounded-md border border-[#bae0fd] font-medium transition-colors"
+                            href={`mailto:${report.reporter_email || meta?.reporter_email}`}
+                            className="inline-flex items-center gap-1.5 text-[#1264a3] bg-[#f0f6fc] hover:bg-[#e1effe] px-2.5 py-1 rounded-md border border-[#bae0fd] font-semibold transition-colors"
                             title="Kirim Email ke Pelapor"
                           >
                             <Mail className="w-3.5 h-3.5 text-[#1264a3]" />
-                            <span>{report.reporter_email}</span>
+                            <span>{report.reporter_email || meta?.reporter_email}</span>
                           </a>
                         )}
                       </div>
