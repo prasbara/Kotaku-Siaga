@@ -131,17 +131,17 @@ export function WindyFloatingLegend({ mode, weather, onClose }: WindyFloatingLeg
   const timestamp = weather?.retrieved_at_wib || new Date().toLocaleTimeString('id-ID', { hour12: false }) + ' WIB'
 
   return (
-    <div className="absolute bottom-4 right-4 z-20 w-80 max-w-[calc(100vw-2rem)] max-h-[calc(100dvh-6rem)] overflow-y-auto bg-surface-container-low/95 backdrop-blur-xl border border-outline-variant/40 rounded-xl p-3.5 shadow-2xl font-body text-xs flex flex-col gap-2.5 animate-in fade-in slide-in-from-bottom-2 duration-150">
+    <div className="absolute bottom-4 right-4 z-20 w-80 max-w-[calc(100vw-2rem)] max-h-[calc(100dvh-6rem)] overflow-y-auto bg-white/95 backdrop-blur-md border border-[#e6e6e6] rounded-[16px] p-3.5 shadow-card font-sans text-xs flex flex-col gap-2.5 animate-in fade-in slide-in-from-bottom-2 duration-150">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-outline-variant/30 pb-2 shrink-0">
-        <div className="flex items-center gap-1.5 font-headline font-bold text-[11px] text-on-surface">
+      <div className="flex items-center justify-between border-b border-[#e6e6e6] pb-2 shrink-0">
+        <div className="flex items-center gap-1.5 font-bold text-[11px] text-[#4a154b]">
           {content.icon}
           <span>{content.title}</span>
         </div>
         {onClose && (
           <button
             onClick={onClose}
-            className="w-7 h-7 flex items-center justify-center text-on-surface-variant hover:text-on-surface p-1 rounded-lg hover:bg-surface-container transition-colors"
+            className="w-7 h-7 flex items-center justify-center text-[#696969] hover:text-[#1d1d1d] p-1 rounded-lg hover:bg-[#f4ede4] transition-colors"
             aria-label="Tutup legenda radar"
           >
             <X className="w-3.5 h-3.5" />
@@ -149,54 +149,57 @@ export function WindyFloatingLegend({ mode, weather, onClose }: WindyFloatingLeg
         )}
       </div>
 
-      <div className="text-[10px] font-mono text-on-surface-variant">
-        Layer Aktif: <span className="text-on-surface font-semibold">{content.layerName}</span>
+      <div className="text-[10px] font-mono text-[#696969]">
+        Layer Aktif: <span className="text-[#1d1d1d] font-semibold">{content.layerName}</span>
       </div>
 
       {/* Progressive Disclosure: Scale (Raw Meteorological Meaning, not simple traffic light) */}
       <div className="flex flex-col gap-1">
-        <span className="text-[10px] font-mono text-on-surface-variant uppercase font-semibold">
+        <span className="text-[10px] font-mono text-[#696969] uppercase font-semibold">
           {content.scaleName}
         </span>
         <div className="grid grid-cols-3 gap-1.5 text-[10px] font-mono">
           {content.scaleSteps.map((step, idx) => (
             <div
               key={idx}
-              className="flex flex-col items-center gap-1 p-1 rounded bg-surface-container border border-outline-variant/30 text-center"
+              className="flex flex-col items-center gap-1 p-1 rounded bg-[#fdfbf9] border border-[#e6e6e6] text-center"
             >
               <span className={`w-full h-1.5 rounded-full ${step.color}`}></span>
-              <span className="text-[9px] text-on-surface font-medium leading-tight">{step.label}</span>
+              <span className="text-[9px] text-[#1d1d1d] font-medium leading-tight">{step.label}</span>
             </div>
           ))}
         </div>
       </div>
 
       {/* Raw Environmental Metric vs System Risk Assessment */}
-      <div className="grid grid-cols-2 gap-2 pt-1 border-t border-outline-variant/20">
+      <div className="grid grid-cols-2 gap-2 pt-1 border-t border-[#e6e6e6]">
         <div className="flex flex-col">
-          <span className="text-[9px] font-mono text-on-surface-variant uppercase">
+          <span className="text-[9px] font-mono text-[#696969] uppercase">
             {content.rawValueLabel}
           </span>
-          <span className="font-mono text-xs font-bold text-on-surface">
+          <span className="font-mono text-xs font-bold text-[#1d1d1d]">
             {content.rawValue}
           </span>
         </div>
         <div className="flex flex-col">
-          <span className="text-[9px] font-mono text-on-surface-variant uppercase">
+          <span className="text-[9px] font-mono text-[#696969] uppercase">
             {content.riskLabel}
           </span>
-          <span className={`font-mono text-xs font-bold ${content.riskColor}`}>
+          <span className={`font-mono text-xs font-bold ${
+            content.riskColor.includes('error') ? 'text-[#cc4117]' :
+            content.riskColor.includes('tertiary') ? 'text-[#d97706]' : 'text-[#007a5a]'
+          }`}>
             {content.riskValue}
           </span>
         </div>
       </div>
 
       {/* Data Source & Freshness */}
-      <div className="pt-1.5 border-t border-outline-variant/20 flex items-center justify-between text-[9px] font-mono text-on-surface-variant">
+      <div className="pt-1.5 border-t border-[#e6e6e6] flex items-center justify-between text-[9px] font-mono text-[#696969]">
         <span className="truncate max-w-[170px]" title={content.source}>
           {content.source}
         </span>
-        <span className="text-secondary font-semibold shrink-0">
+        <span className="text-[#007a5a] font-semibold shrink-0">
           Data: {timestamp}
         </span>
       </div>

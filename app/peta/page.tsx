@@ -260,6 +260,27 @@ export default function PetaPage() {
             isPanelOpen={showInfoModal}
           />
 
+          {/* Direct 1-Click Toggle between GIS & Windy Radar */}
+          {mapCanvasMode === 'gis' ? (
+            <button
+              onClick={() => handleModeChange('radar')}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-[90px] bg-[#1264a3] hover:bg-[#0e4e80] text-white text-xs font-bold transition-all shadow-xs min-h-[40px]"
+              title="Buka Radar Presipitasi & Cuaca Windy Live"
+            >
+              <CloudRain className="w-3.5 h-3.5" />
+              <span>Radar Windy Live</span>
+            </button>
+          ) : (
+            <button
+              onClick={() => handleModeChange('gis')}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-[90px] bg-[#4a154b] hover:bg-[#3d113e] text-white text-xs font-bold transition-all shadow-xs min-h-[40px]"
+              title="Kembali ke Peta Spasial GIS Semarang"
+            >
+              <Navigation className="w-3.5 h-3.5" />
+              <span>Kembali ke GIS</span>
+            </button>
+          )}
+
           {/* Safe Route Evacuation Navigator Toggle (Feature #4) */}
           <button
             onClick={() => {
@@ -555,6 +576,84 @@ export default function PetaPage() {
             />
           ) : (
             <div className="relative w-full h-full bg-[#f4ede4]">
+              {/* Floating Quick Mode Switcher Pill Bar for Windy */}
+              <div className="absolute top-3 left-1/2 -translate-x-1/2 z-30 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-full border-2 border-[#4a154b]/30 shadow-[0_8px_30px_rgba(0,0,0,0.2)] flex items-center gap-1.5 text-xs font-bold overflow-x-auto max-w-[calc(100vw-2rem)] no-scrollbar">
+                <button
+                  type="button"
+                  onClick={() => handleModeChange('gis')}
+                  className="px-3 py-1 rounded-full bg-[#f4ede4] hover:bg-[#e8ded2] text-[#4a154b] flex items-center gap-1 shrink-0 font-bold"
+                  title="Kembali ke Peta Spasial GIS Semarang"
+                >
+                  <span>🗺️ Peta GIS</span>
+                </button>
+                <span className="text-[#e6e6e6]">|</span>
+                <button
+                  type="button"
+                  onClick={() => handleModeChange('radar')}
+                  className={cn(
+                    'px-3 py-1 rounded-full transition-all shrink-0 font-bold',
+                    mapCanvasMode === 'radar'
+                      ? 'bg-[#1264a3] text-white shadow-xs'
+                      : 'hover:bg-[#f4ede4] text-[#1d1d1d]'
+                  )}
+                  title="Radar Presipitasi Hujan Doppler"
+                >
+                  🌧️ Radar Hujan
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleModeChange('wind')}
+                  className={cn(
+                    'px-3 py-1 rounded-full transition-all shrink-0 font-bold',
+                    mapCanvasMode === 'wind'
+                      ? 'bg-[#4a154b] text-white shadow-xs'
+                      : 'hover:bg-[#f4ede4] text-[#1d1d1d]'
+                  )}
+                  title="Aliran Partikel Angin Permukaan (10m)"
+                >
+                  💨 Angin (ECMWF)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleModeChange('waves')}
+                  className={cn(
+                    'px-3 py-1 rounded-full transition-all shrink-0 font-bold',
+                    mapCanvasMode === 'waves'
+                      ? 'bg-[#0284c7] text-white shadow-xs'
+                      : 'hover:bg-[#f4ede4] text-[#1d1d1d]'
+                  )}
+                  title="Tinggi Gelombang Pesisir Laut Jawa"
+                >
+                  🌊 Gelombang Laut
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleModeChange('clouds')}
+                  className={cn(
+                    'px-3 py-1 rounded-full transition-all shrink-0 font-bold',
+                    mapCanvasMode === 'clouds'
+                      ? 'bg-[#4a154b] text-white shadow-xs'
+                      : 'hover:bg-[#f4ede4] text-[#1d1d1d]'
+                  )}
+                  title="Tutupan Awan Satelit"
+                >
+                  ☁️ Satelit Awan
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleModeChange('pressure')}
+                  className={cn(
+                    'px-3 py-1 rounded-full transition-all shrink-0 font-bold',
+                    mapCanvasMode === 'pressure'
+                      ? 'bg-[#4a154b] text-white shadow-xs'
+                      : 'hover:bg-[#f4ede4] text-[#1d1d1d]'
+                  )}
+                  title="Isobar Tekanan Permukaan Laut"
+                >
+                  ⏱️ Tekanan Udara
+                </button>
+              </div>
+
               <iframe
                 src={`https://embed.windy.com/embed.html?lat=-6.96&lon=110.42&zoom=11&level=surface&overlay=${mapCanvasMode}&menu=&message=true&marker=&calendar=&pressure=&type=map&location=coordinates&detail=&detailLat=-6.96&detailLon=110.42&metricWind=km%2Fh&metricTemp=%C2%B0C&radarRange=-1`}
                 title="Windy Live Spatial Radar"
@@ -564,7 +663,7 @@ export default function PetaPage() {
           )}
         </div>
 
-        {/* LEGEND (BOTTOM-LEFT) */}
+        {/* GIS STATIC LEGEND (BOTTOM-LEFT WHEN IN GIS MODE) */}
         {showLegend && mapCanvasMode === 'gis' && (
           <div className="absolute bottom-4 left-4 z-20 bg-white/95 backdrop-blur-md p-3.5 rounded-[16px] border border-[#e6e6e6] shadow-card hidden md:flex flex-col gap-2">
             <div className="flex items-center justify-between gap-4">
@@ -597,6 +696,15 @@ export default function PetaPage() {
               </div>
             </div>
           </div>
+        )}
+
+        {/* WINDY SPATIAL RADAR FLOATING LEGEND (WHEN IN WINDY WEATHER MODES) */}
+        {showWindyLegend && mapCanvasMode !== 'gis' && (
+          <WindyFloatingLegend
+            mode={mapCanvasMode}
+            weather={weather}
+            onClose={() => setShowWindyLegend(false)}
+          />
         )}
 
         {/* WEATHER INTELLIGENCE & RISK INDICATORS PANEL (Requirements #1-15) */}

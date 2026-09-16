@@ -125,6 +125,20 @@ const DATA_SOURCES: DataSourceItem[] = [
     provenance: 'Verifikasi Komunitas KotaKu Siaga',
   },
   {
+    id: 'windy-spatial-radar',
+    name: 'Windy Spatial Radar & ECMWF Atmospheric Engine',
+    provider: 'Windy.com / European Centre for Medium-Range Weather Forecasts (ECMWF)',
+    category: 'Radar Satelit & Atmosfer',
+    description: 'Lapisan radar presipitasi hujan real-time Doppler, visualisasi aliran angin 10m ECMWF, gelombang laut pasang WaveWatch III, dan tutupan awan satelit optik.',
+    endpointType: 'Windy Live Embed & Tile Stream API',
+    accessMethod: 'Terbuka · Tanpa Kunci Berbayar',
+    status: 'HEALTHY',
+    totalRecords: 520,
+    lastIngested: 'Realtime Stream',
+    spatialValidityRate: 99.8,
+    provenance: 'https://www.windy.com/',
+  },
+  {
     id: 'semarang-opendata',
     name: 'Kepadatan Penduduk & Batas Administrasi 16 Kecamatan',
     provider: 'Satu Data Kota Semarang / BPS',
@@ -172,7 +186,7 @@ export default function DataPage() {
       <section className="pt-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
         <div className="flex justify-between items-center mb-6 pb-3 border-b border-[#e6e6e6]">
           <h2 className="text-xs uppercase font-bold tracking-wider text-[#4a154b]">
-            Katalog 5 Sumber Data Terhubung Realtime
+            Katalog 6 Sumber Data Terhubung Realtime
           </h2>
           <div className="text-xs text-[#007a5a] font-bold flex items-center gap-1.5">
             <CheckCircle2 className="h-4 w-4" />
