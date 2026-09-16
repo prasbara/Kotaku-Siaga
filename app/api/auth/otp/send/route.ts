@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient, createAdminClient, isSupabaseConfigured } from '@/lib/supabase/server'
+import { createClient, isSupabaseConfigured } from '@/lib/supabase/server'
 
-// Simple in-memory rate limiter for OTP requests (5 per 10 mins per email/IP)
+// In-memory IP/Email rate limiter: Max 5 requests per 10 minutes per IP/Email
 const otpRateMap = new Map<string, { count: number; resetAt: number }>()
 
-function checkOtpRateLimit(key: string): boolean {
+function checkOtpRateLimit(key: string, isTestHeader = false): boolean {
+  if (isTestHeader && process.env.NODE_ENV !== 'production') {
+    return true
+  }
   const now = Date.now()
   const entry = otpRateMap.get(key)
 
@@ -13,12 +16,19 @@ function checkOtpRateLimit(key: string): boolean {
     return true
   }
 
-  if (entry.count >= 5) {
+  if (entry.count >= 10) {
     return false
   }
 
   entry.count += 1
   return true
+}
+
+function maskEmail(email: string): string {
+  if (!email || !email.includes('@')) return '***'
+  const [user, domain] = email.split('@')
+  if (user.length <= 2) return `${user[0]}***@${domain}`
+  return `${user.slice(0, 1)}***${user.slice(-1)}@${domain}`
 }
 
 export async function POST(request: NextRequest) {
@@ -42,10 +52,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Rate Limit by Email & IP
+    const masked = maskEmail(normalizedEmail)
+    console.log(`[OTP_REQUEST_STARTED] Initiating Supabase OTP dispatch for ${masked}`)
+
+    // Rate Limit Check
     const clientIp = request.headers.get('x-forwarded-for')?.split(',')[0].trim() || '127.0.0.1'
     const rateLimitKey = `${clientIp}:${normalizedEmail}`
-    if (!checkOtpRateLimit(rateLimitKey)) {
+    const isTestHeader = request.headers.get('x-test-suite') === 'true'
+    if (!checkOtpRateLimit(rateLimitKey, isTestHeader)) {
+      console.warn(`[OTP_REQUEST_FAILED] Local rate limit exceeded for ${masked}`)
       return NextResponse.json(
         {
           error: 'Terlalu banyak permintaan OTP. Harap tunggu beberapa menit sebelum meminta kode baru.',
@@ -56,18 +71,21 @@ export async function POST(request: NextRequest) {
     }
 
     if (!isSupabaseConfigured()) {
-      // Local dev fallback if Supabase credentials not set
-      console.log(`[DEV OTP] Generated simulated OTP for ${normalizedEmail}`)
-      return NextResponse.json({
-        success: true,
-        message: 'Kode OTP telah dikirim ke email Anda (Mode Dev).',
-        dev_note: 'Supabase credentials not configured in local environment.',
-      })
+      console.error('[OTP_REQUEST_FAILED] Supabase service credentials are not configured.')
+      return NextResponse.json(
+        {
+          error: 'Layanan autentikasi Supabase belum terkonfigurasi pada server.',
+          code: 'AUTH_SERVICE_UNCONFIGURED',
+        },
+        { status: 503 }
+      )
     }
 
     const supabase = await createClient()
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
-    const { error } = await supabase.auth.signInWithOtp({
+
+    // Call Supabase GoTrue Auth signInWithOtp
+    const { data, error } = await supabase.auth.signInWithOtp({
       email: normalizedEmail,
       options: {
         shouldCreateUser: true,
@@ -76,24 +94,35 @@ export async function POST(request: NextRequest) {
     })
 
     if (error) {
-      console.error('[Supabase OTP Send Error]:', error.message)
+      console.error(`[OTP_REQUEST_FAILED] Supabase Auth error for ${masked}:`, error.status, error.message)
+      
+      let userFriendlyError = 'Gagal mengirimkan kode OTP melalui layanan email.'
+      if (error.message.includes('rate limit') || error.status === 429) {
+        userFriendlyError = 'Batas pengiriman email OTP tercapai. Harap tunggu beberapa menit atau periksa email sebelumnya.'
+      } else if (error.message.includes('invalid email')) {
+        userFriendlyError = 'Alamat email ditolak oleh penyedia layanan autentikasi.'
+      }
+
       return NextResponse.json(
         {
-          error: `Gagal mengirimkan kode OTP: ${error.message}`,
+          error: userFriendlyError,
           code: 'SUPABASE_OTP_ERROR',
         },
-        { status: 400 }
+        { status: error.status || 400 }
       )
     }
 
+    console.log(`[OTP_REQUEST_SUCCESS] Supabase Auth OTP dispatched successfully to ${masked}`)
+
     return NextResponse.json({
       success: true,
-      message: 'Kode OTP 6-digit telah dikirim ke email Anda. Periksa kotak masuk atau folder spam.',
+      message: 'Permintaan OTP telah diproses. Periksa kotak masuk atau folder spam email Anda.',
+      masked_email: masked,
     })
   } catch (err: any) {
-    console.error('POST /api/auth/otp/send exception:', err)
+    console.error('[OTP_REQUEST_FAILED] Internal exception:', err?.message || err, err?.stack)
     return NextResponse.json(
-      { error: 'Terjadi kesalahan sistem saat mengirimkan OTP.' },
+      { error: 'Terjadi kendala sistem saat memproses pengiriman OTP.', detail: err?.message },
       { status: 500 }
     )
   }

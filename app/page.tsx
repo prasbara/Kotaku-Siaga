@@ -395,7 +395,8 @@ export default async function LandingPage() {
                 href="/laporan"
                 className="text-xs sm:text-sm font-semibold text-[#1264a3] hover:text-[#3860be] hover:underline flex items-center gap-1.5 transition-colors"
               >
-                Lihat Seluruh Laporan Warga →
+                <span>Lihat Seluruh Laporan Warga</span>
+                <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             </div>
 
@@ -413,8 +414,9 @@ export default async function LandingPage() {
                   </p>
                 </div>
                 <div className="mt-6 pt-4 border-t border-[#e6e6e6]">
-                  <Link href="/peta" className="text-xs font-bold text-[#4a154b] hover:underline flex items-center gap-1">
-                    Buka Peta Geospasial →
+                  <Link href="/peta" className="text-xs font-bold text-[#4a154b] hover:underline flex items-center gap-1.5">
+                    <span>Buka Peta Geospasial</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
                   </Link>
                 </div>
               </div>
@@ -431,8 +433,9 @@ export default async function LandingPage() {
                   </p>
                 </div>
                 <div className="mt-6 pt-4 border-t border-[#e6e6e6]">
-                  <Link href="/laporan/baru" className="text-xs font-bold text-[#4a154b] hover:underline flex items-center gap-1">
-                    Kirim Laporan Lapangan →
+                  <Link href="/laporan/baru" className="text-xs font-bold text-[#4a154b] hover:underline flex items-center gap-1.5">
+                    <span>Kirim Laporan Lapangan</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
                   </Link>
                 </div>
               </div>
@@ -449,8 +452,9 @@ export default async function LandingPage() {
                   </p>
                 </div>
                 <div className="mt-6 pt-4 border-t border-[#e6e6e6]">
-                  <Link href="/priorities" className="text-xs font-bold text-[#4a154b] hover:underline flex items-center gap-1">
-                    Akses Matriks Prioritas →
+                  <Link href="/priorities" className="text-xs font-bold text-[#4a154b] hover:underline flex items-center gap-1.5">
+                    <span>Akses Matriks Prioritas</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
                   </Link>
                 </div>
               </div>
@@ -478,9 +482,10 @@ export default async function LandingPage() {
               </div>
               <Link
                 href="/priorities"
-                className="text-xs font-bold text-[#4a154b] hover:underline uppercase tracking-wider flex items-center gap-1 shrink-0"
+                className="text-xs font-bold text-[#4a154b] hover:underline uppercase tracking-wider flex items-center gap-1.5 shrink-0"
               >
-                Lihat Matriks Lengkap →
+                <span>Lihat Matriks Lengkap</span>
+                <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             </div>
 
@@ -522,8 +527,9 @@ export default async function LandingPage() {
                       {district.tag}
                     </p>
                   </div>
-                  <span className="text-[11px] font-semibold text-[#1264a3] mt-3 block group-hover:underline">
-                    Pantau Wilayah Ini →
+                  <span className="text-[11px] font-semibold text-[#1264a3] mt-3 flex items-center gap-1 group-hover:underline">
+                    <span>Pantau Wilayah Ini</span>
+                    <ArrowRight className="w-3 h-3" />
                   </span>
                 </Link>
               ))}
@@ -546,8 +552,9 @@ export default async function LandingPage() {
                 <p className="leading-relaxed text-[11px] sm:text-xs">
                   Data observasi bersumber dari Stasiun Meteorologi Maritim BMKG Tanjung Emas, jaringan kamera PantauSemar Diskominfo Kota Semarang, dan sensor pos pantau pintu air DPU.
                 </p>
-                <Link href="/data" className="inline-block font-bold text-[#1264a3] hover:underline pt-1">
-                  Audit Silsilah Data (Lineage) →
+                <Link href="/data" className="inline-flex items-center gap-1 font-bold text-[#1264a3] hover:underline pt-1">
+                  <span>Audit Silsilah Data (Lineage)</span>
+                  <ArrowRight className="w-3 h-3" />
                 </Link>
               </div>
 
@@ -559,8 +566,9 @@ export default async function LandingPage() {
                 <p className="leading-relaxed text-[11px] sm:text-xs">
                   Panggilan Darurat Bebas Pulsa: <strong>112</strong> (BPBD &amp; Ambulans Hebat). Posko Siaga Bencana Kota Semarang: (024) 3550222 / 3584000. Tersedia 24 jam nonstop.
                 </p>
-                <a href="tel:112" className="inline-block font-bold text-[#cc4117] hover:underline pt-1">
-                  Hubungi 112 Bebas Pulsa →
+                <a href="tel:112" className="inline-flex items-center gap-1 font-bold text-[#cc4117] hover:underline pt-1">
+                  <span>Hubungi 112 Bebas Pulsa</span>
+                  <ArrowRight className="w-3 h-3" />
                 </a>
               </div>
 
@@ -572,8 +580,9 @@ export default async function LandingPage() {
                 <p className="leading-relaxed text-[11px] sm:text-xs">
                   Platform KotaKu Siaga dikembangkan sebagai inisiatif kesiapsiagaan sipil cerdas guna mendukung ketahanan iklim Semarang berstandar ISO 37120.
                 </p>
-                <Link href="/edukasi" className="inline-block font-bold text-[#4a154b] hover:underline pt-1">
-                  Panduan Kesiapsiagaan Bencana →
+                <Link href="/edukasi" className="inline-flex items-center gap-1 font-bold text-[#4a154b] hover:underline pt-1">
+                  <span>Panduan Kesiapsiagaan Bencana</span>
+                  <ArrowRight className="w-3 h-3" />
                 </Link>
               </div>
 

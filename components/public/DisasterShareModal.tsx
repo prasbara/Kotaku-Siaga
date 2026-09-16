@@ -89,50 +89,49 @@ export function generateSituationShareText(shareData?: DisasterShareData): strin
   // 4. Ruas Jalan Dialihkan / Dihindari (STRICT: NO STATIC FALSE CLAIMS)
   const hasRoadClosures = shareData?.avoidRoads && shareData.avoidRoads.length > 0
   const roadClosureText = hasRoadClosures
-    ? `⛔ *RUAS JALAN DIALIHKAN / DIHINDARI:*\n- ${shareData.avoidRoads!.join('\n- ')}`
-    : `🚧 *Penutupan Jalan:* Nihil penutupan jalan (Lalu lintas normal terkendali).`
+    ? `[RUAS JALAN DIALIHKAN / DIHINDARI]\n- ${shareData.avoidRoads!.join('\n- ')}`
+    : `[Status Penutupan Jalan]\nNihil penutupan jalan (Lalu lintas normal terkendali).`
 
   // 5. Rekomendasi Rute Aman
   const hasSafeRoutes = shareData?.safeCorridors && shareData.safeCorridors.length > 0
   const safeRouteText = hasRoadClosures && hasSafeRoutes
-    ? `✅ *REKOMENDASI JALUR ALTERNATIF:*\n- ${shareData.safeCorridors!.join('\n- ')}`
+    ? `[REKOMENDASI JALUR ALTERNATIF]\n- ${shareData.safeCorridors!.join('\n- ')}`
     : hasRoadClosures
-    ? `✅ *Rute Perjalanan:* Pantau rekomendasi rute evakuasi aman di menu Peta Interaktif.`
-    : `✅ *Rute Perjalanan:* Jalur utama dapat dilalui secara normal dengan tetap berhati-hati dan mematuhi rambu lalu lintas.`
+    ? `[Rute Perjalanan]\nPantau rekomendasi rute evakuasi aman di menu Peta Interaktif.`
+    : `[Rute Perjalanan]\nJalur utama dapat dilalui secara normal dengan tetap berhati-hati dan mematuhi rambu lalu lintas.`
 
   const url =
     shareData?.reportUrl ||
     (typeof window !== 'undefined' ? `${window.location.origin}/peta` : 'https://kotaku-siaga.vercel.app/peta')
 
   const isEmergency = rawRisk === 'CRITICAL' || rawRisk === 'KRITIS' || (shareData?.floodDepthCm != null && shareData.floodDepthCm > 0)
-  const headerIcon = isEmergency ? '🚨' : '🟡'
   const headerTitle = isEmergency
     ? 'INFORMASI KESIAPSIAGAAN & SITUASI DARURAT'
     : 'INFORMASI STATUS KESIAPSIAGAAN WILAYAH'
 
-  return `${headerIcon} *KOTAKU SIAGA — ${headerTitle}*
-🏢 *Pemerintah Kota Semarang & BPBD*
+  return `*KOTAKU SIAGA — ${headerTitle}*
+*Pemerintah Kota Semarang & BPBD*
 
-📅 *Waktu Pembaruan:* ${timeFormatted}
-📍 *Wilayah / Kecamatan:* ${district}
-⚠️ *Status Risiko Wilayah:* [ ${riskNormalized} ]${scoreText}
+*Waktu Pembaruan:* ${timeFormatted}
+*Wilayah / Kecamatan:* ${district}
+*Status Risiko Wilayah:* [ ${riskNormalized} ]${scoreText}
 
-🌧️ *Curah Hujan:* ${rainText}
-🌊 *Kondisi Pesisir:* ${coastalText}
-💧 *Pantauan Genangan:* ${floodText}
+*Curah Hujan:* ${rainText}
+*Kondisi Pesisir:* ${coastalText}
+*Pantauan Genangan:* ${floodText}
 
 ${roadClosureText}
 
 ${safeRouteText}
 
-ℹ️ *CATATAN:*
+[CATATAN SISTEM]
 Status risiko menunjukkan tingkat kerentanan spasial dan kesiapsiagaan wilayah berdasarkan data multi-sumber, bukan konfirmasi bahwa bencana sedang terjadi saat ini.
 
-📞 *Kontak Darurat Resmi:*
+[KONTAK DARURAT RESMI]
 - Call Center Semarang: 112 (Bebas Pulsa 24 Jam)
 - Posko TRC BPBD Kota Semarang: 024-7629444
 
-🔗 *Pantau Peta Spasial & CCTV Real-time:*
+[PANTAU PETA SPASIAL & CCTV]
 ${url}
 
 _Pesan resmi berbasis data aktual KOTAKU SIAGA (ISO 37120 Audit Trail). Sebarkan informasi valid ini untuk keselamatan bersama._`

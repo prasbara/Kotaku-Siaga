@@ -115,7 +115,7 @@ export function DigitalEvidenceCertificate({ report, className }: DigitalEvidenc
             <div>
               <span className="font-bold text-[#1d1d1d] block">Cloudflare Turnstile Anti-Bot</span>
               <span className="text-[11px] text-[#696969]">
-                {isTurnstileVerified ? '✓ Lolos Tantangan Kemanusiaan Non-Intrusif' : 'Verifikasi Bot Server'}
+                {isTurnstileVerified ? 'Lolos Tantangan Kemanusiaan Non-Intrusif' : 'Verifikasi Bot Server'}
               </span>
             </div>
           </div>
@@ -126,7 +126,7 @@ export function DigitalEvidenceCertificate({ report, className }: DigitalEvidenc
             <div>
               <span className="font-bold text-[#1d1d1d] block">Supabase Passwordless Email OTP</span>
               <span className="text-[11px] text-[#696969]">
-                {isEmailVerified ? '✓ Kepemilikan Email Terverifikasi Token 6-Digit' : 'Identitas Email Terdaftar'}
+                {isEmailVerified ? 'Kepemilikan Email Terverifikasi Token 6-Digit' : 'Identitas Email Terdaftar'}
               </span>
             </div>
           </div>
@@ -137,7 +137,7 @@ export function DigitalEvidenceCertificate({ report, className }: DigitalEvidenc
             <div>
               <span className="font-bold text-[#1d1d1d] block">Batas Administratif Semarang</span>
               <span className="text-[11px] text-[#696969]">
-                ✓ Validasi 16 Kecamatan (Akurasi GPS ±{accuracyMeters}m)
+                Validasi 16 Kecamatan (Akurasi GPS ±{accuracyMeters}m)
               </span>
             </div>
           </div>
@@ -149,7 +149,7 @@ export function DigitalEvidenceCertificate({ report, className }: DigitalEvidenc
               <span className="font-bold text-[#1d1d1d] block">Spatial Haversine Corroboration</span>
               <span className="text-[11px] text-[#696969]">
                 {meta.corroboration_count && meta.corroboration_count > 0
-                  ? `✓ ${meta.corroboration_count} Laporan Bersesuaian dalam Radius 300m`
+                  ? `${meta.corroboration_count} Laporan Bersesuaian dalam Radius 300m`
                   : 'Pencocokan Titik Pantau CCTV & Curah Hujan BMKG'}
               </span>
             </div>

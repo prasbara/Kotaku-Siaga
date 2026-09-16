@@ -25,9 +25,14 @@ import {
   Camera,
   ExternalLink,
   RotateCcw,
+  Flame,
+  Tag,
+  Lightbulb,
+  RefreshCw,
 } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
+import { toast } from '@/components/ui/use-toast'
 
 interface ReportModerationViewProps {
   reports?: Report[]
@@ -39,6 +44,7 @@ const EMPTY_REPORTS: Report[] = []
 
 export function ReportModerationView({ reports, onReportUpdated, onRefresh }: ReportModerationViewProps) {
   const [statusFilter, setStatusFilter] = useState<string>('all')
+  const [categoryFilter, setCategoryFilter] = useState<string>('all')
   const [simulationFilter, setSimulationFilter] = useState<'all' | 'real_only' | 'simulation_only'>('all')
   const [updatingId, setUpdatingId] = useState<string | null>(null)
   const [localReports, setLocalReports] = useState<Report[]>(reports || EMPTY_REPORTS)
@@ -135,22 +141,57 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
     }
   }
 
+  const STATUS_LABELS_MAP: Record<string, string> = {
+    verified: 'Terverifikasi (Siap Ditindaklanjuti)',
+    under_review: 'Dalam Peninjauan Lapangan',
+    rejected: 'Ditolak (Tidak Valid)',
+    suspicious: 'Ditandai Mencurigakan',
+    in_progress: 'Dalam Penanganan Petugas',
+    resolved: 'Selesai Ditangani',
+    submitted: 'Menunggu Moderasi',
+  }
+
   const handleUpdateStatus = async (reportId: string, newStatus: string) => {
     setUpdatingId(reportId)
+    const previousReports = [...localReports]
+
     // Optimistic local update
     setLocalReports((prev) =>
       prev.map((r) => (r.id === reportId ? { ...r, status: newStatus as any } : r))
     )
+
     try {
-      await fetch(`/api/reports/${reportId}`, {
+      const res = await fetch(`/api/reports/${reportId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus }),
       })
-      if (onReportUpdated) onReportUpdated()
-      if (onRefresh) onRefresh()
+      const data = await res.json()
+
+      if (res.ok && data.success) {
+        toast({
+          title: 'Status Laporan Diperbarui',
+          description: `Status berhasil diubah menjadi "${STATUS_LABELS_MAP[newStatus] || newStatus}".`,
+        })
+        if (onReportUpdated) onReportUpdated()
+        if (onRefresh) onRefresh()
+      } else {
+        // Revert on server error
+        setLocalReports(previousReports)
+        toast({
+          title: 'Gagal Memperbarui Status',
+          description: data.error || 'Terjadi kendala saat memperbarui status di basis data.',
+          variant: 'destructive',
+        })
+      }
     } catch (err) {
-      console.error(err)
+      setLocalReports(previousReports)
+      toast({
+        title: 'Kesalahan Jaringan',
+        description: 'Gagal menghubungi server untuk memperbarui status.',
+        variant: 'destructive',
+      })
+      console.error('handleUpdateStatus error:', err)
     } finally {
       setTimeout(() => setUpdatingId(null), 300)
     }
@@ -158,6 +199,7 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
 
   const filtered = localReports
     .filter((r) => statusFilter === 'all' || r.status === statusFilter)
+    .filter((r) => categoryFilter === 'all' || r.category === categoryFilter)
     .filter((r) => {
       const isSim = Boolean(r.is_simulation || r.is_demo)
       if (simulationFilter === 'real_only') return !isSim
@@ -281,6 +323,35 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
         </div>
       </div>
 
+      {/* Category Filter Chips Bar (Section 11) */}
+      <div className="flex items-center gap-1.5 flex-wrap pt-2 border-t border-outline-variant/20">
+        <span className="text-[11px] font-mono text-on-surface-variant font-bold mr-1">Kategori:</span>
+        {[
+          { id: 'all', label: 'Semua Kategori' },
+          { id: 'banjir', label: 'Banjir' },
+          { id: 'genangan', label: 'Rob / Genangan' },
+          { id: 'drainase_tersumbat', label: 'Drainase' },
+          { id: 'longsor', label: 'Longsor' },
+          { id: 'pohon_tumbang', label: 'Pohon Tumbang' },
+          { id: 'kebakaran', label: 'Kebakaran' },
+        ].map((cat) => (
+          <button
+            key={cat.id}
+            type="button"
+            onClick={() => setCategoryFilter(cat.id)}
+            className={`min-h-[32px] text-[11px] px-3 py-1 rounded-full border font-mono transition-all flex items-center justify-center cursor-pointer ${
+              categoryFilter === cat.id
+                ? cat.id === 'kebakaran'
+                  ? 'bg-[#ea580c] text-white border-[#ea580c] font-bold shadow-xs'
+                  : 'bg-primary text-on-primary border-primary font-bold shadow-xs'
+                : 'bg-surface-container/60 text-on-surface-variant border-outline-variant/30 hover:text-on-surface hover:bg-surface-container'
+            }`}
+          >
+            {cat.label}
+          </button>
+        ))}
+      </div>
+
       {/* Moderation Queue Table */}
       <div className="border border-outline-variant/30 rounded-xl bg-surface-container-low overflow-x-auto shadow-md">
         <table className="w-full min-w-[720px] text-left text-xs border-collapse">
@@ -344,8 +415,15 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
                           )}
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1 flex-wrap">
-                              <span className="inline-block text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-surface-container border border-outline-variant/30 text-on-surface font-semibold">
-                                {report.category === 'kebakaran' ? '🔥 Kebakaran' : (CATEGORY_LABELS[report.category as keyof typeof CATEGORY_LABELS] || report.category)}
+                              <span className="inline-flex items-center gap-1 text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-surface-container border border-outline-variant/30 text-on-surface font-semibold">
+                                {report.category === 'kebakaran' ? (
+                                  <>
+                                    <Flame className="w-3 h-3 text-orange-400" />
+                                    <span>Kebakaran</span>
+                                  </>
+                                ) : (
+                                  CATEGORY_LABELS[report.category as keyof typeof CATEGORY_LABELS] || report.category
+                                )}
                               </span>
                               <span
                                 className={`text-[9px] font-mono uppercase font-bold px-1.5 py-0.2 rounded border ${
@@ -406,20 +484,27 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
 
                         {/* Inline AI Insight */}
                         {aiInsights[report.id] && (
-                          <div className="mt-2 p-2.5 rounded-lg bg-surface-container border border-primary/30 text-[11px] font-body space-y-1 animate-in fade-in duration-150">
-                            <div className="flex items-center justify-between text-[10px] font-mono text-primary font-bold">
-                              <span className="flex items-center gap-1">
-                                <Bot className="w-3.5 h-3.5" /> Ringkasan Analisis
+                          <div className="mt-2.5 p-3 rounded-xl bg-white border border-[#eddcf7] text-[11px] font-body space-y-2 shadow-xs animate-in fade-in duration-150">
+                            <div className="flex items-center justify-between text-[11px] font-mono text-[#4a154b] font-bold">
+                              <span className="flex items-center gap-1.5">
+                                <Bot className="w-3.5 h-3.5 text-[#4a154b]" />
+                                <span>Ringkasan Analisis AI</span>
                               </span>
-                              <span className="uppercase text-secondary font-semibold">
-                                {aiInsights[report.id].severity} ({Math.round(aiInsights[report.id].confidence * 100)}%)
+                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#f4ede4] border border-[#d0c8be] text-[#4a154b]">
+                                {aiInsights[report.id].severity.toUpperCase()} ({Math.round(aiInsights[report.id].confidence * 100)}%)
                               </span>
                             </div>
-                            <p className="text-on-surface text-[11px] leading-relaxed">
+                            
+                            <p className="text-[#1d1d1d] text-[11px] leading-relaxed font-normal">
                               {aiInsights[report.id].summary}
                             </p>
-                            <div className="text-[10px] font-mono text-secondary pt-1 border-t border-outline-variant/20">
-                              💡 Saran Penanganan: {aiInsights[report.id].recommended_action}
+                            
+                            <div className="text-[11px] font-mono text-[#1d1d1d] pt-2 border-t border-[#f0ece5] flex items-start gap-1.5 bg-[#fbf8f3] -mx-3 -mb-3 p-2.5 rounded-b-xl">
+                              <Lightbulb className="w-4 h-4 text-[#d97706] shrink-0 mt-0.5" />
+                              <div className="leading-snug">
+                                <strong className="text-[#854d0e] font-bold">Saran Penanganan: </strong>
+                                <span className="text-[#1d1d1d] font-medium">{aiInsights[report.id].recommended_action}</span>
+                              </div>
                             </div>
                           </div>
                         )}
@@ -450,23 +535,27 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
 
                           <div className="flex items-center gap-1.5 flex-wrap text-[10px] font-mono text-on-surface-variant">
                             {report.email_verified && (
-                              <span className="text-emerald-400 font-semibold" title="Email Pelapor Terverifikasi OTP">
-                                ✓ OTP Verified
+                              <span className="text-emerald-400 font-semibold inline-flex items-center gap-0.5" title="Email Pelapor Terverifikasi OTP">
+                                <CheckCircle2 className="w-3 h-3 text-emerald-400 shrink-0" />
+                                <span>OTP Verified</span>
                               </span>
                             )}
                             {(report.independent_reporter_count || meta?.independent_reporter_count) && (
-                              <span className="text-cyan-400 font-bold" title="Jumlah Pelapor Independen">
-                                👥 {report.independent_reporter_count || meta?.independent_reporter_count} Pelapor
+                              <span className="text-cyan-400 font-bold inline-flex items-center gap-0.5" title="Jumlah Pelapor Independen">
+                                <Users className="w-3 h-3 text-cyan-400 shrink-0" />
+                                <span>{report.independent_reporter_count || meta?.independent_reporter_count} Pelapor</span>
                               </span>
                             )}
                             {meta?.cluster_code && (
-                              <span className="text-purple-400 font-mono" title="Kode Klaster Insiden">
-                                🏷️ {meta.cluster_code}
+                              <span className="text-purple-400 font-mono inline-flex items-center gap-0.5" title="Kode Klaster Insiden">
+                                <Tag className="w-3 h-3 text-purple-400 shrink-0" />
+                                <span>{meta.cluster_code}</span>
                               </span>
                             )}
                             {meta?.location_grade === 'normal' && (
-                              <span className="text-emerald-400 font-semibold" title="Koordinat GPS Valid">
-                                📍 GPS Valid
+                              <span className="text-emerald-400 font-semibold inline-flex items-center gap-0.5" title="Koordinat GPS Valid">
+                                <MapPin className="w-3 h-3 text-emerald-400 shrink-0" />
+                                <span>GPS Valid</span>
                               </span>
                             )}
                             {(meta?.abuse_score ?? report.abuse_score) !== undefined && (
@@ -482,18 +571,21 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
                               </span>
                             )}
                             {meta?.duplicate_photo && (
-                              <span className="text-red-400 font-bold" title="Foto Terindikasi Duplikat">
-                                ⚠️ Foto Duplikat
+                              <span className="text-red-400 font-bold inline-flex items-center gap-0.5" title="Foto Terindikasi Duplikat">
+                                <AlertTriangle className="w-3 h-3 text-red-400 shrink-0" />
+                                <span>Foto Duplikat</span>
                               </span>
                             )}
                             {meta?.corroboration_count ? (
-                              <span className="text-cyan-400 font-semibold" title="Dikonfirmasi Laporan Sekitar">
-                                👥 {meta.corroboration_count} Laporan Dekat
+                              <span className="text-cyan-400 font-semibold inline-flex items-center gap-0.5" title="Dikonfirmasi Laporan Sekitar">
+                                <Users className="w-3 h-3 text-cyan-400 shrink-0" />
+                                <span>{meta.corroboration_count} Laporan Dekat</span>
                               </span>
                             ) : null}
                             {meta?.cctv_evidence === 'corroborated' && (
-                              <span className="text-emerald-400 font-semibold" title="Terkonfirmasi CCTV Terdekat">
-                                📹 CCTV
+                              <span className="text-emerald-400 font-semibold inline-flex items-center gap-0.5" title="Terkonfirmasi CCTV Terdekat">
+                                <Camera className="w-3 h-3 text-emerald-400 shrink-0" />
+                                <span>CCTV</span>
                               </span>
                             )}
                           </div>
@@ -525,19 +617,24 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
                       </td>
 
                       {/* 5. Admin Actions */}
-                      <td className="py-3.5 px-4 align-top text-right">
-                        <div className="flex flex-col items-end gap-1.5">
-                          <div className="inline-flex items-center gap-1.5 justify-end flex-wrap">
+                      <td className="py-3.5 px-4 align-top text-right min-w-[200px]">
+                        <div className="flex flex-col items-end gap-2">
+                          <div className="flex items-center gap-1.5 justify-end flex-wrap">
                             {/* Verify Button */}
                             {report.status !== 'verified' && report.status !== 'resolved' && (
                               <button
                                 type="button"
                                 disabled={isUpdating}
                                 onClick={() => handleUpdateStatus(report.id, 'verified')}
-                                className="min-h-[36px] px-2.5 py-1.5 rounded-lg text-[10px] font-mono font-bold uppercase bg-primary text-on-primary hover:brightness-110 transition-all shadow-sm flex items-center justify-center cursor-pointer"
+                                className="min-h-[34px] px-3 py-1.5 rounded-lg text-[11px] font-mono font-bold uppercase bg-[#007a5a] text-white hover:bg-[#006046] active:scale-95 transition-all shadow-xs flex items-center gap-1 cursor-pointer disabled:opacity-50"
                                 title="Verifikasi laporan ini untuk ditangani"
                               >
-                                Verifikasi
+                                {isUpdating ? (
+                                  <RefreshCw className="w-3 h-3 animate-spin" />
+                                ) : (
+                                  <Check className="w-3 h-3" />
+                                )}
+                                <span>Verifikasi</span>
                               </button>
                             )}
 
@@ -547,10 +644,11 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
                                 type="button"
                                 disabled={isUpdating}
                                 onClick={() => handleUpdateStatus(report.id, 'under_review')}
-                                className="min-h-[36px] px-2.5 py-1.5 rounded-lg text-[10px] font-mono font-semibold uppercase bg-surface-container-high text-on-surface border border-outline-variant/40 hover:bg-surface-container-highest transition-colors flex items-center justify-center cursor-pointer"
+                                className="min-h-[34px] px-2.5 py-1.5 rounded-lg text-[11px] font-mono font-bold uppercase bg-[#f4ede4] text-[#4a154b] border border-[#d0c8be] hover:bg-[#e8ded2] active:scale-95 transition-all flex items-center gap-1 cursor-pointer disabled:opacity-50"
                                 title="Minta peninjauan ulang tim lapangan"
                               >
-                                Tinjau
+                                {isUpdating ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Clock className="w-3 h-3" />}
+                                <span>Tinjau</span>
                               </button>
                             )}
 
@@ -560,10 +658,11 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
                                 type="button"
                                 disabled={isUpdating}
                                 onClick={() => handleUpdateStatus(report.id, 'rejected')}
-                                className="min-h-[36px] px-2.5 py-1.5 rounded-lg text-[10px] font-mono font-semibold uppercase bg-error/10 text-error border border-error/30 hover:bg-error/20 transition-colors flex items-center justify-center cursor-pointer"
+                                className="min-h-[34px] px-2.5 py-1.5 rounded-lg text-[11px] font-mono font-bold uppercase bg-[#fdf2f0] text-[#cc4117] border border-[#fca5a5] hover:bg-[#fee2e2] active:scale-95 transition-all flex items-center gap-1 cursor-pointer disabled:opacity-50"
                                 title="Tolak laporan karena tidak valid"
                               >
-                                Tolak
+                                {isUpdating ? <RefreshCw className="w-3 h-3 animate-spin" /> : <XCircle className="w-3 h-3" />}
+                                <span>Tolak</span>
                               </button>
                             )}
 
@@ -573,10 +672,10 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
                                 type="button"
                                 disabled={isUpdating}
                                 onClick={() => handleUpdateStatus(report.id, 'suspicious')}
-                                className="min-h-[36px] px-2 py-1.5 rounded-lg text-[10px] font-mono text-red-400 hover:bg-red-500/15 border border-red-500/20 transition-colors flex items-center justify-center cursor-pointer"
+                                className="min-h-[34px] px-2 py-1.5 rounded-lg text-[11px] font-mono text-[#b45309] bg-[#fffbeb] hover:bg-[#fef3c7] border border-[#fcd34d] active:scale-95 transition-all flex items-center justify-center cursor-pointer disabled:opacity-50"
                                 title="Tandai sebagai mencurigakan"
                               >
-                                <ShieldAlert className="w-3.5 h-3.5" />
+                                <ShieldAlert className="w-3.5 h-3.5 text-[#b45309]" />
                               </button>
                             )}
                           </div>
@@ -587,9 +686,10 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
                               type="button"
                               disabled={isUpdating}
                               onClick={() => handleUpdateStatus(report.id, 'in_progress')}
-                              className="min-h-[34px] px-2.5 py-1 rounded text-[10px] font-mono font-bold uppercase bg-tertiary text-on-tertiary hover:brightness-110 transition-all flex items-center justify-center cursor-pointer"
+                              className="min-h-[32px] px-3 py-1 rounded-md text-[10px] font-mono font-bold uppercase bg-[#4a154b] text-white hover:bg-[#3d123e] transition-all flex items-center gap-1 cursor-pointer disabled:opacity-50 shadow-xs"
                             >
-                              Tugaskan ke Petugas
+                              <Building2 className="w-3 h-3" />
+                              <span>Tugaskan Petugas</span>
                             </button>
                           )}
                           {report.status === 'in_progress' && (
@@ -597,9 +697,10 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
                               type="button"
                               disabled={isUpdating}
                               onClick={() => handleUpdateStatus(report.id, 'resolved')}
-                              className="min-h-[34px] px-2.5 py-1 rounded text-[10px] font-mono font-bold uppercase bg-secondary text-on-secondary hover:brightness-110 transition-all flex items-center justify-center cursor-pointer"
+                              className="min-h-[32px] px-3 py-1 rounded-md text-[10px] font-mono font-bold uppercase bg-[#007a5a] text-white hover:bg-[#006046] transition-all flex items-center gap-1 cursor-pointer disabled:opacity-50 shadow-xs"
                             >
-                              Tandai Selesai
+                              <CheckCircle2 className="w-3 h-3" />
+                              <span>Tandai Selesai</span>
                             </button>
                           )}
                         </div>
@@ -678,7 +779,10 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
                                           <span className="text-[10px] font-mono font-bold uppercase text-red-400 block mb-1">Bahaya Tambahan:</span>
                                           <div className="flex flex-wrap gap-1">
                                             {(fDet.additional_hazards as string[]).map((h: string, i: number) => (
-                                              <span key={i} className="px-1.5 py-0.5 rounded bg-red-500/20 text-[10px]">⚠️ {h}</span>
+                                              <span key={i} className="px-1.5 py-0.5 rounded bg-red-500/20 text-[10px] inline-flex items-center gap-1">
+                                                <AlertTriangle className="w-2.5 h-2.5 text-red-400 shrink-0" />
+                                                <span>{h}</span>
+                                              </span>
                                             ))}
                                           </div>
                                         </div>
@@ -716,13 +820,14 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
                                   {meta?.positive_evidence && meta.positive_evidence.length > 0 ? (
                                     meta.positive_evidence.map((ev: string, idx: number) => (
                                       <div key={idx} className="flex items-start gap-1.5 text-on-surface font-body">
-                                        <span className="text-emerald-400 font-bold">✓</span>
+                                        <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
                                         <span>{ev}</span>
                                       </div>
                                     ))
                                   ) : (
-                                    <div className="text-on-surface-variant text-[11px] font-mono">
-                                      ✓ Lokasi GPS valid di wilayah Kota Semarang
+                                    <div className="text-on-surface-variant text-[11px] font-mono flex items-center gap-1.5">
+                                      <Check className="w-3 h-3 text-emerald-400 shrink-0" />
+                                      <span>Lokasi GPS valid di wilayah Kota Semarang</span>
                                     </div>
                                   )}
                                 </div>
@@ -737,13 +842,14 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
                                   {meta?.warnings && meta.warnings.length > 0 ? (
                                     meta.warnings.map((warn: string, idx: number) => (
                                       <div key={idx} className="flex items-start gap-1.5 text-amber-300 font-body">
-                                        <span className="text-amber-400 font-bold">!</span>
+                                        <span className="text-amber-400 font-bold font-mono">!</span>
                                         <span>{warn}</span>
                                       </div>
                                     ))
                                   ) : (
-                                    <div className="text-emerald-400 text-[11px] font-mono flex items-center gap-1">
-                                      ✓ Tidak ada catatan anomali atau kecurigaan pada laporan ini
+                                    <div className="text-emerald-400 text-[11px] font-mono flex items-center gap-1.5">
+                                      <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                                      <span>Tidak ada catatan anomali atau kecurigaan pada laporan ini</span>
                                     </div>
                                   )}
                                 </div>

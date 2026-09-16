@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import type { Report } from '@/types'
 import { CATEGORY_LABELS, URGENCY_LABELS, STATUS_LABELS } from '@/types'
 import { formatDate, formatRelativeTime } from '@/lib/utils'
-import { ArrowLeft, MapPin, Clock, User, AlertCircle, Bot, ShieldCheck, Camera } from 'lucide-react'
+import { ArrowLeft, MapPin, Clock, User, AlertCircle, Bot, ShieldCheck, Camera, Check, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
 import EvidenceBundlePanel from '@/components/cctv/EvidenceBundlePanel'
@@ -82,7 +82,8 @@ export default async function ReportDetailPage({ params }: Props) {
               href="/peta"
               className="inline-flex items-center gap-1.5 text-xs text-[#4a154b] hover:underline font-semibold"
             >
-              Lihat di Peta Spasial →
+              <span>Lihat di Peta Spasial</span>
+              <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
 
@@ -258,7 +259,7 @@ export default async function ReportDetailPage({ params }: Props) {
                               : 'bg-[#f4ede4] text-[#696969]'
                           }`}
                         >
-                          {isDone ? '✓' : idx + 1}
+                          {isDone ? <Check className="w-3.5 h-3.5" /> : idx + 1}
                         </div>
                         <div className="pt-0.5">
                           <p

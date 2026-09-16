@@ -508,9 +508,9 @@ class FloodEventManager {
     // ─── CORROBORATION GATING (Section 23) ─────────────────────────────────────
     // Corroboration is ONLY allowed if visual water evidence already exists.
     // Citizen reports + weather CANNOT create flood evidence from zero.
-    // model_confidence = 0 means NO visual evidence → event_confidence = 0
+    // model_confidence = 0 means NO visual evidence -> event_confidence = 0
     if (event.model_confidence <= 0) {
-      // RC-3 FIX: No visual evidence → corroboration cannot inflate event_confidence
+      // RC-3 FIX: No visual evidence -> corroboration cannot inflate event_confidence
       event.event_confidence = 0
       event.corroboration_score = 0
       event.confidence_category = 'LOW'

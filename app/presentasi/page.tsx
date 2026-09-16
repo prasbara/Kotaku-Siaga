@@ -510,14 +510,14 @@ export default function PresentationPage() {
       ctx.fillText('INGESTION HUB', coreX, coreY + 10)
       ctx.font = '700 12px "Inter", sans-serif'
       ctx.fillStyle = '#007a5a'
-      ctx.fillText('● 70 STREAMS LIVE', coreX, coreY + 34)
+      ctx.fillText('LIVE: 70 STREAMS', coreX, coreY + 34)
 
       // 4 Ingestion Source Nodes
       const sources = [
-        { name: 'LAPORAN WARGA', sub: 'Geotagged + Foto + Timestamp', icon: '📱', x: 260, y: 340, color: '#cc4117' },
-        { name: 'CCTV PANTAUSEMAR', sub: '70 Titik HLS Live Stream', icon: '📹', x: 260, y: 720, color: '#d97706' },
-        { name: 'BMKG CUACA & HUJAN', sub: 'Radar Presipitasi & Pasang Laut', icon: '⛈️', x: 1660, y: 340, color: '#1264a3' },
-        { name: 'JARINGAN DRAINASE OSM', sub: 'Topologi Saluran & Sungai', icon: '🗺️', x: 1660, y: 720, color: '#007a5a' },
+        { name: 'LAPORAN WARGA', sub: 'Geotagged + Foto + Timestamp', x: 260, y: 340, color: '#cc4117' },
+        { name: 'CCTV PANTAUSEMAR', sub: '70 Titik HLS Live Stream', x: 260, y: 720, color: '#d97706' },
+        { name: 'BMKG CUACA & HUJAN', sub: 'Radar Presipitasi & Pasang Laut', x: 1660, y: 340, color: '#1264a3' },
+        { name: 'JARINGAN DRAINASE OSM', sub: 'Topologi Saluran & Sungai', x: 1660, y: 720, color: '#007a5a' },
       ]
 
       sources.forEach((src, idx) => {
@@ -777,7 +777,7 @@ export default function PresentationPage() {
       ctx.fillStyle = isVerified ? '#007a5a' : '#d97706'
       ctx.font = '700 18px "Inter", sans-serif'
       ctx.textAlign = 'left'
-      ctx.fillText(isVerified ? '✓ STATUS: TERVERIFIKASI (PRIORITAS TINGGI)' : '⏳ STATUS: EVALUASI SEDANG BERLANGSUNG...', diagX + 64, badgeY + 44)
+      ctx.fillText(isVerified ? 'STATUS: TERVERIFIKASI (PRIORITAS TINGGI)' : 'STATUS: EVALUASI SEDANG BERLANGSUNG...', diagX + 64, badgeY + 44)
 
       ctx.fillStyle = '#696969'
       ctx.font = '400 13px "Inter", sans-serif'
@@ -943,9 +943,9 @@ export default function PresentationPage() {
       ctx.stroke()
 
       ctx.fillStyle = '#ffffff'
-      ctx.font = '700 12px "Inter", sans-serif'
+      ctx.font = '700 10px "Inter", sans-serif'
       ctx.textAlign = 'center'
-      ctx.fillText('📷', cctvX, cctvY + 4)
+      ctx.fillText('CAM', cctvX, cctvY + 3)
 
       // Incident Marker (Red)
       ctx.fillStyle = '#cc4117'
@@ -986,7 +986,7 @@ export default function PresentationPage() {
       ctx.fillStyle = '#007a5a'
       ctx.font = '700 12px "Inter", sans-serif'
       ctx.textAlign = 'right'
-      ctx.fillText('● LIVE STREAM FHD', modalX + modalW - 24, modalY + 38)
+      ctx.fillText('LIVE STREAM FHD', modalX + modalW - 24, modalY + 38)
 
       // CCTV Frame Viewport (Using real camera snapshot if loaded)
       const feedX = modalX + 24
@@ -1144,7 +1144,7 @@ export default function PresentationPage() {
         ctx.fillStyle = isPassed ? (sidx === 3 ? '#007a5a' : '#4a154b') : '#999'
         ctx.font = '700 15px "Inter", sans-serif'
         ctx.textAlign = 'left'
-        ctx.fillText(`${isPassed ? '✓ ' : ''}${st.label}`, sx + 20, sy + 34)
+        ctx.fillText(st.label, sx + 20, sy + 34)
 
         ctx.fillStyle = '#696969'
         ctx.font = '400 13px "Inter", sans-serif'
@@ -1152,10 +1152,17 @@ export default function PresentationPage() {
 
         // Arrow between stages
         if (sidx < stages.length - 1) {
-          ctx.fillStyle = isPassed ? '#4a154b' : '#ccc'
-          ctx.font = '700 20px "Inter", sans-serif'
-          ctx.textAlign = 'center'
-          ctx.fillText('➔', sx + stW + 20, sy + 46)
+          const ax = sx + stW + 10
+          const ay = sy + 40
+          ctx.strokeStyle = isPassed ? '#4a154b' : '#dcdcdc'
+          ctx.lineWidth = 2
+          ctx.beginPath()
+          ctx.moveTo(ax, ay)
+          ctx.lineTo(ax + 20, ay)
+          ctx.lineTo(ax + 15, ay - 4)
+          ctx.moveTo(ax + 20, ay)
+          ctx.lineTo(ax + 15, ay + 4)
+          ctx.stroke()
         }
       })
 
@@ -1237,7 +1244,7 @@ export default function PresentationPage() {
         ctx.fill()
         ctx.fillStyle = act.color
         ctx.font = '700 11px "Inter", sans-serif'
-        ctx.fillText(`● ${act.status}`, ax + 32, ay + 172)
+        ctx.fillText(act.status, ax + 32, ay + 172)
       })
     }
 

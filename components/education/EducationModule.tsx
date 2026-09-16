@@ -217,7 +217,7 @@ export function EducationModule() {
               <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-[#1d1d1d]">
                 {currentModule.fivePillars.bagaimanaMengenali.map((item, idx) => (
                   <li key={idx} className="flex items-start gap-2 p-2.5 rounded-xl bg-white border border-[#e6e6e6]">
-                    <span className="text-[#d97706] font-bold">●</span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#d97706] mt-1.5 shrink-0" />
                     <span className="leading-relaxed">{item}</span>
                   </li>
                 ))}

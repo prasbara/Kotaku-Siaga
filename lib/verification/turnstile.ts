@@ -28,7 +28,7 @@ export async function verifyTurnstileToken(
   if (!token || token.trim().length === 0) {
     // If running in development without any configured secret, log a warning
     if (process.env.NODE_ENV === 'development' && !process.env.TURNSTILE_SECRET_KEY) {
-      console.warn('⚠️ [Turnstile] Token missing in development. Bypassing for local testing.')
+      console.warn('[Turnstile] Token missing in development. Bypassing for local testing.')
       return { success: true, isBypassed: true }
     }
     return {

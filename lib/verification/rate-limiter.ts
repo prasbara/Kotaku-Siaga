@@ -36,7 +36,9 @@ export interface RateLimitResult {
 }
 
 export function checkRateLimit(clientIp: string): RateLimitResult {
-  const maxLimit = parseInt(process.env.REPORT_RATE_LIMIT || '3', 10) || 3
+  const isLocalOrDev = process.env.NODE_ENV === 'development' || clientIp === '127.0.0.1' || clientIp === '::1'
+  const defaultLimit = isLocalOrDev ? 100 : 5
+  const maxLimit = parseInt(process.env.REPORT_RATE_LIMIT || defaultLimit.toString(), 10) || defaultLimit
   const windowSeconds = parseInt(process.env.REPORT_RATE_WINDOW || '900', 10) || 900
   const windowMs = windowSeconds * 1000
   const now = Date.now()

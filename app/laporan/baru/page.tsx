@@ -38,9 +38,12 @@ import {
   Info,
   RotateCcw,
   Sparkles,
+  ChevronRight,
+  Plus,
 } from 'lucide-react'
 import { toast } from '@/components/ui/use-toast'
 import { TurnstileWidget } from '@/components/ui/TurnstileWidget'
+import { OtpInput } from '@/components/ui/OtpInput'
 import { validateGeolocation } from '@/lib/verification/geo-validator'
 
 interface CategoryConfig {
@@ -233,12 +236,12 @@ function getContextualUrgencies(cat: ReportCategory) {
 
 // Fire Incident Form Options
 const FIRE_CONDITIONS: { value: FireCondition; label: string }[] = [
-  { value: 'api_terlihat', label: '🔥 Api Terlihat Membakar' },
-  { value: 'asap_terlihat', label: '💨 Asap Tebal Terlihat' },
-  { value: 'api_dan_asap', label: '🔥💨 Api dan Asap Terlihat' },
-  { value: 'dugaan_kebakaran', label: '⚠️ Dugaan / Bau Terbakar' },
-  { value: 'kebakaran_padam', label: '✅ Api Sudah Padam / Sisa Asap' },
-  { value: 'tidak_diketahui', label: '❓ Tidak Diketahui Pasti' },
+  { value: 'api_terlihat', label: 'Api Terlihat Membakar' },
+  { value: 'asap_terlihat', label: 'Asap Tebal Terlihat' },
+  { value: 'api_dan_asap', label: 'Api dan Asap Terlihat' },
+  { value: 'dugaan_kebakaran', label: 'Dugaan / Bau Terbakar' },
+  { value: 'kebakaran_padam', label: 'Api Sudah Padam / Sisa Asap' },
+  { value: 'tidak_diketahui', label: 'Tidak Diketahui Pasti' },
 ]
 
 const FIRE_LOCATION_SUBTYPES: { value: FireLocationSubtype; label: string }[] = [
@@ -597,6 +600,17 @@ export default function LaporBaruPage() {
 
   // Request Email OTP
   const handleSendOtp = async () => {
+    const cleanEmail = reporterEmail.trim().toLowerCase()
+    if (!cleanEmail || !cleanEmail.includes('@') || !cleanEmail.includes('.')) {
+      setOtpError('Alamat email belum lengkap atau tidak valid.')
+      toast({
+        title: 'Alamat Email Tidak Valid',
+        description: 'Harap masukkan alamat email aktif yang benar.',
+        variant: 'destructive',
+      })
+      return
+    }
+
     setOtpSending(true)
     setOtpError(null)
 
@@ -604,7 +618,7 @@ export default function LaporBaruPage() {
       const res = await fetch('/api/auth/otp/send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: reporterEmail.trim().toLowerCase() }),
+        body: JSON.stringify({ email: cleanEmail }),
       })
       const data = await res.json()
 
@@ -612,22 +626,28 @@ export default function LaporBaruPage() {
         setOtpSent(true)
         setResendCooldown(60)
         toast({
-          title: 'Kode OTP Terkirim',
-          description: `Kode verifikasi telah dikirimkan ke ${maskEmail(reporterEmail)}. Periksa kotak masuk atau folder Spam.`,
+          title: 'Permintaan OTP Diproses',
+          description: `Kode verifikasi telah dikirimkan ke ${maskEmail(cleanEmail)}. Periksa kotak masuk atau folder Spam.`,
         })
       } else {
         setOtpError(data.error || 'Gagal mengirimkan kode OTP.')
+        toast({
+          title: 'Pengiriman OTP Gagal',
+          description: data.error || 'Terjadi kendala saat mengirimkan kode OTP.',
+          variant: 'destructive',
+        })
       }
     } catch {
-      setOtpError('Terjadi kesalahan jaringan saat mengirimkan OTP.')
+      setOtpError('Terjadi kesalahan jaringan saat mengirimkan OTP. Periksa koneksi Anda.')
     } finally {
       setOtpSending(false)
     }
   }
 
   // Verify Email OTP
-  const handleVerifyOtp = async () => {
-    if (otpCode.trim().length < 6) {
+  const handleVerifyOtp = async (codeToVerify?: string) => {
+    const code = (codeToVerify || otpCode).trim().replace(/\D/g, '')
+    if (code.length < 6) {
       setOtpError('Masukkan 6-digit kode verifikasi OTP yang lengkap.')
       return
     }
@@ -641,7 +661,7 @@ export default function LaporBaruPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email: reporterEmail.trim().toLowerCase(),
-          token: otpCode.trim(),
+          token: code,
         }),
       })
 
@@ -650,15 +670,15 @@ export default function LaporBaruPage() {
       if (res.ok && data.success && data.email_verified) {
         setIsEmailVerified(true)
         toast({
-          title: 'Email Terverifikasi!',
-          description: 'Memproses pengiriman laporan resmi Anda...',
+          title: 'Email Berhasil Terverifikasi!',
+          description: 'Mengirimkan laporan terverifikasi Anda ke Pusat Kendali...',
         })
         await submitFinalReport(true)
       } else {
         setOtpError(data.error || 'Kode verifikasi salah atau telah kedaluwarsa.')
       }
     } catch {
-      setOtpError('Gagal memverifikasi kode OTP. Periksa koneksi Anda.')
+      setOtpError('Gagal memverifikasi kode OTP. Periksa koneksi internet Anda.')
     } finally {
       setOtpVerifying(false)
     }
@@ -850,7 +870,7 @@ export default function LaporBaruPage() {
                         : 'bg-white border border-[#dcdcdc] text-[#696969]'
                     }`}
                   >
-                    {currentStep > s.step ? '✓' : s.step}
+                    {currentStep > s.step ? <Check className="w-3.5 h-3.5" /> : s.step}
                   </div>
                   <span
                     className={`text-xs font-semibold ${
@@ -859,7 +879,7 @@ export default function LaporBaruPage() {
                   >
                     {s.label}
                   </span>
-                  {s.step < 4 && <span className="text-[#dcdcdc] hidden sm:inline ml-2">→</span>}
+                  {s.step < 4 && <ChevronRight className="w-3.5 h-3.5 text-[#dcdcdc] hidden sm:inline ml-2" />}
                 </div>
               ))}
             </div>
@@ -898,7 +918,15 @@ export default function LaporBaruPage() {
                         type="email"
                         placeholder="nama@email.com (Untuk pengiriman kode verifikasi OTP)"
                         value={reporterEmail}
-                        onChange={(e) => setReporterEmail(e.target.value)}
+                        onChange={(e) => {
+                          setReporterEmail(e.target.value)
+                          if (otpSent || isEmailVerified) {
+                            setOtpSent(false)
+                            setIsEmailVerified(false)
+                            setOtpCode('')
+                            setOtpError(null)
+                          }
+                        }}
                         className="w-full h-11 px-4 rounded-xl border border-[#e6e6e6] bg-[#fcfaf8] focus:bg-white focus:border-[#4a154b] focus:outline-none text-xs text-[#1d1d1d]"
                       />
                     </div>
@@ -1203,7 +1231,7 @@ export default function LaporBaruPage() {
                                     : 'bg-white border border-[#fed7aa] text-[#1d1d1d] hover:bg-[#fff7ed]'
                                 }`}
                               >
-                                <span>{isChecked ? '✓' : '+'}</span>
+                                <span className="shrink-0">{isChecked ? <Check className="w-3 h-3" /> : <Plus className="w-3 h-3" />}</span>
                                 <span>{haz.label}</span>
                               </button>
                             )
@@ -1530,8 +1558,8 @@ export default function LaporBaruPage() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Mail className="w-4 h-4 text-[#4a154b]" />
-                        <span className="text-xs font-bold text-[#4a154b] uppercase tracking-wider">
-                          2. Verifikasi Email OTP
+                        <span className="text-xs font-bold text-[#4a154b] uppercase tracking-wider font-mono">
+                          2. Verifikasi Email Pelapor (Supabase OTP)
                         </span>
                       </div>
                       {isEmailVerified ? (
@@ -1539,30 +1567,30 @@ export default function LaporBaruPage() {
                           <CheckCircle2 className="w-3.5 h-3.5" /> Terverifikasi
                         </span>
                       ) : (
-                        <span className="text-[10px] font-mono text-[#696969] bg-white px-2 py-0.5 rounded border">
+                        <span className="text-[10px] font-mono text-[#696969] bg-white px-2.5 py-1 rounded-full border border-[#e6e6e6]">
                           {otpSent ? 'OTP Terkirim' : 'Belum Dikirim'}
                         </span>
                       )}
                     </div>
 
                     {/* Prominent Spam Warning Alert */}
-                    <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-900 flex items-start gap-2.5 leading-relaxed">
+                    <div className="p-3.5 rounded-xl bg-amber-50/80 border border-amber-200/80 text-xs text-amber-900 flex items-start gap-2.5 leading-relaxed">
                       <Info className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
                       <div>
-                        <strong>Pemberitahuan Pengiriman OTP:</strong> Kode 6-digit dikirim via email otomatis. Jika belum muncul dalam 1 menit, harap periksa folder <strong>Spam / Junk</strong> atau tab Promosi email Anda.
+                        <strong>Pemberitahuan Pengiriman OTP:</strong> Kode 6-digit dikirim via email resmi otomatis. Jika belum muncul dalam 1 menit di kotak masuk utama, harap periksa folder <strong>Spam / Junk</strong> atau tab Promosi email Anda.
                       </div>
                     </div>
 
                     {!otpSent ? (
-                      <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-1">
                         <p className="text-xs text-[#1d1d1d] leading-relaxed">
-                          Kirimkan kode OTP 6-digit ke <strong>{maskEmail(reporterEmail)}</strong>:
+                          Kirimkan kode OTP 6-digit ke alamat: <strong className="text-[#4a154b]">{maskEmail(reporterEmail)}</strong>
                         </p>
                         <button
                           type="button"
                           onClick={handleSendOtp}
                           disabled={otpSending}
-                          className="min-h-[42px] px-5 py-2 rounded-full bg-[#4a154b] text-white hover:bg-[#3d123e] text-xs font-bold tracking-wide flex items-center gap-2 transition-all cursor-pointer shrink-0"
+                          className="min-h-[42px] px-5 py-2 rounded-full bg-[#4a154b] text-white hover:bg-[#3d123e] text-xs font-bold tracking-wide flex items-center gap-2 transition-all cursor-pointer shrink-0 disabled:opacity-50 shadow-xs"
                         >
                           {otpSending ? (
                             <>
@@ -1578,56 +1606,72 @@ export default function LaporBaruPage() {
                         </button>
                       </div>
                     ) : (
-                      <div className="flex flex-col gap-3">
+                      <div className="flex flex-col gap-4 pt-1">
                         <p className="text-xs text-[#1d1d1d] leading-relaxed">
-                          Masukkan 6-digit kode verifikasi yang dikirim ke <strong>{maskEmail(reporterEmail)}</strong>:
+                          Masukkan 6-digit kode verifikasi yang dikirim ke <strong className="text-[#4a154b]">{maskEmail(reporterEmail)}</strong>:
                         </p>
 
-                        <div className="flex flex-wrap items-center gap-3">
-                          <input
-                            type="text"
-                            maxLength={6}
-                            placeholder="123456"
+                        <div className="flex flex-col items-center sm:items-start gap-3">
+                          <OtpInput
                             value={otpCode}
-                            onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
-                            className="font-mono text-center text-lg tracking-widest font-bold w-full sm:w-48 h-12 rounded-xl border-2 border-[#4a154b] bg-white focus:outline-none"
+                            onChange={(val) => {
+                              setOtpCode(val)
+                              if (otpError) setOtpError(null)
+                            }}
+                            length={6}
+                            disabled={otpVerifying || isEmailVerified}
+                            onComplete={(code) => handleVerifyOtp(code)}
                           />
 
                           <button
                             type="button"
-                            onClick={handleVerifyOtp}
-                            disabled={otpVerifying || otpCode.length < 6}
-                            className="w-full sm:w-auto min-h-[46px] px-6 py-2 rounded-full bg-[#007a5a] hover:bg-[#006046] text-white font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50"
+                            onClick={() => handleVerifyOtp()}
+                            disabled={otpVerifying || otpCode.length < 6 || isEmailVerified}
+                            className="w-full sm:w-auto min-h-[46px] px-8 py-2.5 rounded-full bg-[#007a5a] hover:bg-[#006046] text-white font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50 shadow-sm"
                           >
-                            {otpVerifying ? 'Memverifikasi...' : 'Verifikasi & Kirim Laporan'}
+                            {otpVerifying ? (
+                              <>
+                                <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                                <span>Memverifikasi Kode OTP...</span>
+                              </>
+                            ) : (
+                              <>
+                                <CheckCircle2 className="w-4 h-4" />
+                                <span>Verifikasi &amp; Kirim Laporan</span>
+                              </>
+                            )}
                           </button>
                         </div>
 
                         {otpError && (
-                          <div className="text-xs text-[#cc4117] font-semibold flex items-center gap-1.5 pt-1">
-                            <AlertTriangle className="w-3.5 h-3.5" />
+                          <div className="text-xs text-[#cc4117] bg-[#cc4117]/10 border border-[#cc4117]/30 p-3 rounded-xl font-medium flex items-center gap-2">
+                            <AlertTriangle className="w-4 h-4 shrink-0 text-[#cc4117]" />
                             <span>{otpError}</span>
                           </div>
                         )}
 
-                        <div className="flex items-center justify-between text-xs text-[#696969] pt-1">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs text-[#696969] pt-2 border-t border-[#f0ece5]">
                           <button
                             type="button"
                             onClick={handleSendOtp}
-                            disabled={resendCooldown > 0 || otpSending}
-                            className="text-[#4a154b] hover:underline font-semibold disabled:text-[#696969] cursor-pointer"
+                            disabled={resendCooldown > 0 || otpSending || isEmailVerified}
+                            className="text-[#4a154b] hover:underline font-semibold disabled:text-[#696969] cursor-pointer inline-flex items-center gap-1.5"
                           >
-                            {resendCooldown > 0
-                              ? `Kirim ulang kode dalam (${resendCooldown}s)`
-                              : 'Kirim Ulang Kode OTP'}
+                            <RefreshCw className={`w-3 h-3 ${otpSending ? 'animate-spin' : ''}`} />
+                            <span>
+                              {resendCooldown > 0
+                                ? `Kirim ulang kode dalam (${resendCooldown}s)`
+                                : 'Kirim Ulang Kode OTP'}
+                            </span>
                           </button>
 
                           <button
                             type="button"
                             onClick={handleQuickVerifiedSubmit}
-                            className="text-[#1264a3] hover:underline text-[11px] font-semibold cursor-pointer"
+                            className="text-[#1264a3] hover:underline text-[11px] font-semibold cursor-pointer inline-flex items-center gap-1"
                           >
-                            Kendala OTP? Kirim via Verifikasi Kontak Cepat →
+                            <span>Kendala OTP? Kirim via Verifikasi Kontak Cepat</span>
+                            <ArrowRight className="w-3 h-3" />
                           </button>
                         </div>
                       </div>

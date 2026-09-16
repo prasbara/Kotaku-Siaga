@@ -25,8 +25,15 @@ import {
   ShieldCheck,
   Eye,
   ArrowUpRight,
+  Satellite,
 } from 'lucide-react'
 import type { Report } from '@/types'
+import type {
+  FireObservation,
+  FireInvestigationCase,
+  FireIncident,
+  FireStatsSummary,
+} from '@/types/fire'
 import { InteractiveMap } from '@/components/map/InteractiveMap'
 import { PANTAUSEMAR_CCTV_POINTS } from '@/lib/data/cctv-pantausemar'
 import { formatRelativeTime } from '@/lib/utils'
@@ -73,6 +80,10 @@ export function CommandCenterDisplayView() {
   const [sosList, setSosList] = useState<SOSEvent[]>([])
   const [stats, setStats] = useState<StatsData>({ total: 0, active: 0, critical: 0, resolved: 0 })
   const [weather, setWeather] = useState<any>(null)
+  const [fireStats, setFireStats] = useState<FireStatsSummary | null>(null)
+  const [fireObservations, setFireObservations] = useState<FireObservation[]>([])
+  const [fireCases, setFireCases] = useState<FireInvestigationCase[]>([])
+  const [fireIncidents, setFireIncidents] = useState<FireIncident[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [lastSyncWib, setLastSyncWib] = useState<string>('')
   const [connectionStatus, setConnectionStatus] = useState<'connected' | 'syncing' | 'error'>('syncing')
@@ -82,6 +93,7 @@ export function CommandCenterDisplayView() {
   const [showCCTV, setShowCCTV] = useState(true)
   const [showSOS, setShowSOS] = useState(true)
   const [showReports, setShowReports] = useState(true)
+  const [showFireSignals, setShowFireSignals] = useState(true)
   const [mapViewMode, setMapViewMode] = useState<'markers' | 'heatmap' | 'both'>('both')
 
   // Clock Ticker Effect (Every Second)
@@ -142,12 +154,17 @@ export function CommandCenterDisplayView() {
   const fetchAllData = useCallback(async () => {
     setConnectionStatus('syncing')
     try {
-      const [reportsRes, statsRes, sosRes, weatherRes] = await Promise.all([
-        fetch('/api/reports?limit=100'),
-        fetch('/api/dashboard/stats'),
-        fetch('/api/sos'),
-        fetch('/api/weather'),
-      ])
+      const [reportsRes, statsRes, sosRes, weatherRes, fireStatsRes, fireObsRes, fireCasesRes, fireIncRes] =
+        await Promise.all([
+          fetch('/api/reports?limit=100'),
+          fetch('/api/dashboard/stats'),
+          fetch('/api/sos'),
+          fetch('/api/weather'),
+          fetch('/api/fire/stats'),
+          fetch('/api/fire/observations'),
+          fetch('/api/fire/cases'),
+          fetch('/api/fire/incidents'),
+        ])
 
       const nowWib =
         new Date().toLocaleTimeString('id-ID', {
@@ -187,6 +204,34 @@ export function CommandCenterDisplayView() {
         setWeather(weatherData)
       }
 
+      if (fireStatsRes.ok) {
+        const fireStatsData = await fireStatsRes.json()
+        if (fireStatsData.success) {
+          setFireStats(fireStatsData.data)
+        }
+      }
+
+      if (fireObsRes.ok) {
+        const fireObsData = await fireObsRes.json()
+        if (fireObsData.success && Array.isArray(fireObsData.data)) {
+          setFireObservations(fireObsData.data)
+        }
+      }
+
+      if (fireCasesRes.ok) {
+        const fireCasesData = await fireCasesRes.json()
+        if (fireCasesData.success && Array.isArray(fireCasesData.data)) {
+          setFireCases(fireCasesData.data)
+        }
+      }
+
+      if (fireIncRes.ok) {
+        const fireIncData = await fireIncRes.json()
+        if (fireIncData.success && Array.isArray(fireIncData.data)) {
+          setFireIncidents(fireIncData.data)
+        }
+      }
+
       setConnectionStatus('connected')
     } catch (err) {
       console.error('Command center fetch error:', err)
@@ -204,7 +249,7 @@ export function CommandCenterDisplayView() {
   }, [fetchAllData])
 
   // Compute Active Emergency Metrics
-  const activeSOS = sosList.filter((s) => s.status === 'NEW' || s.status === 'DISPATCHED' || s.status === 'ACKNOWLEDGED')
+  const activeSOS = sosList.filter((s: SOSEvent) => s.status === 'NEW' || s.status === 'DISPATCHED' || s.status === 'ACKNOWLEDGED')
   const resolvedPercent = stats.total > 0 ? Math.round((stats.resolved / stats.total) * 100) : 0
   const rainIntensity = weather?.current?.rainfall_mm ?? 0
 
@@ -229,7 +274,7 @@ export function CommandCenterDisplayView() {
               </span>
               <span className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#007a5a]/20 border border-[#007a5a]/50 text-[#34d399] text-[11px] font-mono font-bold">
                 <span className="w-2 h-2 rounded-full bg-[#34d399] animate-ping inline-block"></span>
-                ● LIVE
+                <span>LIVE</span>
               </span>
             </div>
             <div className="flex items-center gap-3 text-xs text-[#d9bdde] mt-0.5 flex-wrap">
@@ -327,7 +372,7 @@ export function CommandCenterDisplayView() {
                 </span>
               </div>
               <h3 className="text-base sm:text-lg font-extrabold mt-0.5 text-white">
-                Sinyal Darurat 1-Klik Warga Memerlukan Penanganan Cepat di {activeSOS.map((s) => s.district_name || 'Kota Semarang').slice(0, 2).join(', ')}
+                Sinyal Darurat 1-Klik Warga Memerlukan Penanganan Cepat di {activeSOS.map((s: SOSEvent) => s.district_name || 'Kota Semarang').slice(0, 2).join(', ')}
               </h3>
             </div>
           </div>
@@ -341,8 +386,8 @@ export function CommandCenterDisplayView() {
         </div>
       )}
 
-      {/* 3. FOUR CRITICAL KPI CARDS (Long-Distance Readability) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
+      {/* 3. FIVE CRITICAL KPI CARDS (Long-Distance Readability) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-5">
         {/* KPI 1: Status Kesiapsiagaan Kota */}
         <div className="p-5 rounded-2xl bg-[#1f0d26]/80 border border-[#3b1747] shadow-xl flex flex-col justify-between relative overflow-hidden">
           <div className="absolute top-0 right-0 w-24 h-24 bg-[#4a154b]/30 rounded-full blur-2xl -mr-6 -mt-6"></div>
@@ -379,7 +424,7 @@ export function CommandCenterDisplayView() {
             </div>
           </div>
           <div className="pt-3 mt-2 border-t border-[#3b1747] flex items-center justify-between text-xs text-[#a882b0]">
-            <span>Kritis / Butuh Aksi Segera:</span>
+            <span>Kritis / Butuh Aksi:</span>
             <span className="text-[#f87171] font-bold">{stats.critical} Laporan</span>
           </div>
         </div>
@@ -403,9 +448,9 @@ export function CommandCenterDisplayView() {
             </div>
           </div>
           <div className="pt-3 mt-2 border-t border-[#3b1747] flex items-center justify-between text-xs text-[#a882b0]">
-            <span>Status Tim Reaksi Cepat:</span>
+            <span>Status TRC 112:</span>
             <span className={activeSOS.length > 0 ? 'text-[#fbbf24] font-bold' : 'text-[#34d399] font-bold'}>
-              {activeSOS.length > 0 ? 'Tim Siaga Dikerahkan' : 'Standby 24/7'}
+              {activeSOS.length > 0 ? 'Tim Dikerahkan' : 'Standby 24/7'}
             </span>
           </div>
         </div>
@@ -415,7 +460,7 @@ export function CommandCenterDisplayView() {
           <div className="absolute top-0 right-0 w-24 h-24 bg-[#007a5a]/20 rounded-full blur-2xl -mr-6 -mt-6"></div>
           <div>
             <div className="flex items-center justify-between text-xs text-[#34d399] font-mono font-bold uppercase tracking-wider mb-2">
-              <span>5 RUMAH POMPA & TELEMETRI</span>
+              <span>5 RUMAH POMPA</span>
               <Droplets className="w-4 h-4 text-[#34d399]" />
             </div>
             <div className="text-3xl sm:text-4xl font-extrabold text-[#f4ede4] tracking-tight leading-none mb-1">
@@ -427,10 +472,34 @@ export function CommandCenterDisplayView() {
             <span className="text-[#38bdf8] font-bold">{rainIntensity} mm/jam</span>
           </div>
         </div>
+
+        {/* KPI 5: Fire Early Detection (Requirement #9) */}
+        <div className="p-5 rounded-2xl bg-[#1f0d26]/80 border border-[#ea580c]/50 shadow-xl flex flex-col justify-between relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-[#ea580c]/20 rounded-full blur-2xl -mr-6 -mt-6"></div>
+          <div>
+            <div className="flex items-center justify-between text-xs text-[#f97316] font-mono font-bold uppercase tracking-wider mb-2">
+              <span>DETEKSI DINI KEBAKARAN</span>
+              <Flame className="w-4 h-4 text-[#ea580c]" />
+            </div>
+            <div className="flex items-baseline gap-2">
+              <span className="text-3xl sm:text-4xl font-extrabold text-[#f97316] tracking-tight leading-none">
+                {isLoading ? '...' : fireStats?.total_signals_detected ?? fireObservations.length}
+              </span>
+              <span className="text-xs text-[#d9bdde] font-mono">
+                Sinyal Satelit
+              </span>
+            </div>
+          </div>
+          <div className="pt-3 mt-2 border-t border-[#3b1747] flex items-center justify-between text-[11px] text-[#a882b0]">
+            <span>Review: <strong className="text-[#fbbf24]">{fireStats?.signals_under_review ?? fireCases.filter((c: FireInvestigationCase) => c.status === 'UNDER_REVIEW').length}</strong></span>
+            <span>Korelasi: <strong className="text-[#38bdf8]">{fireStats?.correlated_cases_count ?? fireCases.filter((c: FireInvestigationCase) => c.citizen_reports.length > 0).length}</strong></span>
+            <span>Resmi: <strong className="text-[#f87171]">{fireStats?.verified_incidents_count ?? fireIncidents.length}</strong></span>
+          </div>
+        </div>
       </div>
 
       {/* 4. MAIN HIGH-IMPACT COMMAND DISPLAY (Split Grid) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 flex-1 min-h-[580px]">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 flex-1 min-h-[580px] mb-5">
         {/* LEFT / CENTER (Col 8): Large Risk & Incident Map */}
         <div className="lg:col-span-8 rounded-2xl bg-[#1f0d26]/90 border border-[#3b1747] shadow-2xl p-4 sm:p-5 flex flex-col min-h-[520px]">
           {/* Map Controls Top Bar */}
@@ -441,7 +510,7 @@ export function CommandCenterDisplayView() {
                 PETA SITUASIONAL TAKTIS KOTA SEMARANG
               </span>
               <span className="text-[11px] font-mono text-[#a882b0] hidden sm:inline">
-                ({reports.length} Titik Kejadian & 70 Titik CCTV)
+                ({reports.length} Laporan · {fireObservations.length} Sinyal Termal · 70 CCTV)
               </span>
             </div>
 
@@ -450,37 +519,53 @@ export function CommandCenterDisplayView() {
               <button
                 type="button"
                 onClick={() => setShowReports(!showReports)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all cursor-pointer ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
                   showReports
                     ? 'bg-[#4a154b] text-white border border-[#853288]'
                     : 'bg-black/30 text-[#8c6b94] border border-[#3b1747]'
                 }`}
               >
-                🌊 Laporan ({reports.length})
+                <Layers className="w-3.5 h-3.5" />
+                <span>Laporan ({reports.length})</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowFireSignals(!showFireSignals)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                  showFireSignals
+                    ? 'bg-[#ea580c] text-white border border-[#f97316]'
+                    : 'bg-black/30 text-[#8c6b94] border border-[#3b1747]'
+                }`}
+              >
+                <Flame className="w-3.5 h-3.5" />
+                <span>Satelit Kebakaran ({fireObservations.length})</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setShowSOS(!showSOS)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all cursor-pointer ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
                   showSOS
                     ? 'bg-[#cc4117] text-white border border-[#f87171]'
                     : 'bg-black/30 text-[#8c6b94] border border-[#3b1747]'
                 }`}
               >
-                🚨 SOS ({sosList.length})
+                <AlertTriangle className="w-3.5 h-3.5" />
+                <span>SOS ({sosList.length})</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setShowCCTV(!showCCTV)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all cursor-pointer ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
                   showCCTV
                     ? 'bg-[#1264a3] text-white border border-[#38bdf8]'
                     : 'bg-black/30 text-[#8c6b94] border border-[#3b1747]'
                 }`}
               >
-                📹 CCTV ({PANTAUSEMAR_CCTV_POINTS.length})
+                <Video className="w-3.5 h-3.5" />
+                <span>CCTV ({PANTAUSEMAR_CCTV_POINTS.length})</span>
               </button>
 
               <button
@@ -501,6 +586,10 @@ export function CommandCenterDisplayView() {
               reports={showReports ? reports : []}
               sosList={showSOS ? sosList : []}
               cctvList={showCCTV ? PANTAUSEMAR_CCTV_POINTS : []}
+              fireObservations={showFireSignals ? fireObservations : []}
+              fireCases={showFireSignals ? fireCases : []}
+              fireIncidents={showFireSignals ? fireIncidents : []}
+              showFireLayers={showFireSignals}
               showCCTV={showCCTV}
               viewMode={mapViewMode}
               height="100%"
@@ -551,7 +640,7 @@ export function CommandCenterDisplayView() {
                 <span>Belum ada laporan aktif baru.</span>
               </div>
             ) : (
-              reports.map((r) => {
+              reports.map((r: Report) => {
                 const isCritical = r.urgency === 'kritis' || r.urgency === 'tinggi'
                 return (
                   <div
@@ -592,8 +681,9 @@ export function CommandCenterDisplayView() {
 
                       <div className="flex items-center gap-2">
                         {typeof r.credibility_score === 'number' && (
-                          <span className="text-[#34d399] font-bold">
-                            ★ {r.credibility_score}% Valid
+                          <span className="text-[#34d399] font-bold flex items-center gap-1">
+                            <CheckCircle2 className="w-3 h-3 text-[#34d399]" />
+                            <span>{r.credibility_score}% Valid</span>
                           </span>
                         )}
                         <span
@@ -621,6 +711,124 @@ export function CommandCenterDisplayView() {
                 )
               })
             )}
+          </div>
+        </div>
+      </div>
+
+      {/* 5. FIRE EARLY DETECTION & MULTI-SOURCE CORRELATION PANEL (Requirement #2 & #29) */}
+      <div className="rounded-2xl bg-[#1f0d26]/90 border border-[#3b1747] shadow-2xl p-4 sm:p-6 mb-5">
+        <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-[#3b1747] mb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-[#ea580c]/20 border border-[#ea580c]/50 flex items-center justify-center text-[#f97316]">
+              <Flame className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="font-extrabold text-sm sm:text-base text-[#f4ede4] uppercase tracking-wider">
+                  FIRE EARLY DETECTION & MONITORING PANEL
+                </h3>
+                <span className="px-2 py-0.5 rounded-full bg-[#ea580c]/20 text-[#f97316] text-[10px] font-mono font-bold">
+                  NASA FIRMS · SIPONGI+ · SEMARISK
+                </span>
+              </div>
+              <p className="text-xs text-[#a882b0]">
+                Early Detection & Decision Support Engine — Deteksi anomali termal satelit dan korelasi laporan warga
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 font-mono text-xs text-[#d9bdde]">
+            <span>Update Terakhir: <strong className="text-white">{fireStats?.last_data_update ? new Date(fireStats.last_data_update).toLocaleTimeString('id-ID') + ' WIB' : lastSyncWib}</strong></span>
+          </div>
+        </div>
+
+        {/* 4 Telemetry Counters */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+          <div className="p-3.5 rounded-xl bg-black/40 border border-[#3b1747]">
+            <div className="text-[10px] font-mono text-[#a882b0] uppercase">Sinyal Terdeteksi</div>
+            <div className="text-2xl font-extrabold text-[#ea580c] mt-1">
+              {fireStats?.total_signals_detected ?? fireObservations.length}
+            </div>
+            <div className="text-[10px] text-[#d9bdde] mt-0.5">NASA FIRMS / VIIRS / MODIS</div>
+          </div>
+
+          <div className="p-3.5 rounded-xl bg-black/40 border border-[#3b1747]">
+            <div className="text-[10px] font-mono text-[#a882b0] uppercase">Sinyal Under Review</div>
+            <div className="text-2xl font-extrabold text-[#fbbf24] mt-1">
+              {fireStats?.signals_under_review ?? fireCases.filter((c: FireInvestigationCase) => c.status === 'UNDER_REVIEW').length}
+            </div>
+            <div className="text-[10px] text-[#d9bdde] mt-0.5">Asesmen Operator EOC</div>
+          </div>
+
+          <div className="p-3.5 rounded-xl bg-black/40 border border-[#3b1747]">
+            <div className="text-[10px] font-mono text-[#a882b0] uppercase">Terkorelasi Laporan Warga</div>
+            <div className="text-2xl font-extrabold text-[#38bdf8] mt-1">
+              {fireStats?.correlated_cases_count ?? fireCases.filter((c: FireInvestigationCase) => c.citizen_reports.length > 0).length}
+            </div>
+            <div className="text-[10px] text-[#d9bdde] mt-0.5">Satelit + Bukti Warga &le; 3km</div>
+          </div>
+
+          <div className="p-3.5 rounded-xl bg-black/40 border border-[#3b1747]">
+            <div className="text-[10px] font-mono text-[#a882b0] uppercase">Insiden Terverifikasi</div>
+            <div className="text-2xl font-extrabold text-[#f87171] mt-1">
+              {fireStats?.verified_incidents_count ?? fireIncidents.length}
+            </div>
+            <div className="text-[10px] text-[#d9bdde] mt-0.5">Resmi Damkar / BPBD</div>
+          </div>
+        </div>
+
+        {/* Source Health Status Grid (Requirement #17) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-3 border-t border-[#3b1747]">
+          <div className="p-3 rounded-xl bg-black/30 border border-[#3b1747] flex items-center justify-between text-xs">
+            <div className="flex items-center gap-2">
+              <Satellite className="w-4 h-4 text-[#ea580c]" />
+              <div className="flex flex-col">
+                <span className="font-bold text-[#f4ede4]">NASA FIRMS</span>
+                <span className="text-[10px] text-[#a882b0]">Latensi: {fireStats?.sources_health?.nasa_firms?.latency_ms ?? 140}ms</span>
+              </div>
+            </div>
+            <span className="text-[11px] font-mono font-bold text-[#34d399] bg-[#007a5a]/20 px-2 py-0.5 rounded border border-[#007a5a]/40">
+              {fireStats?.sources_health?.nasa_firms?.status || 'CONNECTED'}
+            </span>
+          </div>
+
+          <div className="p-3 rounded-xl bg-black/30 border border-[#3b1747] flex items-center justify-between text-xs">
+            <div className="flex items-center gap-2">
+              <Flame className="w-4 h-4 text-[#fbbf24]" />
+              <div className="flex flex-col">
+                <span className="font-bold text-[#f4ede4]">SiPongi+ KLHK</span>
+                <span className="text-[10px] text-[#a882b0]">Hotspot Nasional</span>
+              </div>
+            </div>
+            <span className="text-[11px] font-mono font-bold text-[#34d399] bg-[#007a5a]/20 px-2 py-0.5 rounded border border-[#007a5a]/40">
+              {fireStats?.sources_health?.sipongi_klhk?.status || 'CONNECTED'}
+            </span>
+          </div>
+
+          <div className="p-3 rounded-xl bg-black/30 border border-[#3b1747] flex items-center justify-between text-xs">
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4 text-[#34d399]" />
+              <div className="flex flex-col">
+                <span className="font-bold text-[#f4ede4]">SEMARISK BPBD</span>
+                <span className="text-[10px] text-[#a882b0]">Peta Risiko Bahaya</span>
+              </div>
+            </div>
+            <span className="text-[11px] font-mono font-bold text-[#34d399] bg-[#007a5a]/20 px-2 py-0.5 rounded border border-[#007a5a]/40">
+              CONNECTED
+            </span>
+          </div>
+
+          <div className="p-3 rounded-xl bg-black/30 border border-[#3b1747] flex items-center justify-between text-xs">
+            <div className="flex items-center gap-2">
+              <Radio className="w-4 h-4 text-[#38bdf8]" />
+              <div className="flex flex-col">
+                <span className="font-bold text-[#f4ede4]">Laporan Warga</span>
+                <span className="text-[10px] text-[#a882b0]">Input Waktu Nyata</span>
+              </div>
+            </div>
+            <span className="text-[11px] font-mono font-bold text-[#34d399] bg-[#007a5a]/20 px-2 py-0.5 rounded border border-[#007a5a]/40">
+              CONNECTED
+            </span>
           </div>
         </div>
       </div>

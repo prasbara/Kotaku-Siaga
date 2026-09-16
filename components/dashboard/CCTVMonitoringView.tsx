@@ -26,6 +26,9 @@ import {
   XCircle,
   HelpCircle,
   FileSearch,
+  Waves,
+  Building2,
+  X,
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -481,24 +484,26 @@ export function CCTVMonitoringView() {
           <button
             type="button"
             onClick={() => setSelectedCategory('rob_banjir')}
-            className={`text-xs px-4 py-2 min-h-[40px] rounded-[90px] border font-mono transition-all flex items-center justify-center cursor-pointer ${
+            className={`text-xs px-4 py-2 min-h-[40px] rounded-[90px] border font-mono transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
               selectedCategory === 'rob_banjir'
                 ? 'bg-[#4a154b] text-white border-[#4a154b] font-bold shadow-sm'
                 : 'bg-[#fcfaf7] text-[#696969] border-[#e6e6e6] hover:text-[#1d1d1d]'
             }`}
           >
-            🌊 Titik Rawan Banjir ({genanganCount})
+            <Waves className="w-3.5 h-3.5" />
+            <span>Titik Rawan Banjir ({genanganCount})</span>
           </button>
           <button
             type="button"
             onClick={() => setSelectedCategory('polder_sungai')}
-            className={`text-xs px-4 py-2 min-h-[40px] rounded-[90px] border font-mono transition-all flex items-center justify-center cursor-pointer ${
+            className={`text-xs px-4 py-2 min-h-[40px] rounded-[90px] border font-mono transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
               selectedCategory === 'polder_sungai'
                 ? 'bg-[#4a154b] text-white border-[#4a154b] font-bold shadow-sm'
                 : 'bg-[#fcfaf7] text-[#696969] border-[#e6e6e6] hover:text-[#1d1d1d]'
             }`}
           >
-            ⚙️ Rumah Pompa & Polder ({pompaCount})
+            <Building2 className="w-3.5 h-3.5" />
+            <span>Rumah Pompa & Polder ({pompaCount})</span>
           </button>
         </div>
 
@@ -633,8 +638,9 @@ export function CCTVMonitoringView() {
               <button
                 onClick={() => setDiagnosticsCCTV(null)}
                 className="w-8 h-8 rounded-full bg-[#f4ede4] hover:bg-[#e8ded2] flex items-center justify-center text-[#1d1d1d] cursor-pointer"
+                aria-label="Tutup Diagnostik"
               >
-                ✕
+                <X className="w-4 h-4" />
               </button>
             </div>
 

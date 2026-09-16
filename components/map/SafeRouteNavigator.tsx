@@ -28,7 +28,7 @@ export interface SafeRoutePreset {
 export const SEMARANG_SAFE_ROUTE_PRESETS: SafeRoutePreset[] = [
   {
     id: 'genuk-to-center',
-    title: 'Genuk / Kaligawe → Simpang Lima (Pusat Kota)',
+    title: 'Genuk / Kaligawe ke Simpang Lima (Pusat Kota)',
     originName: 'Jl. Raya Genuksari / Terboyo (Pesisir Timur)',
     destName: 'Kawasan Simpang Lima (Semarang Tengah)',
     originCoords: [-6.9602, 110.4721],
@@ -52,7 +52,7 @@ export const SEMARANG_SAFE_ROUTE_PRESETS: SafeRoutePreset[] = [
   },
   {
     id: 'tanjungemas-to-rsup',
-    title: 'Pelabuhan Tanjung Emas → RSUP Dr. Kariadi',
+    title: 'Pelabuhan Tanjung Emas ke RSUP Dr. Kariadi',
     originName: 'Kawasan Pelabuhan Tanjung Emas (Semarang Utara)',
     destName: 'RSUP Dr. Kariadi (Gajahmungkur)',
     originCoords: [-6.9535, 110.4221],
@@ -76,7 +76,7 @@ export const SEMARANG_SAFE_ROUTE_PRESETS: SafeRoutePreset[] = [
   },
   {
     id: 'mangkang-to-bandara',
-    title: 'Mangkang (Pantura Barat) → Bandara Ahmad Yani',
+    title: 'Mangkang (Pantura Barat) ke Bandara Ahmad Yani',
     originName: 'Pasar Mangkang (Kecamatan Tugu)',
     destName: 'Bandara Internasional Jenderal Ahmad Yani',
     originCoords: [-6.9754, 110.3125],

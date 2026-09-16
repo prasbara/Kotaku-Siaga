@@ -19,6 +19,7 @@ import {
   FileText,
   Radio,
   Zap,
+  CheckCircle2,
 } from 'lucide-react'
 import Image from 'next/image'
 import { WhyDidThisHappenCard } from '@/components/education/WhyDidThisHappenCard'
@@ -134,6 +135,25 @@ export function ReportDetailPanel({ report, onClose }: ReportDetailPanelProps) {
           </div>
         )}
 
+        {/* Anti-Panic Verification Status Banner */}
+        {report.status === 'verified' ? (
+          <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-200 flex items-start gap-2 text-xs">
+            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+            <div>
+              <strong className="block font-semibold">Status: Kejadian Terverifikasi</strong>
+              <span>Informasi telah dikonfirmasi valid berdasarkan silang bukti visual dan parameter telemetri lapangan.</span>
+            </div>
+          </div>
+        ) : (
+          <div className="p-3 rounded-xl bg-surface-container border border-outline-variant/30 text-on-surface-variant flex items-start gap-2 text-xs">
+            <ShieldCheck className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+            <div>
+              <strong className="block font-semibold text-on-surface">Status: Dalam Peninjauan Operator Posko</strong>
+              <span>Laporan warga sedang dalam proses verifikasi. Informasi disajikan untuk kehati-hatian awal tanpa menggantikan instruksi resmi petugas.</span>
+            </div>
+          </div>
+        )}
+
         {/* Photo if exists */}
         {report.photo_url ? (
           <div className="relative h-48 rounded-xl overflow-hidden bg-surface-container border border-outline-variant/30">
@@ -205,8 +225,9 @@ export function ReportDetailPanel({ report, onClose }: ReportDetailPanelProps) {
                 </span>
                 <div className="flex flex-wrap gap-1.5">
                   {(fireDetails.additional_hazards as string[]).map((hazard: string, idx: number) => (
-                    <span key={idx} className="text-[10px] px-2 py-0.5 rounded bg-red-500/20 text-red-200 border border-red-500/30">
-                      ⚠️ {hazard}
+                    <span key={idx} className="text-[10px] px-2 py-0.5 rounded bg-red-500/20 text-red-200 border border-red-500/30 flex items-center gap-1">
+                      <AlertTriangle className="w-2.5 h-2.5 text-red-400 shrink-0" />
+                      <span>{hazard}</span>
                     </span>
                   ))}
                 </div>

@@ -19,6 +19,8 @@ import {
   Waves,
   Droplets,
   RotateCcw,
+  ArrowRight,
+  Check,
 } from 'lucide-react'
 
 interface SOSModalProps {
@@ -246,8 +248,9 @@ export function SOSModal({ isOpen, onClose }: SOSModalProps) {
                     <p className="text-xs text-[#1d1d1d] font-medium mt-0.5 leading-snug">
                       Terjebak banjir tinggi, butuh evakuasi perahu karet lansia/anak, atau bahaya mengancam jiwa.
                     </p>
-                    <span className="text-[11px] text-[#cc4117] font-semibold mt-1 inline-block">
-                      Diteruskan langsung ke Tim Tanggap Darurat BPBD 112 →
+                    <span className="text-[11px] text-[#cc4117] font-semibold mt-1 inline-flex items-center gap-1">
+                      <span>Diteruskan langsung ke Tim Tanggap Darurat BPBD 112</span>
+                      <ArrowRight className="w-3 h-3" />
                     </span>
                   </div>
                 </button>
@@ -268,8 +271,9 @@ export function SOSModal({ isOpen, onClose }: SOSModalProps) {
                     <p className="text-xs text-[#696969] mt-0.5 leading-snug">
                       Jalan utama tergenang 30-70 cm, tanggul rembes, atau kenaikan air pasang rob.
                     </p>
-                    <span className="text-[11px] text-[#1264a3] font-semibold mt-1 inline-block">
-                      Form Laporan Terverifikasi &amp; Peta Spasial →
+                    <span className="text-[11px] text-[#1264a3] font-semibold mt-1 inline-flex items-center gap-1">
+                      <span>Form Laporan Terverifikasi &amp; Peta Spasial</span>
+                      <ArrowRight className="w-3 h-3" />
                     </span>
                   </div>
                 </Link>
@@ -462,7 +466,10 @@ export function SOSModal({ isOpen, onClose }: SOSModalProps) {
                   <div className="flex items-center justify-between pt-1">
                     <label className="text-[11px] font-semibold text-[#4a154b] hover:text-[#611f69] flex items-center gap-1.5 cursor-pointer bg-white px-2.5 py-1.5 rounded-lg border border-[#e6e6e6] shadow-2xs">
                       <Camera className="w-3.5 h-3.5 text-[#4a154b]" />
-                      <span>{photoPreview ? 'Foto Terlampir ✓' : 'Lampirkan Foto'}</span>
+                      <span className="flex items-center gap-1">
+                        {photoPreview && <Check className="w-3 h-3 text-[#007a5a]" />}
+                        <span>{photoPreview ? 'Foto Terlampir' : 'Lampirkan Foto'}</span>
+                      </span>
                       <input
                         type="file"
                         accept="image/*"

@@ -111,7 +111,7 @@ export default function PrioritasPage() {
       const data = await res.json()
       if (data.success) {
         setAiAnalysis(
-          `[Model: OpenRouter / Free Models Router]\n\n${data.analysis.area_assessment}\n\n📌 Masalah Utama:\n${data.analysis.main_issue}\n\n💡 Rekomendasi Intervensi:\n${data.analysis.recommended_intervention}`
+          `[Model: OpenRouter / Free Models Router]\n\n${data.analysis.area_assessment}\n\nMASALAH UTAMA:\n${data.analysis.main_issue}\n\nREKOMENDASI INTERVENSI:\n${data.analysis.recommended_intervention}`
         )
       }
     } catch (err) {

@@ -2,6 +2,21 @@
 
 import React, { useState, useEffect, useCallback } from 'react'
 import { EvidenceBundle, CCTVEvidenceRecord, EvidenceStrength } from '@/lib/services/evidence-collector'
+import {
+  Camera,
+  MapPin,
+  Building2,
+  AlertTriangle,
+  ChevronDown,
+  ChevronUp,
+  Clock,
+  Bot,
+  Radio,
+  FileText,
+  ShieldCheck,
+  ShieldAlert,
+  ExternalLink,
+} from 'lucide-react'
 
 // ============================================================
 // TYPES
@@ -21,14 +36,13 @@ interface EvidenceBundlePanelProps {
 
 const STRENGTH_CONFIG: Record<
   EvidenceStrength,
-  { label: string; color: string; bgColor: string; borderColor: string; icon: string; description: string }
+  { label: string; color: string; bgColor: string; borderColor: string; description: string }
 > = {
   STRONG: {
     label: 'Kuat',
     color: '#10b981',
     bgColor: 'rgba(16, 185, 129, 0.15)',
     borderColor: 'rgba(16, 185, 129, 0.4)',
-    icon: '🟢',
     description: 'Beberapa CCTV mengkonfirmasi genangan',
   },
   MODERATE: {
@@ -36,7 +50,6 @@ const STRENGTH_CONFIG: Record<
     color: '#f59e0b',
     bgColor: 'rgba(245, 158, 11, 0.15)',
     borderColor: 'rgba(245, 158, 11, 0.4)',
-    icon: '🟡',
     description: 'Satu CCTV menunjukkan indikasi',
   },
   WEAK: {
@@ -44,7 +57,6 @@ const STRENGTH_CONFIG: Record<
     color: '#6b7280',
     bgColor: 'rgba(107, 114, 128, 0.15)',
     borderColor: 'rgba(107, 114, 128, 0.4)',
-    icon: '⚪',
     description: 'Data tidak cukup konklusif',
   },
   NEUTRAL: {
@@ -52,7 +64,6 @@ const STRENGTH_CONFIG: Record<
     color: '#60a5fa',
     bgColor: 'rgba(96, 165, 250, 0.15)',
     borderColor: 'rgba(96, 165, 250, 0.4)',
-    icon: '🔵',
     description: 'Tidak ada sinyal genangan',
   },
   CONFLICTING: {
@@ -60,7 +71,6 @@ const STRENGTH_CONFIG: Record<
     color: '#ef4444',
     bgColor: 'rgba(239, 68, 68, 0.15)',
     borderColor: 'rgba(239, 68, 68, 0.4)',
-    icon: '🔴',
     description: 'CCTV menunjukkan kondisi normal',
   },
   NO_DATA: {
@@ -68,7 +78,6 @@ const STRENGTH_CONFIG: Record<
     color: '#9ca3af',
     bgColor: 'rgba(156, 163, 175, 0.1)',
     borderColor: 'rgba(156, 163, 175, 0.3)',
-    icon: '⚫',
     description: 'CCTV offline atau belum diobservasi',
   },
 }
@@ -150,9 +159,13 @@ function CCTVEvidenceCard({ ev }: { ev: CCTVEvidenceRecord }) {
             fontWeight: 700,
             whiteSpace: 'nowrap',
             flexShrink: 0,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
           }}
         >
-          {sc.icon} {sc.label}
+          <span style={{ width: '6px', height: '6px', borderRadius: '9999px', backgroundColor: sc.color }} />
+          <span>{sc.label}</span>
         </div>
 
         {/* CCTV info */}
@@ -160,11 +173,20 @@ function CCTVEvidenceCard({ ev }: { ev: CCTVEvidenceRecord }) {
           <div style={{ fontWeight: 700, fontSize: '14px', color: '#f1f5f9', marginBottom: '2px' }}>
             {ev.cctv_name}
           </div>
-          <div style={{ fontSize: '12px', color: '#94a3b8', display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-            <span>📍 {ev.distance_m}m {ev.direction_label}</span>
-            <span>🏙️ {ev.cctv_district}</span>
+          <div style={{ fontSize: '12px', color: '#94a3b8', display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+              <MapPin style={{ width: '12px', height: '12px', color: '#94a3b8' }} />
+              {ev.distance_m}m {ev.direction_label}
+            </span>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+              <Building2 style={{ width: '12px', height: '12px', color: '#94a3b8' }} />
+              {ev.cctv_district}
+            </span>
             {ev.cctv_status !== 'online' && (
-              <span style={{ color: '#ef4444' }}>⚠️ {ev.cctv_status.toUpperCase()}</span>
+              <span style={{ color: '#ef4444', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                <AlertTriangle style={{ width: '12px', height: '12px' }} />
+                {ev.cctv_status.toUpperCase()}
+              </span>
             )}
           </div>
         </div>
@@ -188,14 +210,15 @@ function CCTVEvidenceCard({ ev }: { ev: CCTVEvidenceRecord }) {
 
         {/* Chevron */}
         <div style={{ color: '#64748b', fontSize: '12px', flexShrink: 0, marginTop: '2px' }}>
-          {expanded ? '▲' : '▼'}
+          {expanded ? <ChevronUp style={{ width: '14px', height: '14px' }} /> : <ChevronDown style={{ width: '14px', height: '14px' }} />}
         </div>
       </div>
 
       {/* Timestamp correlation row */}
-      <div style={{ marginTop: '10px', display: 'flex', gap: '12px', flexWrap: 'wrap', fontSize: '12px', color: '#94a3b8' }}>
-        <span>
-          ⏱️ Korelasi waktu:{' '}
+      <div style={{ marginTop: '10px', display: 'flex', gap: '12px', flexWrap: 'wrap', fontSize: '12px', color: '#94a3b8', alignItems: 'center' }}>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+          <Clock style={{ width: '12px', height: '12px' }} />
+          <span>Korelasi waktu:</span>
           <span
             style={{
               color: ev.timestamp_correlation === 'WITHIN_5MIN' ? '#10b981' :
@@ -209,8 +232,9 @@ function CCTVEvidenceCard({ ev }: { ev: CCTVEvidenceRecord }) {
           {ev.timestamp_delta_minutes !== null && ` (${ev.timestamp_delta_minutes} menit)`}
         </span>
         {ev.visual_confidence !== null && (
-          <span>
-            🤖 Kepercayaan visual:{' '}
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+            <Bot style={{ width: '12px', height: '12px', color: '#a78bfa' }} />
+            <span>Kepercayaan visual:</span>
             <span style={{ color: '#a78bfa', fontWeight: 600 }}>
               {(ev.visual_confidence * 100).toFixed(0)}%
             </span>
@@ -258,10 +282,11 @@ function CCTVEvidenceCard({ ev }: { ev: CCTVEvidenceRecord }) {
                 href={ev.stream_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                style={{ color: '#60a5fa', fontSize: '12px' }}
+                style={{ color: '#60a5fa', fontSize: '12px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
                 onClick={(e) => e.stopPropagation()}
               >
-                🎥 Buka stream CCTV
+                <ExternalLink style={{ width: '12px', height: '12px' }} />
+                <span>Buka stream CCTV</span>
               </a>
             </div>
           )}
@@ -372,8 +397,9 @@ export default function EvidenceBundlePanel({
       {/* ── Header ── */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
         <div>
-          <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 700, color: '#f1f5f9' }}>
-            🎥 Evidence CCTV Terdekat
+          <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 700, color: '#f1f5f9', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Camera style={{ width: '18px', height: '18px', color: '#818cf8' }} />
+            <span>Evidence CCTV Terdekat</span>
           </h3>
           <div style={{ fontSize: '12px', color: '#64748b', marginTop: '4px' }}>
             Radius 1.5km dari lokasi laporan · PantauSemar Kota Semarang
@@ -428,7 +454,7 @@ export default function EvidenceBundlePanel({
             alignItems: 'center',
           }}
         >
-          <span>⚠️</span>
+          <AlertTriangle style={{ width: '16px', height: '16px', color: '#f87171', flexShrink: 0 }} />
           <span>{error}</span>
           <button
             onClick={fetchEvidence}
@@ -465,7 +491,9 @@ export default function EvidenceBundlePanel({
                 gap: '14px',
               }}
             >
-              <div style={{ fontSize: '28px', flexShrink: 0 }}>{sc.icon}</div>
+              <div style={{ flexShrink: 0, marginTop: '2px' }}>
+                <ShieldCheck style={{ width: '24px', height: '24px', color: sc.color }} />
+              </div>
               <div style={{ flex: 1 }}>
                 <div style={{ fontWeight: 700, color: sc.color, fontSize: '15px', marginBottom: '4px' }}>
                   Kekuatan Evidence: {sc.label}
@@ -497,7 +525,9 @@ export default function EvidenceBundlePanel({
                 fontSize: '14px',
               }}
             >
-              <div style={{ fontSize: '32px', marginBottom: '10px' }}>📡</div>
+              <div style={{ marginBottom: '10px', display: 'flex', justifyContent: 'center' }}>
+                <Radio style={{ width: '32px', height: '32px', color: '#64748b' }} />
+              </div>
               <div>Tidak ada CCTV PantauSemar dalam radius 1.5km dari lokasi laporan.</div>
               <div style={{ fontSize: '12px', marginTop: '6px', color: '#475569' }}>
                 Total {bundle.total_cctv_searched} titik CCTV dicek di seluruh Kota Semarang.
@@ -524,7 +554,10 @@ export default function EvidenceBundlePanel({
               lineHeight: 1.6,
             }}
           >
-            <div style={{ fontWeight: 600, color: '#64748b', marginBottom: '4px' }}>📋 Catatan Metodologi</div>
+            <div style={{ fontWeight: 600, color: '#64748b', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <FileText style={{ width: '12px', height: '12px' }} />
+              <span>Catatan Metodologi</span>
+            </div>
             {bundle.methodology_note}
             <div style={{ marginTop: '6px', color: '#374151' }}>
               Diperbarui: {toWib(bundle.created_at)} · {bundle.total_cctv_searched} CCTV dikaji

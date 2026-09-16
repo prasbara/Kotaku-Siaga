@@ -24,6 +24,8 @@ import {
   Video,
   FileCheck2,
   Zap,
+  ArrowRight,
+  X,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { SEMARANG_KECAMATAN } from '@/lib/ingestion/semarang-admin'
@@ -289,7 +291,7 @@ export function DisasterOperationsCenterView() {
               <div className="flex items-center justify-between font-bold">
                 <span>Sumber: {gap.sourceName}</span>
                 <span className="text-[#b45309] font-mono">
-                  Confidence Terpenalti: {gap.confidenceReduction.originalPercent}% → {gap.confidenceReduction.penalizedPercent}%
+                  Penalti: {gap.confidenceReduction.originalPercent}% ke {gap.confidenceReduction.penalizedPercent}%
                 </span>
               </div>
               <p className="text-[11px] text-[#696969]">
@@ -318,15 +320,23 @@ export function DisasterOperationsCenterView() {
 
           <span
             className={cn(
-              'px-3 py-1 rounded-full text-xs font-bold font-mono border',
+              'px-3 py-1 rounded-full text-xs font-bold font-mono border flex items-center gap-1',
               assessment?.correlation.correlationType === 'CONVERGENT'
                 ? 'bg-[#007a5a]/10 text-[#007a5a] border-[#007a5a]/30'
                 : 'bg-[#ec942c]/15 text-[#b45309] border-[#ec942c]/40'
             )}
           >
-            {assessment?.correlation.correlationType === 'CONVERGENT'
-              ? '✓ BUKTI KONVERGEN (VALIDATED)'
-              : '⚠ DISPARITAS DATA (EVIDENCE INSUFFICIENT)'}
+            {assessment?.correlation.correlationType === 'CONVERGENT' ? (
+              <>
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                <span>BUKTI KONVERGEN (VALIDATED)</span>
+              </>
+            ) : (
+              <>
+                <AlertTriangle className="w-3.5 h-3.5" />
+                <span>DISPARITAS DATA (EVIDENCE INSUFFICIENT)</span>
+              </>
+            )}
           </span>
         </div>
 
@@ -409,9 +419,10 @@ export function DisasterOperationsCenterView() {
                     <button
                       type="button"
                       onClick={() => setSelectedEvidenceModal(factor)}
-                      className="px-2.5 py-1 rounded bg-[#f4ede4] hover:bg-[#e8ded2] text-[#4a154b] font-bold text-[11px] transition-all"
+                      className="px-2.5 py-1 rounded bg-[#f4ede4] hover:bg-[#e8ded2] text-[#4a154b] font-bold text-[11px] transition-all inline-flex items-center gap-1"
                     >
-                      Buka Bukti →
+                      <span>Buka Bukti</span>
+                      <ArrowRight className="w-3 h-3" />
                     </button>
                   </td>
                 </tr>
@@ -549,9 +560,10 @@ export function DisasterOperationsCenterView() {
               <button
                 type="button"
                 onClick={() => setSelectedEvidenceModal(null)}
-                className="p-1.5 rounded-lg hover:bg-[#f0f0f0] text-[#696969]"
+                className="p-1.5 rounded-lg hover:bg-[#f0f0f0] text-[#696969] transition-colors"
+                aria-label="Tutup Detail Bukti"
               >
-                ✕
+                <X className="w-4 h-4" />
               </button>
             </div>
 

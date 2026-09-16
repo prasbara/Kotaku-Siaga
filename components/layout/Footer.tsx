@@ -2,7 +2,7 @@
 
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
-import { ShieldAlert, PhoneCall, Building2, Waves } from 'lucide-react'
+import { ShieldAlert, PhoneCall, Building2, Waves, ArrowRight } from 'lucide-react'
 
 export function Footer() {
   const pathname = usePathname()
@@ -73,8 +73,9 @@ export function Footer() {
               Terhubung dengan BMKG Maritim Tanjung Emas, OpenStreetMap, Katalog BNPB, CCTV PantauSemar Diskominfo, dan Portal Satu Data Kota Semarang.
             </p>
             <div className="flex items-center gap-2 mt-2">
-              <Link href="/data" className="text-xs text-[#f4ede4] hover:underline font-semibold flex items-center gap-1">
-                Periksa Asal-Usul Data →
+              <Link href="/data" className="text-xs text-[#f4ede4] hover:underline font-semibold flex items-center gap-1.5">
+                <span>Periksa Asal-Usul Data</span>
+                <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             </div>
           </div>

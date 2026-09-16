@@ -215,8 +215,60 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Koordinat lokasi kejadian wajib tersedia.' }, { status: 400 })
     }
 
+    // Numeric sanity check
+    if (typeof latitude !== 'number' || typeof longitude !== 'number' || isNaN(latitude) || isNaN(longitude)) {
+      return NextResponse.json({ error: 'Nilai numerik koordinat lintang/bujur tidak valid.' }, { status: 400 })
+    }
+
     if (Math.abs(latitude) > 90 || Math.abs(longitude) > 180) {
-      return NextResponse.json({ error: 'Koordinat lintang/bujur tidak valid.' }, { status: 400 })
+      return NextResponse.json({ error: 'Koordinat lintang/bujur di luar rentang bola bumi yang valid.' }, { status: 400 })
+    }
+
+    // Timestamp validation (anti-future & non-stale)
+    if (reported_at) {
+      const parsedTime = new Date(reported_at).getTime()
+      if (isNaN(parsedTime)) {
+        return NextResponse.json({ error: 'Format stempel waktu pelaporan (reported_at) tidak valid.' }, { status: 400 })
+      }
+      const now = Date.now()
+      if (parsedTime > now + 5 * 60 * 1000) {
+        return NextResponse.json(
+          { error: 'Stempel waktu laporan tidak valid (terdeteksi stempel waktu di masa depan).' },
+          { status: 400 }
+        )
+      }
+      if (parsedTime < now - 7 * 24 * 60 * 60 * 1000) {
+        return NextResponse.json(
+          { error: 'Stempel waktu laporan terlalu lama (> 7 hari lalu). Gunakan waktu observasi terkini.' },
+          { status: 400 }
+        )
+      }
+    }
+
+    // Flood-specific validation
+    if (
+      (category === 'banjir' || category === 'genangan') &&
+      incident_details?.water_height_cm !== undefined &&
+      incident_details?.water_height_cm !== null
+    ) {
+      const wh = Number(incident_details.water_height_cm)
+      if (isNaN(wh) || wh < 0) {
+        return NextResponse.json(
+          { error: 'Ketinggian genangan air tidak boleh bernilai negatif atau bukan angka.' },
+          { status: 400 }
+        )
+      }
+      if (wh > 500) {
+        return NextResponse.json(
+          { error: 'Ketinggian genangan air di luar batas wajar pengamatan (maksimal 500 cm).' },
+          { status: 400 }
+        )
+      }
+    }
+
+    // Fire-specific validation (strictly isolate water attributes)
+    if (category === 'kebakaran' && incident_details) {
+      incident_details.water_height_cm = null
     }
 
     // Photo is mandatory for standard report

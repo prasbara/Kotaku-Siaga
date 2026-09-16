@@ -20,12 +20,14 @@ import {
   Layers,
   Monitor,
   Globe,
+  Flame,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 export type DashboardTab =
   | 'command-center'
   | 'operations'
+  | 'fire'
   | 'sos'
   | 'overview'
   | 'reports'
@@ -94,6 +96,12 @@ export function AdminSidebar({
           label: 'Pusat Operasi Bencana',
           sublabel: 'EOC Decision & Timeline',
           icon: ShieldAlert,
+        },
+        {
+          id: 'fire',
+          label: 'Deteksi Dini Kebakaran',
+          sublabel: 'FIRMS · SiPongi+ · Kasus',
+          icon: Flame,
         },
         {
           id: 'sos',

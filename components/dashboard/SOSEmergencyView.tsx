@@ -14,6 +14,7 @@ import {
   Send,
   User,
   Camera,
+  Check,
 } from 'lucide-react'
 import { formatRelativeTime } from '@/lib/utils'
 
@@ -293,7 +294,7 @@ export function SOSEmergencyView() {
                     }`}
                   >
                     <CheckCircle2 className="w-4 h-4" />
-                    <span>{selectedSos.status === 'DISPATCHED' ? '✓ Tim di Lapangan' : 'Tandai Tim Terjun'}</span>
+                    <span>{selectedSos.status === 'DISPATCHED' ? 'Tim di Lapangan' : 'Tandai Tim Terjun'}</span>
                   </button>
 
                   <button
@@ -306,7 +307,8 @@ export function SOSEmergencyView() {
                         : 'bg-[#f4ede4] hover:bg-[#e8ded2] text-[#1d1d1d]'
                     }`}
                   >
-                    <span>{selectedSos.status === 'RESOLVED' ? '✓ Selesai Ditangani' : 'Selesai'}</span>
+                    {selectedSos.status === 'RESOLVED' && <Check className="w-4 h-4" />}
+                    <span>{selectedSos.status === 'RESOLVED' ? 'Selesai Ditangani' : 'Selesai'}</span>
                   </button>
                 </div>
               </div>

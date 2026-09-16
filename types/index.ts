@@ -334,13 +334,13 @@ export const URGENCY_COLORS: Record<UrgencyLevel, string> = {
 }
 
 export const CATEGORY_ICONS: Record<ReportCategory, string> = {
-  banjir: '🌊',
-  genangan: '💧',
-  kebakaran: '🔥',
-  drainase_tersumbat: '🚰',
-  sampah_menumpuk: '🗑️',
-  infrastruktur_hijau: '🌿',
-  pohon_tumbang: '🌳',
-  longsor: '⛰️',
-  lainnya: '📍',
+  banjir: 'waves',
+  genangan: 'droplets',
+  kebakaran: 'flame',
+  drainase_tersumbat: 'wrench',
+  sampah_menumpuk: 'trash-2',
+  infrastruktur_hijau: 'leaf',
+  pohon_tumbang: 'trees',
+  longsor: 'mountain',
+  lainnya: 'map-pin',
 }

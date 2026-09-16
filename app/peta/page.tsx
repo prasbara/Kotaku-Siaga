@@ -5,7 +5,7 @@ import type { Report, ReportCategory, UrgencyLevel } from '@/types'
 import { CATEGORY_LABELS, URGENCY_LABELS } from '@/types'
 import { InteractiveMap } from '@/components/map/InteractiveMap'
 import { ReportDetailPanel } from '@/components/map/ReportDetailPanel'
-import { RefreshCw, Search, X, Wind, Video, CloudRain, Waves, Info, AlertCircle, BookOpen, ShieldAlert, Navigation, SlidersHorizontal } from 'lucide-react'
+import { RefreshCw, Search, X, Wind, Video, CloudRain, Waves, Info, AlertCircle, BookOpen, ShieldAlert, Navigation, SlidersHorizontal, Map as MapIcon, Cloud, Gauge } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { PANTAUSEMAR_CCTV_POINTS, type CCTVPoint } from '@/lib/data/cctv-pantausemar'
 import { CCTVDetailPanel } from '@/components/cctv/CCTVDetailPanel'
@@ -581,76 +581,82 @@ export default function PetaPage() {
                 <button
                   type="button"
                   onClick={() => handleModeChange('gis')}
-                  className="px-3 py-1 rounded-full bg-[#f4ede4] hover:bg-[#e8ded2] text-[#4a154b] flex items-center gap-1 shrink-0 font-bold"
+                  className="px-3 py-1 rounded-full bg-[#f4ede4] hover:bg-[#e8ded2] text-[#4a154b] flex items-center gap-1.5 shrink-0 font-bold"
                   title="Kembali ke Peta Spasial GIS Semarang"
                 >
-                  <span>🗺️ Peta GIS</span>
+                  <MapIcon className="w-3.5 h-3.5" />
+                  <span>Peta GIS</span>
                 </button>
                 <span className="text-[#e6e6e6]">|</span>
                 <button
                   type="button"
                   onClick={() => handleModeChange('radar')}
                   className={cn(
-                    'px-3 py-1 rounded-full transition-all shrink-0 font-bold',
+                    'px-3 py-1 rounded-full transition-all shrink-0 font-bold flex items-center gap-1.5',
                     mapCanvasMode === 'radar'
                       ? 'bg-[#1264a3] text-white shadow-xs'
                       : 'hover:bg-[#f4ede4] text-[#1d1d1d]'
                   )}
                   title="Radar Presipitasi Hujan Doppler"
                 >
-                  🌧️ Radar Hujan
+                  <CloudRain className="w-3.5 h-3.5" />
+                  <span>Radar Hujan</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => handleModeChange('wind')}
                   className={cn(
-                    'px-3 py-1 rounded-full transition-all shrink-0 font-bold',
+                    'px-3 py-1 rounded-full transition-all shrink-0 font-bold flex items-center gap-1.5',
                     mapCanvasMode === 'wind'
                       ? 'bg-[#4a154b] text-white shadow-xs'
                       : 'hover:bg-[#f4ede4] text-[#1d1d1d]'
                   )}
                   title="Aliran Partikel Angin Permukaan (10m)"
                 >
-                  💨 Angin (ECMWF)
+                  <Wind className="w-3.5 h-3.5" />
+                  <span>Angin (ECMWF)</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => handleModeChange('waves')}
                   className={cn(
-                    'px-3 py-1 rounded-full transition-all shrink-0 font-bold',
+                    'px-3 py-1 rounded-full transition-all shrink-0 font-bold flex items-center gap-1.5',
                     mapCanvasMode === 'waves'
                       ? 'bg-[#0284c7] text-white shadow-xs'
                       : 'hover:bg-[#f4ede4] text-[#1d1d1d]'
                   )}
                   title="Tinggi Gelombang Pesisir Laut Jawa"
                 >
-                  🌊 Gelombang Laut
+                  <Waves className="w-3.5 h-3.5" />
+                  <span>Gelombang Laut</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => handleModeChange('clouds')}
                   className={cn(
-                    'px-3 py-1 rounded-full transition-all shrink-0 font-bold',
+                    'px-3 py-1 rounded-full transition-all shrink-0 font-bold flex items-center gap-1.5',
                     mapCanvasMode === 'clouds'
                       ? 'bg-[#4a154b] text-white shadow-xs'
                       : 'hover:bg-[#f4ede4] text-[#1d1d1d]'
                   )}
                   title="Tutupan Awan Satelit"
                 >
-                  ☁️ Satelit Awan
+                  <Cloud className="w-3.5 h-3.5" />
+                  <span>Satelit Awan</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => handleModeChange('pressure')}
                   className={cn(
-                    'px-3 py-1 rounded-full transition-all shrink-0 font-bold',
+                    'px-3 py-1 rounded-full transition-all shrink-0 font-bold flex items-center gap-1.5',
                     mapCanvasMode === 'pressure'
                       ? 'bg-[#4a154b] text-white shadow-xs'
                       : 'hover:bg-[#f4ede4] text-[#1d1d1d]'
                   )}
                   title="Isobar Tekanan Permukaan Laut"
                 >
-                  ⏱️ Tekanan Udara
+                  <Gauge className="w-3.5 h-3.5" />
+                  <span>Tekanan Udara</span>
                 </button>
               </div>
 
@@ -781,9 +787,10 @@ export default function PetaPage() {
               <button
                 type="button"
                 onClick={() => setShowPublicRiskModal(false)}
-                className="absolute top-4 right-4 z-10 p-2 rounded-full bg-[#f4ede4] hover:bg-[#e8ded2] text-[#4a154b] font-bold text-xs"
+                className="absolute top-4 right-4 z-10 p-2 rounded-full bg-[#f4ede4] hover:bg-[#e8ded2] text-[#4a154b] transition-colors"
+                aria-label="Tutup Modal"
               >
-                ✕
+                <X className="w-4 h-4" />
               </button>
               <PublicDisasterRiskWidget />
             </div>

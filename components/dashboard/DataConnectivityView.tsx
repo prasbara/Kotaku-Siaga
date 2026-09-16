@@ -15,6 +15,7 @@ import {
   Database,
   FileText,
   KeyRound,
+  X,
 } from 'lucide-react'
 import {
   ResponsiveContainer,
@@ -910,8 +911,9 @@ export function DataConnectivityView() {
                 type="button"
                 onClick={() => setLineageModalSource(null)}
                 className="p-1.5 rounded-lg hover:bg-[#f0f0f0] text-[#696969]"
+                aria-label="Tutup Modal"
               >
-                ✕
+                <X className="w-4 h-4" />
               </button>
             </div>
 
@@ -922,26 +924,45 @@ export function DataConnectivityView() {
 
               {/* Step-by-step lineage diagram */}
               <div className="space-y-2">
-                {lineageModalSource.dataLineageTemplate.map((step, idx) => (
-                  <div key={idx} className="flex items-center gap-3">
-                    <div className="w-6 h-6 rounded-full bg-[#4a154b] text-white flex items-center justify-center font-bold text-[11px] shrink-0">
-                      {idx + 1}
+                {lineageModalSource.dataLineageTemplate.map((step: any, idx) => (
+                  <div key={idx} className="p-3 rounded-xl bg-[#faf9f8] border border-[#e6e6e6] space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-[#4a154b]">
+                        Langkah {idx + 1}: {typeof step === 'string' ? step : step.step_name || `Tahap ${idx + 1}`}
+                      </span>
+                      <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-white border border-[#e6e6e6] text-[#696969]">
+                        {typeof step === 'string' ? 'VERIFIED' : step.provenance_type || 'PROVENANCE'}
+                      </span>
                     </div>
-                    <div className="p-3 rounded-lg bg-[#f9f8f6] border border-[#e6e6e6] font-mono text-[12px] font-bold text-[#1d1d1d] flex-1">
-                      {step}
-                    </div>
-                    {idx < lineageModalSource.dataLineageTemplate.length - 1 && (
-                      <ArrowRight className="w-4 h-4 text-[#4a154b] shrink-0 hidden sm:block" />
+                    {typeof step !== 'string' && step.transformation && (
+                      <div className="text-[11px] text-[#1d1d1d] font-mono">
+                        <span className="text-[#696969]">Transformasi: </span>{step.transformation}
+                      </div>
+                    )}
+                    {typeof step !== 'string' && step.verification_check && (
+                      <div className="text-[11px] text-[#007a5a]">
+                        <span className="font-bold">Verifikasi: </span>{step.verification_check}
+                      </div>
                     )}
                   </div>
                 ))}
               </div>
 
-              <div className="p-3 rounded-lg bg-[#f4ede4] border border-[#e8ded2] text-[11px] space-y-1">
-                <div className="font-bold text-[#4a154b]">Metadata Verifikasi:</div>
-                <div className="text-[#1d1d1d]">Endpoint: {lineageModalSource.endpoint}</div>
-                <div className="text-[#1d1d1d]">HTTP Method: {lineageModalSource.checkMethod}</div>
-                <div className="text-[#1d1d1d]">Waktu Respons Terakhir: {lineageModalSource.responseTimeMs ?? '—'} ms</div>
+              {/* Audit Proof Hash Box */}
+              <div className="p-3 rounded-xl bg-[#f4ede4] border border-[#eddcf7] space-y-1.5 font-mono text-[11px]">
+                <div className="text-[#4a154b] font-bold">Rantai Audit Integritas (Chain of Custody)</div>
+                <div className="text-[#1d1d1d]">
+                  <span className="text-[#696969]">Endpoint Asal: </span>
+                  <span className="break-all">{lineageModalSource.endpoint}</span>
+                </div>
+                <div className="text-[#1d1d1d]">
+                  <span className="text-[#696969]">Metode Akses: </span>
+                  <span>{lineageModalSource.checkMethod} ({lineageModalSource.provider})</span>
+                </div>
+                <div className="text-[#1d1d1d]">
+                  <span className="text-[#696969]">Status Koneksi: </span>
+                  <span className="text-[#007a5a] font-bold">{lineageModalSource.status}</span>
+                </div>
               </div>
             </div>
 
@@ -951,7 +972,7 @@ export function DataConnectivityView() {
                 onClick={() => setLineageModalSource(null)}
                 className="px-4 py-2 rounded-xl bg-[#4a154b] text-white font-bold text-xs"
               >
-                Tutup Lineage
+                Tutup Silsilah Data
               </button>
             </div>
           </div>
@@ -960,23 +981,22 @@ export function DataConnectivityView() {
 
       {/* 8. Modal: View Evidence / Data Provenance for AI (Requirement #11) */}
       {showAiEvidenceModal && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl border border-[#e6e6e6] shadow-2xl max-w-2xl w-full p-6 space-y-5 animate-in zoom-in-95 duration-150">
-            <div className="flex items-start justify-between border-b border-[#e6e6e6] pb-4">
-              <div>
-                <span className="text-[11px] font-mono font-bold text-[#4a154b] uppercase tracking-wider">
-                  AI PROVENANCE & EVIDENCE INSPECTOR
-                </span>
-                <h3 className="text-lg font-bold text-[#1d1d1d] mt-1">
-                  Bukti Masukan Data Analisis AI (No Black-Box)
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-2xl w-full p-6 space-y-4 border border-[#e6e6e6] shadow-xl max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-[#e6e6e6] pb-3">
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="w-5 h-5 text-[#007a5a]" />
+                <h3 className="font-bold text-base text-[#1d1d1d]">
+                  Inspektor Bukti & Provenansi Input Kecerdasan AI
                 </h3>
               </div>
               <button
                 type="button"
                 onClick={() => setShowAiEvidenceModal(false)}
                 className="p-1.5 rounded-lg hover:bg-[#f0f0f0] text-[#696969]"
+                aria-label="Tutup Modal"
               >
-                ✕
+                <X className="w-4 h-4" />
               </button>
             </div>
 
@@ -1004,8 +1024,9 @@ export function DataConnectivityView() {
                 <div>{`}`}</div>
               </div>
 
-              <div className="p-3 rounded-lg bg-[#007a5a]/10 border border-[#007a5a]/30 text-[11px] text-[#007a5a]">
-                ✓ Tidak ada angka simulasi atau skor keyakinan acak. Jika koneksi API OpenRouter putus, sistem jujur mengembalikan status <span className="font-bold">UNAVAILABLE</span>.
+              <div className="p-3 rounded-lg bg-[#007a5a]/10 border border-[#007a5a]/30 text-[11px] text-[#007a5a] flex items-center gap-1.5">
+                <CheckCircle2 className="w-3.5 h-3.5 text-[#007a5a] shrink-0" />
+                <span>Tidak ada angka simulasi atau skor keyakinan acak. Jika koneksi API OpenRouter putus, sistem jujur mengembalikan status <span className="font-bold">UNAVAILABLE</span>.</span>
               </div>
             </div>
 

@@ -9,6 +9,7 @@ import { SEMARANG_KECAMATAN } from '../ingestion/semarang-admin'
 import { dataSourceRegistry } from '../data-sources/data-source-registry'
 import { PANTAUSEMAR_CCTV_POINTS } from '../data/cctv-pantausemar'
 import { localReportStore } from '../services/local-report-store'
+import { calculateDataQuality, type DataQualityResult } from './data-quality-scorer'
 
 export type DisasterRiskLevel = 'LOW' | 'MODERATE' | 'ELEVATED' | 'HIGH' | 'CRITICAL'
 
@@ -87,6 +88,7 @@ export interface OperatorDisasterAssessment {
   publicRecommendations: string[]
   roadsToAvoid: string[]
   whySummary: string[]
+  dataQuality?: DataQualityResult
 }
 
 export interface PublicDisasterSummary {
@@ -95,6 +97,7 @@ export interface PublicDisasterSummary {
   currentRiskLevel: DisasterRiskLevel
   riskScore: number
   simpleConfidence: 'TINGGI' | 'SEDANG' | 'PERLU_VERIFIKASI'
+  dataQuality?: DataQualityResult
   rainfallSummary: {
     rateMmH: number
     category: string
@@ -876,6 +879,15 @@ export class DisasterIntelligenceEngine {
       whyBullets.push('Nihil laporan genangan aktif dari warga saat ini.')
     }
 
+    const dataQuality = calculateDataQuality({
+      freshnessPercent: liveWeather.isLive ? 95 : 45,
+      completenessPercent: isCoastal ? (liveMarine?.isLive ? 100 : 70) : 95,
+      sourceReliabilityPercent: weatherSrc?.status === 'CONNECTED' ? 95 : 60,
+      spatialValidityPercent: 95,
+      temporalValidityPercent: 95,
+      verificationCoveragePercent: areaReports.length > 0 ? (highUrgencyReports > 0 ? 85 : 70) : 90,
+    })
+
     return {
       areaId: kecamatan.id,
       areaName: kecamatan.name,
@@ -888,6 +900,7 @@ export class DisasterIntelligenceEngine {
       confidencePercent: baseConfidence,
       simpleConfidence,
       calculationIntegrity: dataGaps.length > 0 ? 'DEGRADED_DUE_TO_GAPS' : 'OPTIMAL',
+      dataQuality,
       factors,
       dataGaps,
       correlation: {
@@ -973,6 +986,7 @@ export class DisasterIntelligenceEngine {
       currentRiskLevel: assessment.riskLevel,
       riskScore: assessment.totalRiskScore,
       simpleConfidence: assessment.simpleConfidence,
+      dataQuality: assessment.dataQuality,
       rainfallSummary: {
         rateMmH: actualRain,
         category: rainCategory,

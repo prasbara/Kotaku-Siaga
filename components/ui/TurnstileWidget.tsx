@@ -196,8 +196,8 @@ export function TurnstileWidget({
           <CheckCircle2 className="w-4 h-4 text-[#007a5a] shrink-0" />
           <span>
             {isFallbackUsed
-              ? 'Verifikasi Keamanan Server Diterapkan ✓'
-              : 'Verifikasi Anti-Bot Berhasil ✓'}
+              ? 'Verifikasi Keamanan Server Diterapkan'
+              : 'Verifikasi Anti-Bot Berhasil'}
           </span>
         </div>
       ) : (

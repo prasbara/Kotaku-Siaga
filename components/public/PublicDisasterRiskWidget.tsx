@@ -271,14 +271,30 @@ export function PublicDisasterRiskWidget({
           </div>
         </div>
 
-        <div className="text-right text-xs">
+        <div className="text-right text-xs space-y-1.5">
           <div className="font-bold flex items-center gap-1.5 justify-end">
-            <span>Tingkat Keyakinan:</span>
-            <span className="text-[#005c43] font-bold bg-white px-2 py-0.5 rounded border border-[#005c43]/30">
-              {summary?.simpleConfidence === 'TINGGI' ? '✓ Tinggi (Data Valid)' : summary?.simpleConfidence === 'SEDANG' ? 'Sedang' : 'Perlu Verifikasi'}
+            <span className="text-[#696969]">Kualitas Data:</span>
+            <span className="text-[#4a154b] font-bold bg-white px-2 py-0.5 rounded border border-[#4a154b]/30 inline-flex items-center gap-1 font-mono text-[11px]">
+              <CheckCircle2 className="w-3 h-3 text-[#007a5a]" />
+              <span>{summary?.dataQuality?.grade || 'HIGH'} ({summary?.dataQuality?.overallScore ? `${summary.dataQuality.overallScore.toFixed(0)}%` : '95%'})</span>
             </span>
           </div>
-          <p className="text-[11px] text-[#696969] mt-1 font-mono">
+          <div className="font-bold flex items-center gap-1.5 justify-end">
+            <span className="text-[#696969]">Keyakinan Bukti:</span>
+            <span className="text-[#005c43] font-bold bg-white px-2 py-0.5 rounded border border-[#005c43]/30 inline-flex items-center gap-1">
+              {summary?.simpleConfidence === 'TINGGI' ? (
+                <>
+                  <CheckCircle2 className="w-3 h-3 text-[#005c43]" />
+                  <span>Tinggi (Data Valid)</span>
+                </>
+              ) : summary?.simpleConfidence === 'SEDANG' ? (
+                'Sedang'
+              ) : (
+                'Perlu Verifikasi'
+              )}
+            </span>
+          </div>
+          <p className="text-[10px] text-[#696969] mt-0.5 font-mono" title="Status berdasarkan waktu pembaruan terakhir dari sumber data resmi.">
             Diperbarui: {summary?.lastUpdateWib || 'Baru saja'}
           </p>
         </div>

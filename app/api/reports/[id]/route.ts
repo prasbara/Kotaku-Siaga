@@ -95,6 +95,12 @@ export async function PATCH(
       .single()
 
     if (error) {
+      // If not in Supabase, check local report store
+      const localUpdated = localReportStore.update(id, updateData)
+      if (localUpdated) {
+        return NextResponse.json({ success: true, data: localUpdated, is_local_store: true })
+      }
+
       if (error.code === 'PGRST116') {
         return NextResponse.json({ error: 'Laporan tidak ditemukan.' }, { status: 404 })
       }
@@ -104,6 +110,9 @@ export async function PATCH(
         { status: 503 }
       )
     }
+
+    // Also update local store if present
+    localReportStore.update(id, updateData)
 
     return NextResponse.json({ success: true, data })
   } catch (error) {

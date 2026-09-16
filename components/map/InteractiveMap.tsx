@@ -7,11 +7,19 @@ import { formatRelativeTime } from '@/lib/utils'
 import type { CCTVPoint } from '@/lib/data/cctv-pantausemar'
 import type { FloodEvent } from '@/types/flood-event'
 import type { SafeRoutePreset } from '@/components/map/SafeRouteNavigator'
+import type { FireObservation, FireInvestigationCase, FireIncident } from '@/types/fire'
 
 interface InteractiveMapProps {
   reports: Report[]
   sosList?: Array<{ id: string; sos_code: string; latitude: number; longitude: number; status: string; created_at: string; district_name?: string | null }>
   clusters?: Array<{ id: string; cluster_code: string; category: string; latitude: number; longitude: number; independent_reporter_count: number; report_count: number; radius_m: number; status: string }>
+  fireObservations?: FireObservation[]
+  fireCases?: FireInvestigationCase[]
+  fireIncidents?: FireIncident[]
+  showFireLayers?: boolean
+  onFireObservationClick?: (obs: FireObservation) => void
+  onFireCaseClick?: (caseItem: FireInvestigationCase) => void
+  onFireIncidentClick?: (incident: FireIncident) => void
   viewMode?: 'markers' | 'heatmap' | 'both'
   onReportClick?: (report: Report) => void
   selectedReport?: Report | null
@@ -49,6 +57,13 @@ export function InteractiveMap({
   reports,
   sosList = [],
   clusters = [],
+  fireObservations = [],
+  fireCases = [],
+  fireIncidents = [],
+  showFireLayers = true,
+  onFireObservationClick,
+  onFireCaseClick,
+  onFireIncidentClick,
   viewMode = 'markers',
   onReportClick,
   selectedReport,
@@ -74,6 +89,9 @@ export function InteractiveMap({
   const sosMarkersRef = useRef<unknown[]>([])
   const clusterLayersRef = useRef<unknown[]>([])
   const safeRouteLayersRef = useRef<unknown[]>([])
+  const fireObsMarkersRef = useRef<unknown[]>([])
+  const fireCaseMarkersRef = useRef<unknown[]>([])
+  const fireIncidentMarkersRef = useRef<unknown[]>([])
   const [isClient, setIsClient] = useState(false)
 
   useEffect(() => {
@@ -196,6 +214,9 @@ export function InteractiveMap({
       sosMarkersRef.current.forEach((m) => map.removeLayer(m))
       clusterLayersRef.current.forEach((c) => map.removeLayer(c))
       safeRouteLayersRef.current.forEach((l) => map.removeLayer(l))
+      fireObsMarkersRef.current.forEach((m) => map.removeLayer(m))
+      fireCaseMarkersRef.current.forEach((m) => map.removeLayer(m))
+      fireIncidentMarkersRef.current.forEach((m) => map.removeLayer(m))
       markersRef.current = []
       circlesRef.current = []
       cctvMarkersRef.current = []
@@ -203,6 +224,9 @@ export function InteractiveMap({
       sosMarkersRef.current = []
       clusterLayersRef.current = []
       safeRouteLayersRef.current = []
+      fireObsMarkersRef.current = []
+      fireCaseMarkersRef.current = []
+      fireIncidentMarkersRef.current = []
 
       reports.forEach((report) => {
         const isSelected = selectedReport?.id === report.id
@@ -213,20 +237,22 @@ export function InteractiveMap({
         // Tactical Civic Intelligence Color Tokens
         let colorBg = isFire ? '#EA580C' : '#06B6D4'
         let colorBorder = isFire ? '#F97316' : '#22D3EE'
-        let markerLabel = isFire ? '🔥' : 'S'
+        let markerSvg = isFire
+          ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>`
+          : `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>`
 
         if (urgency === 'kritis') {
           colorBg = '#EF4444'
           colorBorder = '#F87171'
-          markerLabel = isFire ? '🔥' : 'K'
+          markerSvg = isFire
+            ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>`
+            : `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`
         } else if (urgency === 'tinggi') {
           colorBg = isFire ? '#EA580C' : '#F59E0B'
           colorBorder = isFire ? '#FB923C' : '#FBBF24'
-          markerLabel = isFire ? '🔥' : 'T'
         } else if (urgency === 'rendah') {
           colorBg = isFire ? '#D97706' : '#10B981'
           colorBorder = isFire ? '#F59E0B' : '#34D399'
-          markerLabel = isFire ? '🔥' : 'R'
         }
 
         const size = isSelected ? 36 : (isFire ? 30 : 26)
@@ -258,7 +284,7 @@ export function InteractiveMap({
                 cursor: pointer;
                 transition: transform 0.15s ease;
               ">
-                ${markerLabel}
+                ${markerSvg}
               </div>
             </div>
           `,
@@ -290,7 +316,7 @@ export function InteractiveMap({
               ${
                 isSimulation
                   ? `<div style="background: rgba(245, 158, 11, 0.2); color: #FBBF24; padding: 2px 6px; border-radius: 4px; font-size: 9px; font-family: monospace; font-weight: bold; margin-bottom: 6px; text-align: center;">
-                      ⚠️ MODE SIMULASI / TEST MODE
+                      MODE SIMULASI / TEST MODE
                     </div>`
                   : ''
               }
@@ -309,14 +335,14 @@ export function InteractiveMap({
                 Klasifikasi Awal: ${safeUrgency}
               </div>
               <div style="color: #94A3B8; font-size: 11px; margin-bottom: 6px;">
-                📍 ${safeAddress}
+                ${safeAddress}
               </div>
               <div style="display: flex; justify-content: space-between; font-size: 9px; color: #64748B; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 5px; margin-top: 4px;">
                 <span>Sumber: ${sourceText}</span>
                 <span>${evidenceText}</span>
               </div>
               <div style="font-size: 9px; color: #475569; font-family: monospace; margin-top: 3px;">
-                🕒 ${safeTime}
+                Waktu: ${safeTime}
               </div>
             </div>
           `
@@ -446,10 +472,9 @@ export function InteractiveMap({
                   align-items: center;
                   justify-content: center;
                   cursor: pointer;
-                  font-size: 15px;
                   transition: transform 0.15s ease;
                 ">
-                  🔴
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${floodColor}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h20"/><path d="M20 12v8H4v-8"/><path d="m4 4 16 16"/></svg>
                 </div>
               </div>
             `,
@@ -473,7 +498,7 @@ export function InteractiveMap({
             <div style="min-width: 200px; font-family: inherit;">
               <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
                 <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 800; color: ${floodColor}; letter-spacing: 0.05em;">
-                  🔴 FLOOD EVENT
+                  DETEKSI GENANGAN (FLOOD EVENT)
                 </span>
                 <span style="font-size: 9px; padding: 2px 6px; border-radius: 4px; background: ${floodColor}26; color: ${floodColor}; font-family: 'JetBrains Mono', monospace; font-weight: bold;">
                   ${safeStatus}
@@ -532,11 +557,11 @@ export function InteractiveMap({
                   justify-content: center;
                   color: #FFFFFF;
                   font-family: 'JetBrains Mono', monospace;
-                  font-size: 14px;
+                  font-size: 11px;
                   font-weight: 900;
                   cursor: pointer;
                 ">
-                  🚨
+                  SOS
                 </div>
               </div>
             `,
@@ -585,7 +610,7 @@ export function InteractiveMap({
           circle.bindPopup(`
             <div style="min-width: 160px; font-size: 11px;">
               <div style="font-weight: bold; color: #4a154b; margin-bottom: 2px;">${escapeHtml(cl.cluster_code)}</div>
-              <div style="font-size: 10px; color: #007a5a; font-weight: bold;">👥 ${cl.independent_reporter_count} Pelapor Independen</div>
+              <div style="font-size: 10px; color: #007a5a; font-weight: bold;">${cl.independent_reporter_count} Pelapor Independen</div>
               <div style="font-size: 10px; color: #696969;">Total Laporan: ${cl.report_count} | Radius ~${cl.radius_m}m</div>
             </div>
           `)
@@ -642,10 +667,282 @@ export function InteractiveMap({
           // Ignore if map not ready
         }
       }
+
+      // Render Fire Observation Layers (Satellite Thermal Anomalies)
+      if (showFireLayers && fireObservations && fireObservations.length > 0) {
+        fireObservations.forEach((obs) => {
+          const obsSize = 32
+          const isHighConf = obs.confidence === 'high'
+          const obsColor = isHighConf ? '#EA580C' : '#F59E0B'
+          const pulseColor = isHighConf ? '#F97316' : '#FBBF24'
+
+          const fireObsIcon = L.divIcon({
+            className: 'custom-fire-obs-marker',
+            html: `
+              <div style="position: relative; width: ${obsSize}px; height: ${obsSize}px; display: flex; align-items: center; justify-content: center;">
+                <span style="position: absolute; inset: -5px; border-radius: 9999px; background-color: ${pulseColor}; opacity: 0.5; animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;"></span>
+                <div style="
+                  width: ${obsSize}px;
+                  height: ${obsSize}px;
+                  border-radius: 9999px;
+                  background-color: #1a0808;
+                  border: 2px solid ${obsColor};
+                  box-shadow: 0 0 14px ${obsColor}99;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  color: ${obsColor};
+                  cursor: pointer;
+                  transition: transform 0.15s ease;
+                ">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>
+                  </svg>
+                </div>
+              </div>
+            `,
+            iconSize: [obsSize, obsSize],
+            iconAnchor: [obsSize / 2, obsSize / 2],
+          })
+
+          const marker = L.marker([obs.latitude, obs.longitude], { icon: fireObsIcon })
+          const popupContent = document.createElement('div')
+          popupContent.className = 'text-xs'
+
+          const safeSource = escapeHtml(obs.source)
+          const safeSat = escapeHtml(obs.satellite)
+          const safeInst = escapeHtml(obs.instrument)
+          const safeConf = escapeHtml(String(obs.confidence).toUpperCase())
+          const safeFrp = obs.frp !== undefined ? `${obs.frp.toFixed(1)} MW` : 'N/A'
+          const safeTime = new Date(obs.observed_at).toLocaleString('id-ID', {
+            day: 'numeric',
+            month: 'short',
+            hour: '2-digit',
+            minute: '2-digit',
+          }) + ' WIB'
+          const safeFreshness = escapeHtml(obs.freshness_status)
+          const safeDistrict = escapeHtml(obs.district_name || 'Kota Semarang')
+          const safeStatus = escapeHtml(obs.verification_status)
+
+          popupContent.innerHTML = `
+            <div style="min-width: 220px; font-family: inherit;">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                <span style="font-family: monospace; font-size: 10px; font-weight: 800; color: #F97316; letter-spacing: 0.05em;">
+                  SATELLITE FIRE SIGNAL
+                </span>
+                <span style="font-size: 9px; padding: 2px 6px; border-radius: 4px; background: rgba(234, 88, 12, 0.2); color: #F97316; font-family: monospace; font-weight: bold;">
+                  ${safeStatus}
+                </span>
+              </div>
+              <div style="font-size: 11px; font-weight: bold; color: #F8FAFC; margin-bottom: 4px;">
+                Potensi Anomali Termal Satelit
+              </div>
+              <div style="color: #94A3B8; font-size: 10px; margin-bottom: 2px;">
+                Sumber: <span style="color: #F1F5F9; font-weight: 600;">${safeSource} (${safeSat} / ${safeInst})</span>
+              </div>
+              <div style="color: #94A3B8; font-size: 10px; margin-bottom: 2px;">
+                Wilayah: <span style="color: #F1F5F9; font-weight: 600;">${safeDistrict}</span>
+              </div>
+              <div style="color: #94A3B8; font-size: 10px; margin-bottom: 2px;">
+                Observasi: <span style="color: #F1F5F9; font-weight: 600;">${safeTime}</span>
+              </div>
+              <div style="display: flex; gap: 8px; color: #94A3B8; font-size: 10px; margin: 4px 0;">
+                <span>Confidence: <strong style="color: #FBBF24;">${safeConf}</strong></span>
+                <span>FRP: <strong style="color: #FB923C;">${safeFrp}</strong></span>
+                <span>Freshness: <strong style="color: #34D399;">${safeFreshness}</strong></span>
+              </div>
+              <div style="font-size: 9px; color: #CBD5E1; background: rgba(255,255,255,0.06); padding: 4px 6px; border-radius: 4px; margin-top: 5px; font-style: italic;">
+                Peringatan: Sinyal ini adalah deteksi termal awal dan bukan konfirmasi kebakaran resmi BPBD/Damkar.
+              </div>
+            </div>
+          `
+
+          marker.bindPopup(popupContent, { offset: [0, -obsSize / 2], maxWidth: 280, autoPan: true })
+
+          if (onFireObservationClick) {
+            marker.on('click', () => onFireObservationClick(obs))
+          }
+
+          marker.addTo(map as any)
+          fireObsMarkersRef.current.push(marker)
+        })
+      }
+
+      // Render Fire Investigation Cases (Multi-Source Correlated)
+      if (showFireLayers && fireCases && fireCases.length > 0) {
+        fireCases.forEach((cItem) => {
+          const caseSize = 36
+          const isCritical = cItem.detection_priority === 'CRITICAL'
+          const caseColor = isCritical ? '#DC2626' : '#D97706'
+
+          const caseIcon = L.divIcon({
+            className: 'custom-fire-case-marker',
+            html: `
+              <div style="position: relative; width: ${caseSize}px; height: ${caseSize}px; display: flex; align-items: center; justify-content: center;">
+                <span style="position: absolute; inset: -6px; border-radius: 9999px; background-color: ${caseColor}; opacity: 0.6; animation: ping 1.4s cubic-bezier(0, 0, 0.2, 1) infinite;"></span>
+                <div style="
+                  width: ${caseSize}px;
+                  height: ${caseSize}px;
+                  border-radius: 9999px;
+                  background-color: #2D0A14;
+                  border: 2px solid ${caseColor};
+                  box-shadow: 0 0 16px ${caseColor};
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  color: #FFFFFF;
+                  font-family: monospace;
+                  font-size: 11px;
+                  font-weight: 900;
+                  cursor: pointer;
+                ">
+                  CASE
+                </div>
+              </div>
+            `,
+            iconSize: [caseSize, caseSize],
+            iconAnchor: [caseSize / 2, caseSize / 2],
+          })
+
+          const marker = L.marker([cItem.latitude, cItem.longitude], { icon: caseIcon })
+          const popupContent = document.createElement('div')
+          popupContent.className = 'text-xs'
+
+          popupContent.innerHTML = `
+            <div style="min-width: 220px; font-family: inherit;">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
+                <span style="font-family: monospace; font-size: 10px; font-weight: 800; color: #F87171;">
+                  ${escapeHtml(cItem.case_code)}
+                </span>
+                <span style="font-size: 9px; padding: 2px 6px; border-radius: 4px; background: #DC2626; color: #FFFFFF; font-weight: bold;">
+                  ${escapeHtml(cItem.detection_priority)}
+                </span>
+              </div>
+              <div style="font-size: 12px; font-weight: bold; color: #F8FAFC; margin-bottom: 4px;">
+                Kasus Investigasi Potensi Kebakaran
+              </div>
+              <div style="color: #94A3B8; font-size: 10px; margin-bottom: 2px;">
+                Lokasi: <span style="color: #F1F5F9; font-weight: 600;">${escapeHtml(cItem.district_name)}</span>
+              </div>
+              <div style="color: #94A3B8; font-size: 10px; margin-bottom: 2px;">
+                Sinyal Satelit: <span style="color: #FB923C; font-weight: bold;">${cItem.signals.length} Sinyal</span>
+              </div>
+              <div style="color: #94A3B8; font-size: 10px; margin-bottom: 4px;">
+                Laporan Warga: <span style="color: #38BDF8; font-weight: bold;">${cItem.citizen_reports.length} Laporan</span>
+              </div>
+              <div style="font-size: 9px; color: #4CD7F6; font-family: monospace; font-weight: bold; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 4px;">
+                KLIK UNTUK DETAIL INVESTIGASI & VERIFIKASI
+              </div>
+            </div>
+          `
+
+          marker.bindPopup(popupContent, { offset: [0, -caseSize / 2], maxWidth: 280, autoPan: true })
+
+          if (onFireCaseClick) {
+            marker.on('click', () => onFireCaseClick(cItem))
+          }
+
+          marker.addTo(map as any)
+          fireCaseMarkersRef.current.push(marker)
+        })
+      }
+
+      // Render Verified Fire Incidents
+      if (showFireLayers && fireIncidents && fireIncidents.length > 0) {
+        fireIncidents.forEach((inc) => {
+          const incSize = 34
+          const incIcon = L.divIcon({
+            className: 'custom-verified-fire-marker',
+            html: `
+              <div style="position: relative; width: ${incSize}px; height: ${incSize}px; display: flex; align-items: center; justify-content: center;">
+                <div style="
+                  width: ${incSize}px;
+                  height: ${incSize}px;
+                  border-radius: 9999px;
+                  background-color: #991B1B;
+                  border: 2px solid #FFFFFF;
+                  box-shadow: 0 0 16px #DC2626;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  color: #FFFFFF;
+                  cursor: pointer;
+                ">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                  </svg>
+                </div>
+              </div>
+            `,
+            iconSize: [incSize, incSize],
+            iconAnchor: [incSize / 2, incSize / 2],
+          })
+
+          const marker = L.marker([inc.latitude, inc.longitude], { icon: incIcon })
+          const popupContent = document.createElement('div')
+          popupContent.className = 'text-xs'
+
+          popupContent.innerHTML = `
+            <div style="min-width: 220px; font-family: inherit;">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
+                <span style="font-family: monospace; font-size: 10px; font-weight: 800; color: #EF4444;">
+                  ${escapeHtml(inc.incident_code)}
+                </span>
+                <span style="font-size: 9px; padding: 2px 6px; border-radius: 4px; background: #991B1B; color: #FFFFFF; font-weight: bold;">
+                  VERIFIED INCIDENT
+                </span>
+              </div>
+              <div style="font-size: 12px; font-weight: bold; color: #F8FAFC; margin-bottom: 4px;">
+                ${escapeHtml(inc.fire_type)}
+              </div>
+              <div style="color: #94A3B8; font-size: 10px; margin-bottom: 2px;">
+                Lokasi: <span style="color: #F1F5F9; font-weight: 600;">${escapeHtml(inc.location_address || inc.district_name)}</span>
+              </div>
+              <div style="color: #94A3B8; font-size: 10px; margin-bottom: 2px;">
+                Keparahan: <span style="color: #F87171; font-weight: bold; text-transform: uppercase;">${escapeHtml(inc.severity)}</span>
+              </div>
+              <div style="color: #94A3B8; font-size: 10px; margin-bottom: 4px;">
+                Diverifikasi: <span style="color: #F1F5F9;">${new Date(inc.verified_at).toLocaleTimeString('id-ID')} WIB</span>
+              </div>
+            </div>
+          `
+
+          marker.bindPopup(popupContent, { offset: [0, -incSize / 2], maxWidth: 280, autoPan: true })
+
+          if (onFireIncidentClick) {
+            marker.on('click', () => onFireIncidentClick(inc))
+          }
+
+          marker.addTo(map as any)
+          fireIncidentMarkersRef.current.push(marker)
+        })
+      }
     }
 
     updateMarkers()
-  }, [reports, sosList, clusters, viewMode, selectedReport, onReportClick, isClient, showCCTV, cctvList, onCCTVClick, floodEvents, showFloodEvents, onFloodEventClick, activeSafeRoute])
+  }, [
+    reports,
+    sosList,
+    clusters,
+    fireObservations,
+    fireCases,
+    fireIncidents,
+    showFireLayers,
+    onFireObservationClick,
+    onFireCaseClick,
+    onFireIncidentClick,
+    viewMode,
+    selectedReport,
+    onReportClick,
+    isClient,
+    showCCTV,
+    cctvList,
+    onCCTVClick,
+    floodEvents,
+    showFloodEvents,
+    onFloodEventClick,
+    activeSafeRoute,
+  ])
 
   // Center on selected report
   useEffect(() => {

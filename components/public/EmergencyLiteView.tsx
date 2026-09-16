@@ -210,8 +210,9 @@ export function EmergencyLiteView() {
             </div>
 
             <div>
-              <p className="text-xs font-bold text-amber-300 uppercase tracking-wide mb-1">
-                ⚠️ RUAS JALAN RAWAN TERGENANG / DIHINDARI:
+              <p className="text-xs font-bold text-amber-300 uppercase tracking-wide mb-1 flex items-center gap-1.5">
+                <AlertTriangle className="w-3.5 h-3.5 text-amber-300 shrink-0" />
+                <span>RUAS JALAN RAWAN TERGENANG / DIHINDARI:</span>
               </p>
               <ul className="list-disc list-inside text-xs space-y-1 text-white/90">
                 {currentDistrict.avoidRoads.map((road, idx) => (

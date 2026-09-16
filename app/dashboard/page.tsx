@@ -4,13 +4,14 @@ import { useState, useEffect, useCallback } from 'react'
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer
 } from 'recharts'
-import { RefreshCw, Menu, Droplets, CheckCircle2, ArrowRight, ShieldAlert, PhoneCall, Waves, AlertCircle } from 'lucide-react'
+import { RefreshCw, Menu, Droplets, CheckCircle2, ArrowRight, ShieldAlert, PhoneCall, Waves, AlertCircle, Monitor } from 'lucide-react'
 import Link from 'next/link'
 import type { Report } from '@/types'
 import { AdminSidebar, type DashboardTab } from '@/components/dashboard/AdminSidebar'
 import { CommandCenterDisplayView } from '@/components/dashboard/CommandCenterDisplayView'
 import { ReportModerationView } from '@/components/dashboard/ReportModerationView'
 import { SOSEmergencyView } from '@/components/dashboard/SOSEmergencyView'
+import { FireEarlyDetectionView } from '@/components/dashboard/FireEarlyDetectionView'
 import { IncidentClustersView } from '@/components/dashboard/IncidentClustersView'
 import { InterventionMatrixView } from '@/components/dashboard/InterventionMatrixView'
 import { CCTVMonitoringView } from '@/components/dashboard/CCTVMonitoringView'
@@ -177,7 +178,8 @@ export default function DashboardPage() {
               onClick={() => setActiveTab('command-center')}
               className="min-h-[36px] px-3.5 py-1.5 rounded-xl bg-[#4a154b] hover:bg-[#3b113c] text-white font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
             >
-              <span>🖥️ Layar Command Center</span>
+              <Monitor className="w-3.5 h-3.5" />
+              <span>Layar Command Center</span>
             </button>
           </div>
         </header>
@@ -187,6 +189,8 @@ export default function DashboardPage() {
           {activeTab === 'command-center' && <CommandCenterDisplayView />}
 
           {activeTab === 'operations' && <DisasterOperationsCenterView />}
+
+          {activeTab === 'fire' && <FireEarlyDetectionView />}
 
           {activeTab === 'sos' && <SOSEmergencyView />}
 
@@ -396,9 +400,10 @@ export default function DashboardPage() {
                   <div className="pt-4 mt-4 border-t border-[#e8ded2]">
                     <Link
                       href="/peta"
-                      className="text-xs font-bold text-[#1264a3] hover:text-[#3860be] hover:underline flex items-center gap-1"
+                      className="text-xs font-bold text-[#1264a3] hover:text-[#3860be] hover:underline flex items-center gap-1.5"
                     >
-                      Lihat Lokasi Pompa di Peta →
+                      <span>Lihat Lokasi Pompa di Peta</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
                     </Link>
                   </div>
                 </div>
