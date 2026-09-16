@@ -207,29 +207,29 @@ export function InteractiveMap({
       reports.forEach((report) => {
         const isSelected = selectedReport?.id === report.id
         const urgency = report.urgency || 'sedang'
+        const isFire = report.category === 'kebakaran'
+        const isSimulation = Boolean(report.is_simulation || report.is_demo)
 
         // Tactical Civic Intelligence Color Tokens
-        let colorBg = '#06B6D4'
-        let colorBorder = '#22D3EE'
-        let urgencyShort = 'S'
-        let pulseClass = ''
+        let colorBg = isFire ? '#EA580C' : '#06B6D4'
+        let colorBorder = isFire ? '#F97316' : '#22D3EE'
+        let markerLabel = isFire ? '🔥' : 'S'
 
         if (urgency === 'kritis') {
           colorBg = '#EF4444'
           colorBorder = '#F87171'
-          urgencyShort = 'K'
-          pulseClass = 'animate-ping'
+          markerLabel = isFire ? '🔥' : 'K'
         } else if (urgency === 'tinggi') {
-          colorBg = '#F59E0B'
-          colorBorder = '#FBBF24'
-          urgencyShort = 'T'
+          colorBg = isFire ? '#EA580C' : '#F59E0B'
+          colorBorder = isFire ? '#FB923C' : '#FBBF24'
+          markerLabel = isFire ? '🔥' : 'T'
         } else if (urgency === 'rendah') {
-          colorBg = '#10B981'
-          colorBorder = '#34D399'
-          urgencyShort = 'R'
+          colorBg = isFire ? '#D97706' : '#10B981'
+          colorBorder = isFire ? '#F59E0B' : '#34D399'
+          markerLabel = isFire ? '🔥' : 'R'
         }
 
-        const size = isSelected ? 34 : 26
+        const size = isSelected ? 36 : (isFire ? 30 : 26)
 
         // Tactical glowing custom div icon
         const icon = L.divIcon({
@@ -237,8 +237,8 @@ export function InteractiveMap({
           html: `
             <div style="position: relative; width: ${size}px; height: ${size}px; display: flex; align-items: center; justify-content: center;">
               ${
-                urgency === 'kritis'
-                  ? `<span style="position: absolute; inset: -4px; border-radius: 9999px; background-color: ${colorBg}; opacity: 0.5; animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;"></span>`
+                urgency === 'kritis' || isFire
+                  ? `<span style="position: absolute; inset: -4px; border-radius: 9999px; background-color: ${colorBg}; opacity: 0.45; animation: ping 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;"></span>`
                   : ''
               }
               <div style="
@@ -247,18 +247,18 @@ export function InteractiveMap({
                 border-radius: 9999px;
                 background-color: ${colorBg};
                 border: 2px solid ${isSelected ? '#FFFFFF' : colorBorder};
-                box-shadow: 0 0 14px ${colorBg};
+                box-shadow: 0 0 ${isFire ? '16px rgba(239, 68, 68, 0.7)' : `14px ${colorBg}`};
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                color: #070e1b;
+                color: ${isFire ? '#FFFFFF' : '#070e1b'};
                 font-family: 'JetBrains Mono', monospace;
-                font-size: ${isSelected ? '12px' : '10px'};
+                font-size: ${isFire ? '13px' : (isSelected ? '12px' : '10px')};
                 font-weight: 800;
                 cursor: pointer;
                 transition: transform 0.15s ease;
               ">
-                ${urgencyShort}
+                ${markerLabel}
               </div>
             </div>
           `,
@@ -272,38 +272,56 @@ export function InteractiveMap({
         if (viewMode === 'markers' || viewMode === 'both') {
           const marker = L.marker([reportLat, reportLng], { icon })
 
-          // Popup
+          // Popup with complete civic incident intelligence & provenance
           const popupContent = document.createElement('div')
           popupContent.className = 'text-xs'
           const safeCode = escapeHtml(report.report_code || 'SMG-ALERT')
           const safeUrgency = escapeHtml(urgency.toUpperCase())
-          const safeTitle = escapeHtml(report.title || report.category)
+          const safeCategory = escapeHtml(isFire ? 'KEBAKARAN' : report.category.toUpperCase().replace('_', ' '))
+          const safeTitle = escapeHtml(report.title || (isFire ? 'Laporan Kebakaran' : report.category))
           const safeAddress = escapeHtml(report.address || report.district_name || 'Kota Semarang')
           const safeTime = escapeHtml(formatRelativeTime(report.created_at))
+          const statusText = report.status === 'verified' ? 'Verified' : report.status === 'under_review' ? 'Under Review' : report.status === 'resolved' ? 'Resolved' : 'Unverified'
+          const evidenceText = report.photo_url ? '1 Foto Lapangan' : 'No evidence attached'
+          const sourceText = isSimulation ? 'Simulation Test' : 'Citizen Report'
 
           popupContent.innerHTML = `
-            <div style="min-width: 170px;">
+            <div style="min-width: 200px; font-family: system-ui, -apple-system, sans-serif;">
+              ${
+                isSimulation
+                  ? `<div style="background: rgba(245, 158, 11, 0.2); color: #FBBF24; padding: 2px 6px; border-radius: 4px; font-size: 9px; font-family: monospace; font-weight: bold; margin-bottom: 6px; text-align: center;">
+                      ⚠️ MODE SIMULASI / TEST MODE
+                    </div>`
+                  : ''
+              }
               <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
-                <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: ${colorBg}; font-weight: bold; text-transform: uppercase;">
+                <span style="font-family: monospace; font-size: 10px; color: ${colorBg}; font-weight: bold;">
                   ${safeCode}
                 </span>
-                <span style="font-size: 9px; padding: 2px 6px; border-radius: 4px; background: rgba(255,255,255,0.1); font-family: 'JetBrains Mono', monospace;">
-                  ${safeUrgency}
+                <span style="font-size: 9px; padding: 2px 6px; border-radius: 4px; background: rgba(255,255,255,0.12); font-family: monospace; font-weight: bold; color: #E2E8F0;">
+                  ${statusText}
                 </span>
               </div>
-              <div style="font-weight: bold; font-size: 13px; color: #F8FAFC; margin-bottom: 4px;">
+              <div style="font-weight: bold; font-size: 13px; color: #F8FAFC; margin-bottom: 2px;">
                 ${safeTitle}
               </div>
-              <div style="color: #94A3B8; font-size: 11px; margin-bottom: 6px;">
-                ${safeAddress}
+              <div style="font-size: 10px; color: ${isFire ? '#FB923C' : '#94A3B8'}; font-weight: 600; text-transform: uppercase; margin-bottom: 6px;">
+                Klasifikasi Awal: ${safeUrgency}
               </div>
-              <div style="font-size: 10px; color: #64748B; font-family: 'JetBrains Mono', monospace;">
-                ${safeTime}
+              <div style="color: #94A3B8; font-size: 11px; margin-bottom: 6px;">
+                📍 ${safeAddress}
+              </div>
+              <div style="display: flex; justify-content: space-between; font-size: 9px; color: #64748B; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 5px; margin-top: 4px;">
+                <span>Sumber: ${sourceText}</span>
+                <span>${evidenceText}</span>
+              </div>
+              <div style="font-size: 9px; color: #475569; font-family: monospace; margin-top: 3px;">
+                🕒 ${safeTime}
               </div>
             </div>
           `
 
-          marker.bindPopup(popupContent, { offset: [0, -size / 2], maxWidth: 260, autoPan: true })
+          marker.bindPopup(popupContent, { offset: [0, -size / 2], maxWidth: 280, autoPan: true })
 
           if (onReportClick) {
             marker.on('click', () => onReportClick(report))

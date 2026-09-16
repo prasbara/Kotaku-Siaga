@@ -133,6 +133,9 @@ export async function runVerificationPipeline(
     duplicate_report_codes: dupCheck.duplicateReportCodes,
     corroboration_count: crowd.corroboratingCount,
     corroborating_report_codes: crowd.corroboratingReportCodes,
+    possible_duplicate: crowd.possibleDuplicate,
+    duplicate_warning: crowd.duplicateReason,
+    suspected_duplicate_of: crowd.suspectedDuplicateCodes,
     nearest_cctv: cctv.nearestCctv
       ? {
           code: cctv.nearestCctv.code,

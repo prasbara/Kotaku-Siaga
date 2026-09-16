@@ -21,6 +21,12 @@ export function WhyDidThisHappenCard({
   const recommendedModule = getRecommendedModuleForLocation(latitude, longitude, category)
 
   const getScientificReason = () => {
+    if (category === 'kebakaran') {
+      return 'Beban termal, kegagalan isolasi listrik (korsleting), kebocoran tabung gas, atau akumulasi biomassa kering memicu segitiga api (oksigen, panas, bahan bakar) yang dapat membesar cepat jika terpapar hembusan angin perkotaan.'
+    }
+    if (category === 'pohon_tumbang') {
+      return 'Terpaan angin kencang (microburst) dikombinasikan dengan sistem perakaran dangkal atau pelapukan kambium pohon tua menyebabkan kegagalan struktural mekanis batang pohon.'
+    }
     if (category === 'longsor' || latitude < -7.03) {
       return 'Kawasan perbukitan rentan terhadap penjenuhan pori tanah akibat akumulasi hujan terus-menerus yang mereduksi gaya geser penahan lereng.'
     }
@@ -31,6 +37,12 @@ export function WhyDidThisHappenCard({
   }
 
   const getCivicAction = () => {
+    if (category === 'kebakaran') {
+      return 'Tutup hidung/mulut dengan kain basah untuk memfilter asap beracun, evakuasi merayap di bawah lapisan asap, hindari lift, amankan tabung gas jika memungkinkan, dan segera hubungi Damkar 113 / 112.'
+    }
+    if (category === 'pohon_tumbang') {
+      return 'Jauhi kabel listrik yang tertimpa pohon untuk menghindari bahaya sengatan (step voltage), pasang tanda peringatan bagi pengendara, dan jangan berteduh di bawah pohon rapuh saat hujan badai.'
+    }
     if (category === 'longsor' || latitude < -7.03) {
       return 'Amati tanda retakan dinding/tanah, jauhi lereng terjal, dan segera lapor atau evakuasi jika terdengar gemuruh tebing.'
     }

@@ -58,6 +58,7 @@ class LocalReportStore {
     urgency?: string
     status?: string
     district?: string
+    is_simulation?: boolean | string
     page?: number
     limit?: number
   } = {}): { data: Report[]; count: number } {
@@ -75,6 +76,10 @@ class LocalReportStore {
     if (filters.district && filters.district !== 'all') {
       const distLower = filters.district.toLowerCase()
       list = list.filter((r) => r.district_name?.toLowerCase().includes(distLower))
+    }
+    if (filters.is_simulation !== undefined) {
+      const isSim = typeof filters.is_simulation === 'string' ? filters.is_simulation === 'true' : Boolean(filters.is_simulation)
+      list = list.filter((r) => Boolean(r.is_simulation || r.is_demo) === isSim)
     }
     if (filters.search && filters.search.trim()) {
       const q = filters.search.trim().toLowerCase()
@@ -126,12 +131,14 @@ class LocalReportStore {
       photo_url: reportData.photo_url || null,
       reporter_name: reportData.reporter_name || null,
       reporter_contact: reportData.reporter_contact || null,
-      is_demo: false,
+      is_demo: Boolean(reportData.is_demo || reportData.is_simulation),
+      is_simulation: Boolean(reportData.is_simulation || reportData.is_demo),
       created_at: reportData.created_at || now,
       updated_at: reportData.updated_at || now,
       district_name: reportData.district_name || 'Kota Semarang',
       address: reportData.address || null,
-      water_height_cm: reportData.water_height_cm ?? null,
+      water_height_cm: ['banjir', 'genangan', 'rob', 'drainase_tersumbat'].includes(reportData.category as string) ? (reportData.water_height_cm ?? null) : null,
+      incident_details: reportData.incident_details || null,
       credibility_score: reportData.credibility_score ?? 85,
       location_accuracy: reportData.location_accuracy ?? 10,
       verification_metadata: reportData.verification_metadata || null,
@@ -157,8 +164,11 @@ class LocalReportStore {
     return this.reports[index]
   }
 
-  public getStats() {
-    const all = this.reports
+  public getStats(options: { is_simulation?: boolean } = {}) {
+    let all = this.reports
+    if (options.is_simulation !== undefined) {
+      all = all.filter((r) => Boolean(r.is_simulation || r.is_demo) === options.is_simulation)
+    }
     const total = all.length
     const active = all.filter((r) => !['resolved', 'rejected', 'duplicate'].includes(r.status)).length
     const critical = all.filter((r) => r.urgency === 'kritis' || (r.urgency as string) === 'critical').length

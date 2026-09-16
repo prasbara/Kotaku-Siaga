@@ -10,6 +10,7 @@ export type ReportCategory =
   | 'infrastruktur_hijau'
   | 'pohon_tumbang'
   | 'longsor'
+  | 'kebakaran'
   | 'lainnya'
 
 export type UrgencyLevel = 'rendah' | 'sedang' | 'tinggi' | 'kritis'
@@ -24,6 +25,99 @@ export type ReportStatus =
   | 'rejected'
   | 'suspicious'
   | 'duplicate'
+
+// Structured Dynamic Incident Data Models
+export type FireCondition =
+  | 'api_terlihat'
+  | 'asap_terlihat'
+  | 'api_dan_asap'
+  | 'dugaan_kebakaran'
+  | 'kebakaran_padam'
+  | 'tidak_diketahui'
+
+export type FireLocationSubtype =
+  | 'rumah_permukiman'
+  | 'gedung_bertingkat'
+  | 'kendaraan'
+  | 'lahan_vegetasi'
+  | 'industri_pabrik'
+  | 'fasilitas_umum'
+  | 'area_komersial'
+  | 'lainnya'
+
+export type FireSpreadCondition =
+  | 'terlokalisasi'
+  | 'mulai_menyebar'
+  | 'meluas'
+  | 'tidak_diketahui'
+
+export type SmokeIntensity =
+  | 'tidak_terlihat'
+  | 'tipis'
+  | 'sedang'
+  | 'tebal'
+  | 'tidak_diketahui'
+
+export type CasualtyPotential =
+  | 'tidak_diketahui'
+  | 'tidak_ada_korban'
+  | 'orang_terjebak'
+  | 'ada_korban'
+  | 'butuh_evakuasi'
+
+export type AdditionalHazard =
+  | 'listrik'
+  | 'lpg_gas'
+  | 'bahan_kimia'
+  | 'bahan_mudah_terbakar'
+  | 'kendaraan'
+  | 'bangunan_runtuh'
+  | 'ledakan'
+  | 'tidak_diketahui'
+
+export interface FireIncidentDetails {
+  incident_type: 'kebakaran'
+  fire_condition: FireCondition
+  location_subtype: FireLocationSubtype
+  spread_condition: FireSpreadCondition
+  smoke_intensity: SmokeIntensity
+  casualty_potential: CasualtyPotential
+  additional_hazards: AdditionalHazard[]
+  estimated_area_m2?: number | null
+}
+
+export interface FloodIncidentDetails {
+  incident_type: 'banjir' | 'genangan'
+  water_height_cm?: number | null
+  water_depth_label?: string | null
+  flow_speed?: 'tenang' | 'mengalir_pelan' | 'deras' | 'sangat_deras'
+  road_access?: 'bisa_dilewati' | 'roda_dua_mogok' | 'terputus_total'
+  home_impact?: 'tidak_masuk' | 'halaman_pekarangan' | 'dalam_rumah'
+  inundation_duration_hours?: number | null
+}
+
+export interface TreeIncidentDetails {
+  incident_type: 'pohon_tumbang'
+  tree_size?: 'kecil' | 'sedang' | 'besar'
+  road_blocked?: 'sebagian' | 'total' | 'tidak_menghalangi'
+  electrical_wires_impacted?: boolean
+  building_threat?: boolean
+  casualties?: boolean
+}
+
+export interface LandslideIncidentDetails {
+  incident_type: 'longsor'
+  material_condition?: 'tanah_basah' | 'batu_bongkahan' | 'pohon_dan_lumpur'
+  road_blocked?: 'sebagian' | 'total' | 'tidak_menghalangi'
+  settlement_threat?: boolean
+}
+
+export type IncidentDetails =
+  | FireIncidentDetails
+  | FloodIncidentDetails
+  | TreeIncidentDetails
+  | LandslideIncidentDetails
+  | Record<string, any>
 
 export interface Report {
   id: string
@@ -41,12 +135,14 @@ export interface Report {
   reporter_contact?: string | null
   reporter_id?: string | null
   is_demo: boolean
+  is_simulation?: boolean
   created_at: string
   updated_at: string
   title?: string | null
   district_name?: string | null
   address?: string | null
   water_height_cm?: number | null
+  incident_details?: IncidentDetails | null
   credibility_score?: number | null
   location_accuracy?: number | null
   verification_metadata?: any | null
@@ -200,13 +296,14 @@ export interface MapViewMode {
 // ============================================================
 
 export const CATEGORY_LABELS: Record<ReportCategory, string> = {
-  banjir: 'Banjir',
-  genangan: 'Genangan',
+  banjir: 'Banjir Rob',
+  genangan: 'Genangan Air Hujan',
+  kebakaran: 'Kebakaran',
   drainase_tersumbat: 'Drainase Tersumbat',
   sampah_menumpuk: 'Sampah Menumpuk',
   infrastruktur_hijau: 'Infrastruktur Hijau Rusak',
   pohon_tumbang: 'Pohon Tumbang',
-  longsor: 'Longsor',
+  longsor: 'Longsor / Rekahan',
   lainnya: 'Lainnya',
 }
 
@@ -239,6 +336,7 @@ export const URGENCY_COLORS: Record<UrgencyLevel, string> = {
 export const CATEGORY_ICONS: Record<ReportCategory, string> = {
   banjir: '🌊',
   genangan: '💧',
+  kebakaran: '🔥',
   drainase_tersumbat: '🚰',
   sampah_menumpuk: '🗑️',
   infrastruktur_hijau: '🌿',

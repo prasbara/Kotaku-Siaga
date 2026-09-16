@@ -44,6 +44,9 @@ export interface CrowdCorroborationResult {
   corroboratingCount: number
   corroboratingReportCodes: string[]
   corroborationLevel: 'none' | 'signal' | 'strong'
+  possibleDuplicate?: boolean
+  duplicateReason?: string
+  suspectedDuplicateCodes?: string[]
 }
 
 export interface CCTVCorroborationResult {
@@ -99,6 +102,9 @@ export interface VerificationMetadata {
   duplicate_report_codes: string[]
   corroboration_count: number
   corroborating_report_codes: string[]
+  possible_duplicate?: boolean
+  duplicate_warning?: string
+  suspected_duplicate_of?: string[]
   nearest_cctv: {
     code: string
     name: string

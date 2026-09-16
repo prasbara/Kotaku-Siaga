@@ -3,13 +3,23 @@
 import { useState, useRef, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import type { ReportCategory, UrgencyLevel } from '@/types'
+import type {
+  ReportCategory,
+  UrgencyLevel,
+  FireCondition,
+  FireLocationSubtype,
+  FireSpreadCondition,
+  SmokeIntensity,
+  CasualtyPotential,
+  AdditionalHazard,
+} from '@/types'
 import {
   Waves,
   Droplets,
   Wrench,
   AlertTriangle,
   Mountain,
+  Flame,
   Camera,
   Navigation,
   Check,
@@ -26,9 +36,8 @@ import {
   Mail,
   RefreshCw,
   Info,
-  FlaskConical,
-  Eye,
   RotateCcw,
+  Sparkles,
 } from 'lucide-react'
 import { toast } from '@/components/ui/use-toast'
 import { TurnstileWidget } from '@/components/ui/TurnstileWidget'
@@ -44,85 +53,255 @@ interface CategoryConfig {
 
 const CATEGORIES: CategoryConfig[] = [
   {
-    value: 'banjir' as ReportCategory,
+    value: 'banjir',
     label: 'Banjir Rob / Pasang Laut',
     code: 'ROB-HYDRO',
     desc: 'Air pasang laut meluap di Tanjung Emas, Kaligawe, Genuk & sekitarnya.',
     icon: Waves,
   },
   {
-    value: 'genangan' as ReportCategory,
+    value: 'genangan',
     label: 'Genangan Air Hujan',
     code: 'DRAIN-FL',
     desc: 'Luapan air hujan menggenangi badan jalan atau permukiman.',
     icon: Droplets,
   },
   {
-    value: 'drainase_tersumbat' as ReportCategory,
-    label: 'Saluran / Drainase Tersumbat',
-    code: 'TRASH-CLOG',
-    desc: 'Sampah atau endapan lumpur menyumbat saluran drainase.',
-    icon: Wrench,
+    value: 'kebakaran',
+    label: 'Kebakaran',
+    code: 'FIRE-URGENT',
+    desc: 'Api, asap tebal, atau kebakaran yang mengancam bangunan, kendaraan, atau warga.',
+    icon: Flame,
   },
   {
-    value: 'longsor' as ReportCategory,
+    value: 'pohon_tumbang',
+    label: 'Pohon Tumbang / Hambatan',
+    code: 'VEG-BLOCK',
+    desc: 'Dahan patah atau pohon tumbang yang mengganggu jalur dan fasilitas publik.',
+    icon: AlertTriangle,
+  },
+  {
+    value: 'longsor',
     label: 'Longsor / Rekahan Tebing',
     code: 'SLOPE-GEO',
     desc: 'Gerakan tanah atau rekahan lereng di kawasan perbukitan.',
     icon: Mountain,
   },
   {
-    value: 'pohon_tumbang' as ReportCategory,
-    label: 'Pohon Tumbang / Hambatan',
-    code: 'VEG-BLOCK',
-    desc: 'Dahan patah atau pohon tumbang yang mengganggu jalur evakuasi.',
-    icon: AlertTriangle,
+    value: 'drainase_tersumbat',
+    label: 'Saluran / Drainase Tersumbat',
+    code: 'TRASH-CLOG',
+    desc: 'Sampah atau endapan lumpur menyumbat saluran drainase.',
+    icon: Wrench,
   },
 ]
 
-interface UrgencyConfig {
-  value: UrgencyLevel
-  label: string
-  badge: string
-  desc: string
-  color: string
+// Dynamic Contextual Severity Generator
+function getContextualUrgencies(cat: ReportCategory) {
+  switch (cat) {
+    case 'kebakaran':
+      return [
+        {
+          value: 'rendah' as UrgencyLevel,
+          label: 'Rendah (Pantauan Lingkungan)',
+          badge: 'Api Kecil / Terlokalisasi',
+          desc: 'Api kecil pada sampah/lahan terbatas, asap tipis, tidak ada ancaman meluas, dan nihil korban.',
+          color: 'border-[#007a5a] bg-[#ecfdf5] text-[#007a5a]',
+        },
+        {
+          value: 'sedang' as UrgencyLevel,
+          label: 'Sedang (Waspada Kebakaran)',
+          badge: 'Mulai Menyebar',
+          desc: 'Api terlihat jelas, mulai menyebar dekat bangunan/kendaraan, asap mulai mengganggu jarak pandang warga.',
+          color: 'border-[#d97706] bg-[#fffbeb] text-[#d97706]',
+        },
+        {
+          value: 'tinggi' as UrgencyLevel,
+          label: 'Tinggi (Siaga Darurat)',
+          badge: 'Api Meluas & Asap Tebal',
+          desc: 'Api meluas mengancam permukiman padat atau fasilitas publik, asap pekat, potensi perambatan tinggi.',
+          color: 'border-[#ea580c] bg-[#fff7ed] text-[#ea580c]',
+        },
+        {
+          value: 'kritis' as UrgencyLevel,
+          label: 'Kritis (Darurat Jiwa & Evakuasi)',
+          badge: 'Orang Terjebak / Ledakan',
+          desc: 'Ada orang terjebak, korban luka, potensi ledakan gas/kimia, api sulit dikendalikan. Butuh Damkar & SAR segera.',
+          color: 'border-[#cc4117] bg-[#fdf2f0] text-[#cc4117]',
+        },
+      ]
+
+    case 'pohon_tumbang':
+      return [
+        {
+          value: 'rendah' as UrgencyLevel,
+          label: 'Rendah (Pantauan)',
+          badge: 'Dahan Kecil',
+          desc: 'Ranting/dahan kecil di pinggir jalan, tidak mengganggu kelancaran arus lalu lintas.',
+          color: 'border-[#007a5a] bg-[#ecfdf5] text-[#007a5a]',
+        },
+        {
+          value: 'sedang' as UrgencyLevel,
+          label: 'Sedang (Waspada)',
+          badge: 'Menimpa Sebagian Jalan',
+          desc: 'Dahan sedang menimpa sebagian badan jalan, kendaraan melambat namun masih dapat melintas bergantian.',
+          color: 'border-[#d97706] bg-[#fffbeb] text-[#d97706]',
+        },
+        {
+          value: 'tinggi' as UrgencyLevel,
+          label: 'Tinggi (Siaga)',
+          badge: 'Jalan Tertutup / Kabel Terdampak',
+          desc: 'Pohon besar menutup akses jalan utama atau menimpa jaringan kabel listrik bertegangan.',
+          color: 'border-[#ea580c] bg-[#fff7ed] text-[#ea580c]',
+        },
+        {
+          value: 'kritis' as UrgencyLevel,
+          label: 'Kritis (Darurat)',
+          badge: 'Menimpa Kendaraan / Bangunan',
+          desc: 'Pohon tumbang menimpa rumah berpenghuni atau kendaraan melintas dengan potensi korban terjebak.',
+          color: 'border-[#cc4117] bg-[#fdf2f0] text-[#cc4117]',
+        },
+      ]
+
+    case 'longsor':
+      return [
+        {
+          value: 'rendah' as UrgencyLevel,
+          label: 'Rendah (Pantauan)',
+          badge: 'Rekahan Awal Lereng',
+          desc: 'Rekahan tanah kecil di tebing/pekarangan kosong tanpa pergerakan material aktif.',
+          color: 'border-[#007a5a] bg-[#ecfdf5] text-[#007a5a]',
+        },
+        {
+          value: 'sedang' as UrgencyLevel,
+          label: 'Sedang (Waspada)',
+          badge: 'Lumpur Menutup Saluran',
+          desc: 'Guguran tanah menutup selokan air atau bahu jalan lingkar perbukitan.',
+          color: 'border-[#d97706] bg-[#fffbeb] text-[#d97706]',
+        },
+        {
+          value: 'tinggi' as UrgencyLevel,
+          label: 'Tinggi (Siaga)',
+          badge: 'Tebing Runtuh & Akses Putus',
+          desc: 'Longsoran tebing menutup badan jalan antarkelurahan atau mengikis fondasi rumah warga.',
+          color: 'border-[#ea580c] bg-[#fff7ed] text-[#ea580c]',
+        },
+        {
+          value: 'kritis' as UrgencyLevel,
+          label: 'Kritis (Darurat)',
+          badge: 'Menimbun Rumah / Korban Terjebak',
+          desc: 'Longsoran besar menimbun pemukiman lereng dan membutuhkan evakuasi cepat tim penyelamat.',
+          color: 'border-[#cc4117] bg-[#fdf2f0] text-[#cc4117]',
+        },
+      ]
+
+    case 'banjir':
+    case 'genangan':
+    default:
+      return [
+        {
+          value: 'rendah' as UrgencyLevel,
+          label: 'Rendah (Pantauan Lingkungan)',
+          badge: 'Genangan < 20 cm',
+          desc: 'Genangan semata kaki di bahu jalan. Seluruh jenis kendaraan masih dapat melintas perlahan.',
+          color: 'border-[#007a5a] bg-[#ecfdf5] text-[#007a5a]',
+        },
+        {
+          value: 'sedang' as UrgencyLevel,
+          label: 'Sedang (Waspada Genangan)',
+          badge: 'Genangan 20 - 50 cm',
+          desc: 'Jalan tergenang selutut, kendaraan roda dua rawan mogok, air mulai merembes ke pekarangan rumah.',
+          color: 'border-[#d97706] bg-[#fffbeb] text-[#d97706]',
+        },
+        {
+          value: 'tinggi' as UrgencyLevel,
+          label: 'Tinggi (Siaga Bencana)',
+          badge: 'Genangan 50 - 80 cm',
+          desc: 'Akses jalan utama terputus, air masuk ke dalam rumah warga, butuh operasional pompa polder darurat.',
+          color: 'border-[#ea580c] bg-[#fff7ed] text-[#ea580c]',
+        },
+        {
+          value: 'kritis' as UrgencyLevel,
+          label: 'Kritis (Darurat Evakuasi)',
+          badge: 'Air > 80 cm / Arus Deras',
+          desc: 'Kondisi membahayakan keselamatan jiwa. Lansia/anak-anak terjebak butuh perahu karet evakuasi SAR.',
+          color: 'border-[#cc4117] bg-[#fdf2f0] text-[#cc4117]',
+        },
+      ]
+  }
 }
 
-const URGENCIES: UrgencyConfig[] = [
-  {
-    value: 'rendah',
-    label: 'Rendah (Pantauan Lingkungan)',
-    badge: 'Genangan < 20 cm',
-    desc: 'Saluran mampet atau genangan semata kaki. Kendaraan masih dapat melintas perlahan.',
-    color: 'border-[#007a5a] bg-[#ecfdf5] text-[#007a5a]',
-  },
-  {
-    value: 'sedang',
-    label: 'Sedang (Waspada Genangan)',
-    badge: 'Genangan 20 - 50 cm',
-    desc: 'Jalan tergenang, kendaraan roda dua rawan mogok, air mulai merembes ke pekarangan.',
-    color: 'border-[#d97706] bg-[#fffbeb] text-[#d97706]',
-  },
-  {
-    value: 'tinggi',
-    label: 'Tinggi (Siaga Bencana)',
-    badge: 'Genangan 50 - 80 cm',
-    desc: 'Akses jalan utama terputus, air masuk ke dalam rumah warga, butuh bantuan pompa/barier.',
-    color: 'border-[#ea580c] bg-[#fff7ed] text-[#ea580c]',
-  },
-  {
-    value: 'kritis',
-    label: 'Kritis (Darurat Evakuasi)',
-    badge: 'Air > 80 cm / Arus Deras',
-    desc: 'Kondisi membahayakan keselamatan jiwa. Lansia/anak-anak terjebak butuh perahu karet SAR.',
-    color: 'border-[#cc4117] bg-[#fdf2f0] text-[#cc4117]',
-  },
+// Fire Incident Form Options
+const FIRE_CONDITIONS: { value: FireCondition; label: string }[] = [
+  { value: 'api_terlihat', label: '🔥 Api Terlihat Membakar' },
+  { value: 'asap_terlihat', label: '💨 Asap Tebal Terlihat' },
+  { value: 'api_dan_asap', label: '🔥💨 Api dan Asap Terlihat' },
+  { value: 'dugaan_kebakaran', label: '⚠️ Dugaan / Bau Terbakar' },
+  { value: 'kebakaran_padam', label: '✅ Api Sudah Padam / Sisa Asap' },
+  { value: 'tidak_diketahui', label: '❓ Tidak Diketahui Pasti' },
 ]
 
+const FIRE_LOCATION_SUBTYPES: { value: FireLocationSubtype; label: string }[] = [
+  { value: 'rumah_permukiman', label: 'Rumah / Permukiman Warga' },
+  { value: 'gedung_bertingkat', label: 'Gedung Bertingkat / Perkantoran' },
+  { value: 'kendaraan', label: 'Kendaraan (Mobil / Truk / Motor)' },
+  { value: 'lahan_vegetasi', label: 'Lahan Kering / Hutan / Vegetasi' },
+  { value: 'industri_pabrik', label: 'Industri / Pabrik / Gudang' },
+  { value: 'fasilitas_umum', label: 'Fasilitas Umum / Pasar / RS' },
+  { value: 'area_komersial', label: 'Area Komersial / Pertokoan' },
+  { value: 'lainnya', label: 'Lokasi Lainnya' },
+]
+
+const FIRE_SPREAD_CONDITIONS: { value: FireSpreadCondition; label: string }[] = [
+  { value: 'terlokalisasi', label: 'Terlokalisasi (Satu Titik)' },
+  { value: 'mulai_menyebar', label: 'Mulai Menyebar ke Sekitar' },
+  { value: 'meluas', label: 'Meluas Cepat / Sangat Besar' },
+  { value: 'tidak_diketahui', label: 'Belum Dapat Dipastikan' },
+]
+
+const SMOKE_INTENSITIES: { value: SmokeIntensity; label: string }[] = [
+  { value: 'tidak_terlihat', label: 'Tidak Terlihat Asap' },
+  { value: 'tipis', label: 'Asap Tipis / Samar' },
+  { value: 'sedang', label: 'Asap Sedang Mengumpul' },
+  { value: 'tebal', label: 'Asap Sangat Tebal & Gelap' },
+  { value: 'tidak_diketahui', label: 'Tidak Diketahui' },
+]
+
+const CASUALTY_POTENTIALS: { value: CasualtyPotential; label: string }[] = [
+  { value: 'tidak_ada_korban', label: 'Nihil / Tidak Ada Laporan Korban' },
+  { value: 'orang_terjebak', label: 'Ada Orang Terjebak di Dalam' },
+  { value: 'ada_korban', label: 'Ada Korban Luka / Jiwa' },
+  { value: 'butuh_evakuasi', label: 'Membutuhkan Evakuasi Medis' },
+  { value: 'tidak_diketahui', label: 'Kondisi Korban Belum Diketahui' },
+]
+
+const ADDITIONAL_HAZARDS_LIST: { value: AdditionalHazard; label: string }[] = [
+  { value: 'listrik', label: 'Kabel / Instalasi Listrik' },
+  { value: 'lpg_gas', label: 'Tabung Gas LPG / Pipa Gas' },
+  { value: 'bahan_kimia', label: 'Bahan Kimia / B3' },
+  { value: 'bahan_mudah_terbakar', label: 'Bahan Mudah Terbakar (Kain/Kayu/Kertas)' },
+  { value: 'kendaraan', label: 'Tangki BBM Kendaraan' },
+  { value: 'bangunan_runtuh', label: 'Ancaman Bangunan Runtuh' },
+  { value: 'ledakan', label: 'Terdengar Dentuman / Ledakan' },
+]
+
+// Flood Options
 const WATER_LEVELS = [
   { label: 'Semata Kaki (10 - 25 cm)', desc: 'Kendaraan masih dapat lewat perlahan' },
   { label: 'Selutut (30 - 50 cm)', desc: 'Kendaraan roda dua rawan mogok' },
   { label: 'Sedada / Arus Deras (> 80 cm)', desc: 'Akses terputus, butuh perahu evakuasi' },
+]
+
+const FLOOD_FLOW_SPEEDS = [
+  { value: 'tenang', label: 'Air Tenang / Tergenang' },
+  { value: 'mengalir_pelan', label: 'Mengalir Perlahan' },
+  { value: 'deras', label: 'Arus Cepat / Deras' },
+]
+
+const FLOOD_ROAD_ACCESS = [
+  { value: 'bisa_dilewati', label: 'Dapat Dilewati Semua Kendaraan' },
+  { value: 'roda_dua_mogok', label: 'Roda Dua Rawan Mogok' },
+  { value: 'terputus_total', label: 'Akses Jalan Terputus Total' },
 ]
 
 const SEMARANG_DISTRICTS = [
@@ -157,7 +336,7 @@ export default function LaporBaruPage() {
   // Step Wizard:
   // Step 1: Data Diri Pelapor
   // Step 2: Lokasi & Bukti Foto
-  // Step 3: Rincian & Klasifikasi Urgensi
+  // Step 3: Rincian & Klasifikasi Urgensi (Dynamic Incident Form)
   // Step 4: Verifikasi Email OTP & Anti-Bot
   const [currentStep, setCurrentStep] = useState<number>(1)
 
@@ -167,7 +346,6 @@ export default function LaporBaruPage() {
   const [reporterPhone, setReporterPhone] = useState<string>('')
   const [category, setCategory] = useState<ReportCategory>('banjir')
   const [urgency, setUrgency] = useState<UrgencyLevel>('sedang')
-  const [waterDepth, setWaterDepth] = useState<string>('Semata Kaki (10 - 25 cm)')
   const [district, setDistrict] = useState<string>('Genuk')
   const [address, setAddress] = useState<string>('')
   const [lat, setLat] = useState<number>(-6.9667)
@@ -175,6 +353,32 @@ export default function LaporBaruPage() {
   const [locationAccuracy, setLocationAccuracy] = useState<number | null>(null)
   const [description, setDescription] = useState<string>('')
   const [isTestReport, setIsTestReport] = useState<boolean>(false)
+
+  // DYNAMIC INCIDENT ATTRIBUTES
+  // Fire Incident State
+  const [fireCondition, setFireCondition] = useState<FireCondition>('api_terlihat')
+  const [fireLocationSubtype, setFireLocationSubtype] = useState<FireLocationSubtype>('rumah_permukiman')
+  const [fireSpreadCondition, setFireSpreadCondition] = useState<FireSpreadCondition>('terlokalisasi')
+  const [smokeIntensity, setSmokeIntensity] = useState<SmokeIntensity>('sedang')
+  const [casualtyPotential, setCasualtyPotential] = useState<CasualtyPotential>('tidak_ada_korban')
+  const [additionalHazards, setAdditionalHazards] = useState<AdditionalHazard[]>(['listrik'])
+
+  // Flood Incident State
+  const [waterDepth, setWaterDepth] = useState<string>('Semata Kaki (10 - 25 cm)')
+  const [flowSpeed, setFlowSpeed] = useState<string>('tenang')
+  const [roadAccess, setRoadAccess] = useState<string>('roda_dua_mogok')
+  const [homeImpact, setHomeImpact] = useState<string>('halaman_pekarangan')
+
+  // Tree Incident State
+  const [treeSize, setTreeSize] = useState<string>('sedang')
+  const [treeRoadBlocked, setTreeRoadBlocked] = useState<string>('sebagian')
+  const [treeWires, setTreeWires] = useState<boolean>(false)
+  const [treeBuilding, setTreeBuilding] = useState<boolean>(false)
+
+  // Landslide Incident State
+  const [landslideMaterial, setLandslideMaterial] = useState<string>('tanah_basah')
+  const [landslideRoadBlocked, setLandslideRoadBlocked] = useState<string>('sebagian')
+  const [landslideThreat, setLandslideThreat] = useState<boolean>(false)
 
   // Photo state
   const [photoFile, setPhotoFile] = useState<File | null>(null)
@@ -223,6 +427,13 @@ export default function LaporBaruPage() {
       }
     }
   }, [])
+
+  // Toggle hazard item in fire form
+  const toggleHazard = (hazard: AdditionalHazard) => {
+    setAdditionalHazards((prev) =>
+      prev.includes(hazard) ? prev.filter((h) => h !== hazard) : [...prev, hazard]
+    )
+  }
 
   // Compute SHA-256 hash when photo is chosen
   const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -453,7 +664,7 @@ export default function LaporBaruPage() {
     }
   }
 
-  // Quick Verified Submission (Emergency / WhatsApp verified fallback)
+  // Quick Verified Submission (Emergency / Contact verified fallback)
   const handleQuickVerifiedSubmit = async () => {
     toast({
       title: 'Verifikasi Kontak Cepat Diterapkan',
@@ -463,11 +674,55 @@ export default function LaporBaruPage() {
     await submitFinalReport(false)
   }
 
+  // Build Dynamic Structured Incident Details
+  const getDynamicIncidentDetails = () => {
+    if (category === 'kebakaran') {
+      return {
+        incident_type: 'kebakaran' as const,
+        fire_condition: fireCondition,
+        location_subtype: fireLocationSubtype,
+        spread_condition: fireSpreadCondition,
+        smoke_intensity: smokeIntensity,
+        casualty_potential: casualtyPotential,
+        additional_hazards: additionalHazards,
+      }
+    }
+    if (category === 'banjir' || category === 'genangan') {
+      return {
+        incident_type: category as 'banjir' | 'genangan',
+        water_depth_label: waterDepth,
+        flow_speed: flowSpeed as any,
+        road_access: roadAccess as any,
+        home_impact: homeImpact as any,
+      }
+    }
+    if (category === 'pohon_tumbang') {
+      return {
+        incident_type: 'pohon_tumbang' as const,
+        tree_size: treeSize as any,
+        road_blocked: treeRoadBlocked as any,
+        electrical_wires_impacted: treeWires,
+        building_threat: treeBuilding,
+      }
+    }
+    if (category === 'longsor') {
+      return {
+        incident_type: 'longsor' as const,
+        material_condition: landslideMaterial as any,
+        road_blocked: landslideRoadBlocked as any,
+        settlement_threat: landslideThreat,
+      }
+    }
+    return null
+  }
+
   // Final Report Submit
   const submitFinalReport = async (verified: boolean) => {
     setIsSubmitting(true)
     try {
       const effectiveUrgency = isTestReport ? 'rendah' : urgency
+      const dynamicDetails = getDynamicIncidentDetails()
+
       const res = await fetch('/api/reports', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -475,8 +730,9 @@ export default function LaporBaruPage() {
           category,
           urgency: effectiveUrgency,
           description: isTestReport
-            ? `[MODE UJI COBA SIMULASI] ${description} | Estimasi: ${waterDepth}`
-            : `${description} | Estimasi Genangan: ${waterDepth} | Alamat: ${address || district}`,
+            ? `[MODE UJI COBA SIMULASI] ${description}`
+            : description,
+          incident_details: dynamicDetails,
           latitude: lat,
           longitude: lng,
           location_accuracy: locationAccuracy,
@@ -500,7 +756,7 @@ export default function LaporBaruPage() {
       if (res.ok && result.success) {
         setSubmittedReport(result)
         toast({
-          title: isTestReport ? 'Laporan Uji Coba Masuk!' : 'Laporan Diterima!',
+          title: isTestReport ? 'Laporan Uji Coba Masuk!' : 'Laporan Berhasil Diterima!',
           description: isTestReport
             ? 'Simulasi pelaporan berhasil tercatat tanpa memicu alarm tanggap darurat.'
             : 'Laporan Anda berstatus: Menunggu Verifikasi Posko BPBD.',
@@ -529,6 +785,8 @@ export default function LaporBaruPage() {
     setReporterEmail('')
     setReporterPhone('')
     setDescription('')
+    setCategory('banjir')
+    setUrgency('sedang')
     setPhotoFile(null)
     setPhotoPreview(null)
     setPhotoSha256(null)
@@ -539,6 +797,8 @@ export default function LaporBaruPage() {
     setSubmittedReport(null)
     setIsTestReport(false)
   }
+
+  const currentUrgencies = getContextualUrgencies(category)
 
   return (
     <div className="min-h-screen bg-[#fdfbf9] text-[#1d1d1d] py-10 px-4 sm:px-6 lg:px-8">
@@ -557,15 +817,15 @@ export default function LaporBaruPage() {
           <div className="flex items-center gap-2 mb-2">
             <span className="w-2 h-2 rounded-full bg-[#007a5a] animate-pulse" />
             <span className="text-xs font-bold text-[#4a154b] uppercase tracking-wider">
-              Layanan Pelaporan Partisipatif
+              Layanan Pelaporan Partisipatif Terpadu
             </span>
           </div>
 
           <h1 className="font-display text-2xl sm:text-3xl font-bold text-[#1d1d1d] tracking-tight">
-            Formulir Laporan Genangan &amp; Situasi Bencana
+            Formulir Pelaporan Situasi Bencana &amp; Kedaruratan
           </h1>
           <p className="text-xs sm:text-sm text-[#696969] mt-1 leading-relaxed">
-            Data laporan Anda divalidasi silang menggunakan koordinat GPS, stasiun cuaca terdekat, dan verifikasi email untuk mencegah informasi palsu.
+            Data laporan Anda divalidasi silang menggunakan koordinat GPS, citra bukti lapangan, dan korelasi cuaca/CCTV untuk memastikan penanganan yang objektif dan cepat.
           </p>
         </div>
 
@@ -765,22 +1025,22 @@ export default function LaporBaruPage() {
                 </div>
               )}
 
-              {/* STEP 3: RINCIAN & KLASIFIKASI URGENSI */}
+              {/* STEP 3: RINCIAN & KLASIFIKASI URGENSI (DYNAMIC FORM) */}
               {currentStep === 3 && (
-                <div className="flex flex-col gap-5 animate-in fade-in duration-150">
+                <div className="flex flex-col gap-6 animate-in fade-in duration-150">
                   <div className="border-b border-[#f0f0f0] pb-3">
                     <h2 className="text-lg font-bold text-[#1d1d1d]">Langkah 3: Rincian &amp; Klasifikasi Urgensi</h2>
-                    <p className="text-xs text-[#696969] mt-0.5">
-                      Pilih kategori dan tingkat keparahan yang akurat untuk mencegah melebih-lebihkan kondisi.
+                    <p className="text-xs text-[#696969] mt-0.5 leading-relaxed">
+                      Pilih jenis kejadian dan berikan informasi yang paling relevan dengan kondisi di lapangan. Klasifikasi urgensi merupakan penilaian awal dan dapat diperbarui setelah verifikasi.
                     </p>
                   </div>
 
-                  {/* Kategori Kejadian */}
+                  {/* Kategori Kejadian Card Selection */}
                   <div>
-                    <label className="block text-xs font-bold text-[#1d1d1d] uppercase tracking-wider mb-2">
-                      Jenis Kejadian
+                    <label className="block text-xs font-bold text-[#1d1d1d] uppercase tracking-wider mb-2.5">
+                      Jenis Kejadian <span className="text-[#cc4117]">*</span>
                     </label>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
                       {CATEGORIES.map((c) => {
                         const Icon = c.icon
                         const isSelected = category === c.value
@@ -788,55 +1048,391 @@ export default function LaporBaruPage() {
                           <div
                             key={c.value}
                             onClick={() => setCategory(c.value)}
-                            className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-start gap-3 ${
+                            className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between gap-2.5 ${
                               isSelected
-                                ? 'border-[#4a154b] bg-[#f9f0ff] shadow-xs'
+                                ? 'border-[#4a154b] bg-[#f9f0ff] shadow-sm ring-1 ring-[#4a154b]'
                                 : 'border-[#e6e6e6] bg-white hover:bg-gray-50'
                             }`}
                           >
-                            <div
-                              className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 mt-0.5 ${
-                                isSelected ? 'bg-[#4a154b] text-white' : 'bg-[#f4ede4] text-[#4a154b]'
-                              }`}
-                            >
-                              <Icon className="w-4 h-4" />
+                            <div className="flex items-start gap-2.5">
+                              <div
+                                className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
+                                  isSelected
+                                    ? c.value === 'kebakaran'
+                                      ? 'bg-[#cc4117] text-white'
+                                      : 'bg-[#4a154b] text-white'
+                                    : 'bg-[#f4ede4] text-[#4a154b]'
+                                }`}
+                              >
+                                <Icon className="w-4 h-4" />
+                              </div>
+                              <div>
+                                <span className="text-xs font-bold text-[#1d1d1d] block">{c.label}</span>
+                                <span className="text-[10px] font-mono text-[#696969] uppercase">{c.code}</span>
+                              </div>
                             </div>
-                            <div>
-                              <span className="text-xs font-bold text-[#1d1d1d] block">{c.label}</span>
-                              <span className="text-[11px] text-[#696969] leading-snug">{c.desc}</span>
-                            </div>
+                            <p className="text-[11px] text-[#696969] leading-tight line-clamp-2">
+                              {c.desc}
+                            </p>
                           </div>
                         )
                       })}
                     </div>
                   </div>
 
-                  {/* Tingkat Keparahan / Urgensi */}
+                  {/* DYNAMIC SECTION A: KEBAKARAN */}
+                  {category === 'kebakaran' && (
+                    <div className="p-4 sm:p-5 rounded-2xl bg-[#fff7ed] border border-[#ffedd5] space-y-4 animate-in fade-in slide-in-from-top-2 duration-150">
+                      <div className="flex items-center gap-2 text-xs font-bold text-[#c2410c] uppercase font-mono border-b border-[#fed7aa] pb-2">
+                        <Flame className="w-4 h-4 text-[#ea580c]" />
+                        <span>Rincian Khusus Kejadian Kebakaran (Fire Incident Intelligence)</span>
+                      </div>
+
+                      {/* Kondisi Kejadian */}
+                      <div>
+                        <label className="block text-xs font-bold text-[#1d1d1d] uppercase tracking-wider mb-1.5">
+                          Kondisi Kejadian <span className="text-[#cc4117]">*</span>
+                        </label>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          {FIRE_CONDITIONS.map((fc) => (
+                            <button
+                              key={fc.value}
+                              type="button"
+                              onClick={() => setFireCondition(fc.value)}
+                              className={`p-2.5 rounded-xl border text-left text-xs font-medium transition-all ${
+                                fireCondition === fc.value
+                                  ? 'border-[#ea580c] bg-white text-[#c2410c] font-bold shadow-xs'
+                                  : 'border-[#fed7aa] bg-white/70 text-[#1d1d1d] hover:bg-white'
+                              }`}
+                            >
+                              {fc.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Subkategori Lokasi */}
+                      <div>
+                        <label className="block text-xs font-bold text-[#1d1d1d] uppercase tracking-wider mb-1.5">
+                          Subkategori Lokasi Kebakaran
+                        </label>
+                        <select
+                          value={fireLocationSubtype}
+                          onChange={(e) => setFireLocationSubtype(e.target.value as FireLocationSubtype)}
+                          className="w-full h-11 px-3.5 rounded-xl border border-[#fed7aa] bg-white text-xs font-semibold text-[#1d1d1d] focus:outline-none focus:border-[#ea580c]"
+                        >
+                          {FIRE_LOCATION_SUBTYPES.map((ls) => (
+                            <option key={ls.value} value={ls.value}>
+                              {ls.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* Kondisi Penyebaran & Intensitas Asap */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs font-bold text-[#1d1d1d] uppercase tracking-wider mb-1.5">
+                            Kondisi Penyebaran Api
+                          </label>
+                          <select
+                            value={fireSpreadCondition}
+                            onChange={(e) => setFireSpreadCondition(e.target.value as FireSpreadCondition)}
+                            className="w-full h-11 px-3.5 rounded-xl border border-[#fed7aa] bg-white text-xs font-semibold text-[#1d1d1d] focus:outline-none focus:border-[#ea580c]"
+                          >
+                            {FIRE_SPREAD_CONDITIONS.map((sc) => (
+                              <option key={sc.value} value={sc.value}>
+                                {sc.label}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-bold text-[#1d1d1d] uppercase tracking-wider mb-1.5">
+                            Intensitas Asap
+                          </label>
+                          <select
+                            value={smokeIntensity}
+                            onChange={(e) => setSmokeIntensity(e.target.value as SmokeIntensity)}
+                            className="w-full h-11 px-3.5 rounded-xl border border-[#fed7aa] bg-white text-xs font-semibold text-[#1d1d1d] focus:outline-none focus:border-[#ea580c]"
+                          >
+                            {SMOKE_INTENSITIES.map((si) => (
+                              <option key={si.value} value={si.value}>
+                                {si.label}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+
+                      {/* Potensi Korban */}
+                      <div>
+                        <label className="block text-xs font-bold text-[#1d1d1d] uppercase tracking-wider mb-1.5">
+                          Potensi Korban / Orang Terjebak
+                        </label>
+                        <select
+                          value={casualtyPotential}
+                          onChange={(e) => setCasualtyPotential(e.target.value as CasualtyPotential)}
+                          className="w-full h-11 px-3.5 rounded-xl border border-[#fed7aa] bg-white text-xs font-semibold text-[#1d1d1d] focus:outline-none focus:border-[#ea580c]"
+                        >
+                          {CASUALTY_POTENTIALS.map((cp) => (
+                            <option key={cp.value} value={cp.value}>
+                              {cp.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* Bahaya Tambahan Multi-Select */}
+                      <div>
+                        <label className="block text-xs font-bold text-[#1d1d1d] uppercase tracking-wider mb-1.5">
+                          Bahaya Tambahan di Sekitar Lokasi (Pilih yang berlaku)
+                        </label>
+                        <div className="flex flex-wrap gap-1.5">
+                          {ADDITIONAL_HAZARDS_LIST.map((haz) => {
+                            const isChecked = additionalHazards.includes(haz.value)
+                            return (
+                              <button
+                                key={haz.value}
+                                type="button"
+                                onClick={() => toggleHazard(haz.value)}
+                                className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                                  isChecked
+                                    ? 'bg-[#ea580c] text-white shadow-xs'
+                                    : 'bg-white border border-[#fed7aa] text-[#1d1d1d] hover:bg-[#fff7ed]'
+                                }`}
+                              >
+                                <span>{isChecked ? '✓' : '+'}</span>
+                                <span>{haz.label}</span>
+                              </button>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* DYNAMIC SECTION B: BANJIR / GENANGAN */}
+                  {(category === 'banjir' || category === 'genangan') && (
+                    <div className="p-4 sm:p-5 rounded-2xl bg-[#f0fdf4] border border-[#dcfce7] space-y-4 animate-in fade-in slide-in-from-top-2 duration-150">
+                      <div className="flex items-center gap-2 text-xs font-bold text-[#15803d] uppercase font-mono border-b border-[#bbf7d0] pb-2">
+                        <Waves className="w-4 h-4 text-[#16a34a]" />
+                        <span>Rincian Khusus Genangan &amp; Banjir Rob</span>
+                      </div>
+
+                      {/* Estimasi Ketinggian Muka Air */}
+                      <div>
+                        <label className="block text-xs font-bold text-[#1d1d1d] uppercase tracking-wider mb-1.5">
+                          Estimasi Ketinggian Muka Air
+                        </label>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                          {WATER_LEVELS.map((w) => (
+                            <button
+                              key={w.label}
+                              type="button"
+                              onClick={() => setWaterDepth(w.label)}
+                              className={`p-2.5 rounded-xl border text-left transition-all ${
+                                waterDepth === w.label
+                                  ? 'border-[#16a34a] bg-white text-[#15803d] font-bold shadow-xs'
+                                  : 'border-[#bbf7d0] bg-white/70 text-[#1d1d1d] hover:bg-white'
+                              }`}
+                            >
+                              <span className="text-xs block">{w.label}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Arus Air & Akses Jalan */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs font-bold text-[#1d1d1d] uppercase tracking-wider mb-1.5">
+                            Kondisi Arus Air
+                          </label>
+                          <select
+                            value={flowSpeed}
+                            onChange={(e) => setFlowSpeed(e.target.value)}
+                            className="w-full h-11 px-3.5 rounded-xl border border-[#bbf7d0] bg-white text-xs font-semibold text-[#1d1d1d]"
+                          >
+                            {FLOOD_FLOW_SPEEDS.map((f) => (
+                              <option key={f.value} value={f.value}>
+                                {f.label}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-bold text-[#1d1d1d] uppercase tracking-wider mb-1.5">
+                            Kondisi Akses Jalan
+                          </label>
+                          <select
+                            value={roadAccess}
+                            onChange={(e) => setRoadAccess(e.target.value)}
+                            className="w-full h-11 px-3.5 rounded-xl border border-[#bbf7d0] bg-white text-xs font-semibold text-[#1d1d1d]"
+                          >
+                            {FLOOD_ROAD_ACCESS.map((r) => (
+                              <option key={r.value} value={r.value}>
+                                {r.label}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* DYNAMIC SECTION C: POHON TUMBANG */}
+                  {category === 'pohon_tumbang' && (
+                    <div className="p-4 sm:p-5 rounded-2xl bg-[#fffbeb] border border-[#fef3c7] space-y-4 animate-in fade-in slide-in-from-top-2 duration-150">
+                      <div className="flex items-center gap-2 text-xs font-bold text-[#b45309] uppercase font-mono border-b border-[#fde68a] pb-2">
+                        <AlertTriangle className="w-4 h-4 text-[#d97706]" />
+                        <span>Rincian Pohon Tumbang &amp; Hambatan Jalan</span>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs font-bold text-[#1d1d1d] uppercase tracking-wider mb-1.5">
+                            Ukuran Pohon / Dahan
+                          </label>
+                          <select
+                            value={treeSize}
+                            onChange={(e) => setTreeSize(e.target.value)}
+                            className="w-full h-11 px-3.5 rounded-xl border border-[#fde68a] bg-white text-xs font-semibold text-[#1d1d1d]"
+                          >
+                            <option value="kecil">Ranting / Dahan Kecil</option>
+                            <option value="sedang">Batang Pohon Sedang</option>
+                            <option value="besar">Pohon Besar Tumbang Total</option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-bold text-[#1d1d1d] uppercase tracking-wider mb-1.5">
+                            Tingkat Hambatan Jalan
+                          </label>
+                          <select
+                            value={treeRoadBlocked}
+                            onChange={(e) => setTreeRoadBlocked(e.target.value)}
+                            className="w-full h-11 px-3.5 rounded-xl border border-[#fde68a] bg-white text-xs font-semibold text-[#1d1d1d]"
+                          >
+                            <option value="tidak_menghalangi">Tidak Menghalangi Jalan</option>
+                            <option value="sebagian">Menutup Sebagian Jalan</option>
+                            <option value="total">Menutup Total Badan Jalan</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-wrap gap-4 pt-1 text-xs">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={treeWires}
+                            onChange={(e) => setTreeWires(e.target.checked)}
+                            className="rounded accent-[#d97706]"
+                          />
+                          <span className="font-semibold text-[#1d1d1d]">Menimpa Kabel Listrik / Telepon</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={treeBuilding}
+                            onChange={(e) => setTreeBuilding(e.target.checked)}
+                            className="rounded accent-[#d97706]"
+                          />
+                          <span className="font-semibold text-[#1d1d1d]">Mengancam / Menimpa Bangunan</span>
+                        </label>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* DYNAMIC SECTION D: LONGSOR */}
+                  {category === 'longsor' && (
+                    <div className="p-4 sm:p-5 rounded-2xl bg-[#faf5ff] border border-[#f3e8ff] space-y-4 animate-in fade-in slide-in-from-top-2 duration-150">
+                      <div className="flex items-center gap-2 text-xs font-bold text-[#6b21a8] uppercase font-mono border-b border-[#e9d5ff] pb-2">
+                        <Mountain className="w-4 h-4 text-[#7e22ce]" />
+                        <span>Rincian Gerakan Tanah &amp; Longsor Tebing</span>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs font-bold text-[#1d1d1d] uppercase tracking-wider mb-1.5">
+                            Kondisi Material Longsor
+                          </label>
+                          <select
+                            value={landslideMaterial}
+                            onChange={(e) => setLandslideMaterial(e.target.value)}
+                            className="w-full h-11 px-3.5 rounded-xl border border-[#e9d5ff] bg-white text-xs font-semibold text-[#1d1d1d]"
+                          >
+                            <option value="tanah_basah">Tanah Basah / Lumpur</option>
+                            <option value="batu_bongkahan">Bongkahan Batu / Puing</option>
+                            <option value="pohon_dan_lumpur">Campuran Pohon &amp; Tanah Tebing</option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-bold text-[#1d1d1d] uppercase tracking-wider mb-1.5">
+                            Kondisi Jalan
+                          </label>
+                          <select
+                            value={landslideRoadBlocked}
+                            onChange={(e) => setLandslideRoadBlocked(e.target.value)}
+                            className="w-full h-11 px-3.5 rounded-xl border border-[#e9d5ff] bg-white text-xs font-semibold text-[#1d1d1d]"
+                          >
+                            <option value="tidak_menghalangi">Tidak Menutup Jalan</option>
+                            <option value="sebagian">Menutup Sebagian Jalan</option>
+                            <option value="total">Menutup Total Akses Jalan</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <label className="flex items-center gap-2 cursor-pointer pt-1 text-xs">
+                        <input
+                          type="checkbox"
+                          checked={landslideThreat}
+                          onChange={(e) => setLandslideThreat(e.target.checked)}
+                          className="rounded accent-[#7e22ce]"
+                        />
+                        <span className="font-semibold text-[#1d1d1d]">Mengancam Fondasi / Pemukiman Lereng</span>
+                      </label>
+                    </div>
+                  )}
+
+                  {/* Dynamic Contextual Severity Component */}
                   <div>
-                    <label className="block text-xs font-bold text-[#1d1d1d] uppercase tracking-wider mb-2">
-                      Tingkat Keparahan &amp; Urgensi
-                    </label>
-                    <div className="grid grid-cols-1 gap-2">
-                      {URGENCIES.map((u) => {
+                    <div className="flex items-baseline justify-between mb-1">
+                      <label className="block text-xs font-bold text-[#1d1d1d] uppercase tracking-wider">
+                        Klasifikasi Awal Sistem <span className="text-[#cc4117]">*</span>
+                      </label>
+                      <span className="text-[10px] font-mono text-[#696969] bg-[#f4ede4] px-2 py-0.5 rounded">
+                        Penilaian Awal Warga
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-[#696969] mb-2.5">
+                      Tingkat urgensi merupakan klasifikasi awal berdasarkan informasi laporan dan dapat berubah setelah proses verifikasi petugas posko.
+                    </p>
+
+                    <div className="grid grid-cols-1 gap-2.5">
+                      {currentUrgencies.map((u) => {
                         const isSelected = urgency === u.value
                         return (
                           <div
                             key={u.value}
                             onClick={() => setUrgency(u.value)}
-                            className={`p-3 rounded-xl border transition-all cursor-pointer flex items-start justify-between gap-3 ${
+                            className={`p-3.5 rounded-xl border transition-all cursor-pointer flex items-start justify-between gap-3 ${
                               isSelected
-                                ? `${u.color} shadow-xs`
+                                ? `${u.color} shadow-xs font-semibold`
                                 : 'border-[#e6e6e6] bg-white hover:bg-gray-50 text-[#1d1d1d]'
                             }`}
                           >
-                            <div>
-                              <div className="flex items-center gap-2">
+                            <div className="space-y-0.5">
+                              <div className="flex items-center gap-2 flex-wrap">
                                 <span className="text-xs font-bold">{u.label}</span>
-                                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-white/80 border">
+                                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-white/90 border">
                                   {u.badge}
                                 </span>
                               </div>
-                              <p className="text-[11px] text-[#696969] mt-0.5">{u.desc}</p>
+                              <p className="text-[11px] text-[#696969] leading-relaxed">{u.desc}</p>
                             </div>
                             <div className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 mt-0.5 ${
                               isSelected ? 'border-current bg-current' : 'border-[#dcdcdc]'
@@ -849,54 +1445,37 @@ export default function LaporBaruPage() {
                     </div>
                   </div>
 
-                  {/* Estimasi Ketinggian Genangan */}
-                  <div>
-                    <label className="block text-xs font-bold text-[#1d1d1d] uppercase tracking-wider mb-1.5">
-                      Estimasi Ketinggian Muka Air
-                    </label>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                      {WATER_LEVELS.map((w) => (
-                        <button
-                          key={w.label}
-                          type="button"
-                          onClick={() => setWaterDepth(w.label)}
-                          className={`p-2.5 rounded-xl border text-left transition-all ${
-                            waterDepth === w.label
-                              ? 'border-[#4a154b] bg-[#f9f0ff] text-[#4a154b] font-bold'
-                              : 'border-[#e6e6e6] bg-white text-[#1d1d1d]'
-                          }`}
-                        >
-                          <span className="text-xs block">{w.label}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Deskripsi Kejadian */}
+                  {/* Deskripsi Kejadian Lapangan */}
                   <div>
                     <label className="block text-xs font-bold text-[#1d1d1d] uppercase tracking-wider mb-1.5">
                       Deskripsi Kejadian Lapangan <span className="text-[#cc4117]">*</span>
                     </label>
                     <textarea
                       rows={3}
-                      placeholder="Jelaskan kondisi detail (misal: Air pasang rob mulai menggenangi bahu jalan sedalam 20 cm, saluran tersumbat sampah plastik di depan ruko, kendaraan masih bisa lewat perlahan)."
+                      placeholder={
+                        category === 'kebakaran'
+                          ? 'Jelaskan kondisi kebakaran (misal: Api membakar gudang kain di lantai 2, asap hitam tebal membubung tinggi, warga sedang berusaha memadamkan dengan APAR, akses jalan sempit).'
+                          : category === 'pohon_tumbang'
+                          ? 'Jelaskan kondisi pohon (misal: Pohon trembesi besar tumbang menimpa jalur arah Genuk, kabel listrik tertarik putus, lalu lintas dialihkan).'
+                          : 'Jelaskan kondisi detail di lapangan secara faktual dan jelas.'
+                      }
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
                       className="w-full p-3.5 rounded-xl border border-[#e6e6e6] bg-[#fcfaf8] focus:bg-white focus:border-[#4a154b] focus:outline-none text-xs text-[#1d1d1d] leading-relaxed resize-none"
                     />
                   </div>
 
-                  {/* Test Mode Checkbox */}
-                  <div className="p-3 rounded-xl bg-gray-50 border border-dashed border-[#dcdcdc] flex items-center gap-2.5">
+                  {/* Test Mode Simulation Checkbox */}
+                  <div className="p-3.5 rounded-xl bg-[#fdfbf9] border border-dashed border-[#dcdcdc] flex items-start gap-2.5">
                     <input
                       type="checkbox"
                       id="checkbox-test-report"
                       checked={isTestReport}
                       onChange={(e) => setIsTestReport(e.target.checked)}
-                      className="w-4 h-4 text-[#4a154b] rounded"
+                      className="w-4 h-4 text-[#4a154b] rounded mt-0.5"
                     />
-                    <label htmlFor="checkbox-test-report" className="text-xs text-[#696969] cursor-pointer">
-                      Tandai laporan ini sebagai <strong>Mode Uji Coba / Simulasi Test</strong> (Tidak memicu mobilisasi regu lapangan).
+                    <label htmlFor="checkbox-test-report" className="text-xs text-[#696969] cursor-pointer leading-relaxed">
+                      <strong className="text-[#1d1d1d]">Mode Uji Coba / Simulasi Test</strong>: Tandai jika laporan ini dibuat untuk demonstrasi fitur atau latihan kesiapsiagaan. <em>Mode simulasi tidak memicu mobilisasi regu lapangan dan tidak dianggap sebagai kejadian darurat nyata.</em>
                     </label>
                   </div>
                 </div>
@@ -923,6 +1502,11 @@ export default function LaporBaruPage() {
                       <div>Kontak: <strong className="text-[#1d1d1d]">{reporterPhone}</strong></div>
                       <div>Lokasi: <strong className="text-[#1d1d1d]">Kecamatan {district}</strong></div>
                       <div>Tingkat Urgensi: <strong className="text-[#1d1d1d] uppercase">{urgency}</strong></div>
+                      {category === 'kebakaran' && (
+                        <div className="col-span-1 sm:col-span-2 text-[#ea580c] font-semibold">
+                          Kondisi: {fireCondition.replace(/_/g, ' ')} • Subkategori: {fireLocationSubtype.replace(/_/g, ' ')}
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -1112,7 +1696,7 @@ export default function LaporBaruPage() {
                 Terima Kasih, {reporterName}!
               </h2>
               <p className="text-xs sm:text-sm text-[#696969] leading-relaxed">
-                Laporan Anda telah tercatat dalam sistem KotaKu Siaga dan diteruskan ke posko pantau BPBD Kota Semarang untuk validasi data lapangan.
+                Laporan Anda telah tercatat dalam sistem KotaKu Siaga dan diteruskan ke posko pantau BPBD / Damkar Kota Semarang untuk validasi data lapangan.
               </p>
             </div>
 

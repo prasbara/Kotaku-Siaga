@@ -40,6 +40,7 @@ export async function GET(request: NextRequest) {
   const urgency = searchParams.get('urgency') || undefined
   const status = searchParams.get('status') || undefined
   const district = searchParams.get('district') || undefined
+  const simulationParam = searchParams.get('simulation') ?? searchParams.get('is_simulation')
   const limit = parseInt(searchParams.get('limit') || '100')
   const page = parseInt(searchParams.get('page') || '0')
 
@@ -53,6 +54,7 @@ export async function GET(request: NextRequest) {
       urgency,
       status,
       district,
+      is_simulation: simulationParam !== null && simulationParam !== undefined ? simulationParam === 'true' : undefined,
       limit,
       page,
     })
@@ -75,10 +77,19 @@ export async function GET(request: NextRequest) {
       .order('created_at', { ascending: false })
       .range(page * limit, (page + 1) * limit - 1)
 
-    if (category && category !== 'all') query = query.eq('category', category)
+    if (category && category !== 'all') {
+      if (category === 'kebakaran') {
+        query = query.or('category.eq.kebakaran,category.eq.lainnya')
+      } else {
+        query = query.eq('category', category)
+      }
+    }
     if (urgency && urgency !== 'all') query = query.eq('urgency', urgency)
     if (status && status !== 'all') query = query.eq('status', status)
     if (district && district !== 'all') query = query.ilike('district_name', `%${district}%`)
+    if (simulationParam !== null && simulationParam !== undefined) {
+      query = query.eq('is_demo', simulationParam === 'true')
+    }
     if (search && search.trim()) {
       query = query.or(
         `title.ilike.%${search.trim()}%,description.ilike.%${search.trim()}%,district_name.ilike.%${search.trim()}%,report_code.ilike.%${search.trim()}%`
@@ -95,12 +106,24 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const sanitizedData = (data || []).map((report) => sanitizeReportForRole(report, role))
+    const mappedData = (data || []).map((report) => {
+      const meta = report.verification_metadata
+      if (meta?.actual_category === 'kebakaran' || meta?.incident_details?.incident_type === 'kebakaran') {
+        return { ...report, category: 'kebakaran' }
+      }
+      return report
+    })
+
+    const finalFiltered = category === 'kebakaran'
+      ? mappedData.filter((r) => r.category === 'kebakaran')
+      : mappedData
+
+    const sanitizedData = finalFiltered.map((report) => sanitizeReportForRole(report, role))
 
     return NextResponse.json({
       success: true,
       data: sanitizedData,
-      count: count ?? (data ? data.length : 0),
+      count: count ?? sanitizedData.length,
       page,
       limit,
     })
@@ -157,7 +180,12 @@ export async function POST(request: NextRequest) {
       company, // Honeypot field
       phone_number_confirm, // Honeypot field
       reported_at,
+      incident_details,
+      is_simulation,
+      is_test_mode,
     } = body
+
+    const isSimulationReport = Boolean(is_simulation || is_test_mode)
 
     // 2. Fundamental Input Validation
     if (!reporter_name || reporter_name.trim().length < 2) {
@@ -220,12 +248,15 @@ export async function POST(request: NextRequest) {
         const past24Hours = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
         const { data: dbRecent } = await supabase
           .from('reports')
-          .select('id, report_code, latitude, longitude, created_at, photo_url, category')
+          .select('id, report_code, latitude, longitude, created_at, photo_url, category, verification_metadata')
           .gte('created_at', past24Hours)
           .limit(100)
 
         if (dbRecent && Array.isArray(dbRecent)) {
-          recentReports = dbRecent
+          recentReports = dbRecent.map((r: any) => ({
+            ...r,
+            category: r.verification_metadata?.actual_category || r.category,
+          }))
         }
       } catch (fetchErr) {
         console.warn('Could not fetch recent reports for corroboration:', fetchErr)
@@ -325,7 +356,9 @@ export async function POST(request: NextRequest) {
         photo_url: photo_url || null,
         reporter_name,
         reporter_contact: normalizedPhone,
-        is_demo: false,
+        is_demo: isSimulationReport,
+        is_simulation: isSimulationReport,
+        incident_details: incident_details || null,
         district_name: district_name || verification.metadata.nearest_district || 'Kota Semarang',
         address: address || null,
         title: title || description.slice(0, 40),
@@ -341,49 +374,63 @@ export async function POST(request: NextRequest) {
           corroboration_status: clusterResult.corroborationStatus,
           credibility_score: verification.credibilityScore,
           status: determinedStatus,
+          is_simulation: isSimulationReport,
           is_local_store: true,
         },
         { status: 201 }
       )
     }
 
-    // Supabase Insert
+    // Supabase Insert — Safe & backward-compatible payload with constraint fallback
     const supabase = await createAdminClient()
-    const { data, error } = await supabase
-      .from('reports')
-      .insert({
-        report_code: reportCode,
-        category,
-        description,
-        latitude,
-        longitude,
-        location_accuracy: verification.metadata.location_accuracy,
-        urgency,
-        status: determinedStatus,
-        credibility_score: verification.credibilityScore,
-        verification_metadata: {
-          ...verification.metadata,
-          abuse_score: abuseScore,
-          cluster_code: clusterResult.clusterCode,
-          independent_reporter_count: clusterResult.independentReporterCount,
-        },
-        photo_url: photo_url || null,
-        photo_hash: photo_sha256 || null,
-        photo_taken_at: photo_taken_at || null,
-        reporter_name,
+    const insertPayload: any = {
+      report_code: reportCode,
+      category,
+      description,
+      latitude,
+      longitude,
+      location_accuracy: verification.metadata.location_accuracy,
+      urgency,
+      status: determinedStatus,
+      credibility_score: verification.credibilityScore,
+      verification_metadata: {
+        ...verification.metadata,
+        actual_category: category,
+        abuse_score: abuseScore,
+        incident_cluster_id: clusterResult.clusterId,
+        cluster_code: clusterResult.clusterCode,
+        independent_reporter_count: clusterResult.independentReporterCount,
+        incident_details: incident_details || null,
+        is_simulation: isSimulationReport,
         reporter_email: normalizedEmail,
         reporter_phone: normalizedPhone,
         email_verified: Boolean(email_verified),
         turnstile_verified: true,
-        incident_cluster_id: clusterResult.clusterId,
-        independent_reporter_count: clusterResult.independentReporterCount,
-        abuse_score: abuseScore,
-        district_name: district_name || verification.metadata.nearest_district || null,
-        address: address || null,
-        title: title || description.slice(0, 40),
-      })
-      .select()
-      .single()
+      },
+      photo_url: photo_url || null,
+      photo_hash: photo_sha256 || null,
+      photo_taken_at: photo_taken_at || null,
+      reporter_name,
+      reporter_contact: normalizedPhone,
+      is_demo: isSimulationReport,
+      district_name: district_name || verification.metadata.nearest_district || null,
+      address: address || null,
+      title: title || description.slice(0, 40),
+    }
+
+    let { data, error } = await supabase.from('reports').insert(insertPayload).select().single()
+
+    // If schema constraint check fails for new categories like 'kebakaran', fallback to 'lainnya' with metadata
+    if (error && error.message.includes('reports_category_check')) {
+      console.warn('Postgres category constraint triggered. Falling back to category=lainnya with actual_category in metadata.')
+      insertPayload.category = 'lainnya'
+      const fallbackResult = await supabase.from('reports').insert(insertPayload).select().single()
+      data = fallbackResult.data
+      error = fallbackResult.error
+      if (data) {
+        data.category = category
+      }
+    }
 
     if (error) {
       console.error('POST /api/reports database insert error:', error.message)
@@ -393,10 +440,25 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    const returnedData = data
+      ? {
+          ...data,
+          category: data.verification_metadata?.actual_category || data.category,
+          incident_details: data.incident_details || data.verification_metadata?.incident_details || incident_details || null,
+          is_simulation: isSimulationReport,
+          verification_metadata: {
+            ...(data.verification_metadata || {}),
+            possible_duplicate: verification.metadata.possible_duplicate,
+            duplicate_warning: verification.metadata.duplicate_warning,
+            suspected_duplicate_of: verification.metadata.suspected_duplicate_of,
+          },
+        }
+      : data
+
     return NextResponse.json(
       {
         success: true,
-        data: sanitizeReportForRole(data, 'public'),
+        data: sanitizeReportForRole(returnedData, 'public'),
         report_code: reportCode,
         cluster_code: clusterResult.clusterCode,
         independent_reporter_count: clusterResult.independentReporterCount,

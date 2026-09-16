@@ -9,6 +9,25 @@ import type { CrowdCorroborationResult } from './types'
 export const CORROBORATION_RADIUS_METERS = 300
 export const CORROBORATION_TIME_WINDOW_MS = 30 * 60 * 1000 // 30 minutes
 
+// Helper to check category compatibility for duplicate / crowd clustering
+function isCategorySimilar(cat1?: string, cat2?: string): boolean {
+  if (!cat1 || !cat2) return true
+  const c1 = cat1.toLowerCase().trim()
+  const c2 = cat2.toLowerCase().trim()
+  if (c1 === c2) return true
+
+  const waterGroup = ['banjir', 'genangan', 'rob', 'drainase_tersumbat', 'inundation', 'flood']
+  if (waterGroup.includes(c1) && waterGroup.includes(c2)) return true
+
+  const fireGroup = ['kebakaran', 'fire']
+  if (fireGroup.includes(c1) && fireGroup.includes(c2)) return true
+
+  const treeGroup = ['pohon_tumbang', 'tree']
+  if (treeGroup.includes(c1) && treeGroup.includes(c2)) return true
+
+  return false
+}
+
 export function checkCrowdCorroboration(
   latitude: number,
   longitude: number,
@@ -26,6 +45,7 @@ export function checkCrowdCorroboration(
   currentCategory?: string
 ): CrowdCorroborationResult {
   const matchedCodes: string[] = []
+  const suspectedDuplicateCodes: string[] = []
 
   for (const report of existingReports) {
     const repLat = report.lat ?? report.latitude
@@ -36,12 +56,20 @@ export function checkCrowdCorroboration(
     const dist = calculateDistanceMeters(latitude, longitude, repLat, repLng)
     if (dist > CORROBORATION_RADIUS_METERS) continue
 
-    // Time window check
+    // Time window check (Within 60 minutes for potential duplicate, 30 min for strict corroboration)
     const existingTimeMs = new Date(report.created_at).getTime()
     const diffMs = Math.abs(reportTimeMs - existingTimeMs)
-    if (diffMs > CORROBORATION_TIME_WINDOW_MS) continue
+    if (diffMs > 60 * 60 * 1000) continue
 
-    matchedCodes.push(report.report_code || report.id)
+    const code = report.report_code || report.id
+
+    if (diffMs <= CORROBORATION_TIME_WINDOW_MS) {
+      matchedCodes.push(code)
+    }
+
+    if (isCategorySimilar(currentCategory, report.category)) {
+      suspectedDuplicateCodes.push(code)
+    }
   }
 
   const count = matchedCodes.length
@@ -53,10 +81,17 @@ export function checkCrowdCorroboration(
     level = 'signal'
   }
 
+  const isPossibleDuplicate = suspectedDuplicateCodes.length > 0
+
   return {
     corroborationFound: count > 0,
     corroboratingCount: count,
     corroboratingReportCodes: matchedCodes,
     corroborationLevel: level,
+    possibleDuplicate: isPossibleDuplicate,
+    duplicateReason: isPossibleDuplicate
+      ? `Terdeteksi ${suspectedDuplicateCodes.length} laporan dengan kategori serupa dalam radius < 300m (< 60 menit lalu).`
+      : undefined,
+    suspectedDuplicateCodes: isPossibleDuplicate ? suspectedDuplicateCodes : undefined,
   }
 }

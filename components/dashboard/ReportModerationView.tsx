@@ -39,6 +39,7 @@ const EMPTY_REPORTS: Report[] = []
 
 export function ReportModerationView({ reports, onReportUpdated, onRefresh }: ReportModerationViewProps) {
   const [statusFilter, setStatusFilter] = useState<string>('all')
+  const [simulationFilter, setSimulationFilter] = useState<'all' | 'real_only' | 'simulation_only'>('all')
   const [updatingId, setUpdatingId] = useState<string | null>(null)
   const [localReports, setLocalReports] = useState<Report[]>(reports || EMPTY_REPORTS)
   const [aiInsights, setAiInsights] = useState<Record<string, any>>({})
@@ -114,6 +115,9 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
 
   const getDispositionAgency = (category: string) => {
     switch (category) {
+      case 'kebakaran':
+      case 'fire':
+        return { name: 'Dinas Pemadam Kebakaran (Damkar)', badge: 'bg-red-500/10 text-red-400 border-red-500/30' }
       case 'drainase_tersumbat':
       case 'drainage_clog':
         return { name: 'Dinas PU (SDA)', badge: 'bg-primary/10 text-primary border-primary/30' }
@@ -152,13 +156,18 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
     }
   }
 
-  const filtered =
-    statusFilter === 'all'
-      ? localReports
-      : localReports.filter((r) => r.status === statusFilter)
+  const filtered = localReports
+    .filter((r) => statusFilter === 'all' || r.status === statusFilter)
+    .filter((r) => {
+      const isSim = Boolean(r.is_simulation || r.is_demo)
+      if (simulationFilter === 'real_only') return !isSim
+      if (simulationFilter === 'simulation_only') return isSim
+      return true
+    })
 
   const pendingCount = localReports.filter((r) => r.status === 'submitted').length
   const suspiciousCount = localReports.filter((r) => r.status === 'suspicious').length
+  const simulationCount = localReports.filter((r) => Boolean(r.is_simulation || r.is_demo)).length
 
   const getScoreBadgeClass = (score: number) => {
     if (score >= 70) return 'bg-emerald-500/15 text-emerald-400 border-emerald-500/40'
@@ -206,8 +215,9 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
         </div>
       </div>
 
-      {/* Filter Chips Bar */}
-      <div className="flex flex-wrap items-center gap-1.5">
+      {/* Filter Chips Bar & Simulation Toggle */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-1.5">
           {[
             { id: 'all', label: `Semua (${localReports.length})` },
             { id: 'submitted', label: `Menunggu (${pendingCount})` },
@@ -222,7 +232,7 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
               key={filter.id}
               type="button"
               onClick={() => setStatusFilter(filter.id)}
-              className={`min-h-[38px] text-xs px-3 py-1.5 rounded-lg border font-mono transition-all flex items-center justify-center ${
+              className={`min-h-[38px] text-xs px-3 py-1.5 rounded-lg border font-mono transition-all flex items-center justify-center cursor-pointer ${
                 statusFilter === filter.id
                   ? 'bg-primary text-on-primary border-primary font-bold shadow-sm'
                   : 'bg-surface-container text-on-surface-variant border-outline-variant/30 hover:text-on-surface hover:bg-surface-container-high'
@@ -232,6 +242,44 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
             </button>
           ))}
         </div>
+
+        {/* Data Stream Filter: Real vs Simulation */}
+        <div className="flex items-center gap-1 bg-surface-container p-1 rounded-lg border border-outline-variant/30 text-xs font-mono shrink-0">
+          <button
+            type="button"
+            onClick={() => setSimulationFilter('all')}
+            className={`px-2.5 py-1 rounded text-[11px] transition-all cursor-pointer ${
+              simulationFilter === 'all'
+                ? 'bg-surface-container-highest text-on-surface font-bold shadow-xs'
+                : 'text-on-surface-variant hover:text-on-surface'
+            }`}
+          >
+            Semua Data
+          </button>
+          <button
+            type="button"
+            onClick={() => setSimulationFilter('real_only')}
+            className={`px-2.5 py-1 rounded text-[11px] transition-all cursor-pointer ${
+              simulationFilter === 'real_only'
+                ? 'bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30'
+                : 'text-on-surface-variant hover:text-on-surface'
+            }`}
+          >
+            Hanya Data Riil
+          </button>
+          <button
+            type="button"
+            onClick={() => setSimulationFilter('simulation_only')}
+            className={`px-2.5 py-1 rounded text-[11px] transition-all cursor-pointer ${
+              simulationFilter === 'simulation_only'
+                ? 'bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30'
+                : 'text-on-surface-variant hover:text-on-surface'
+            }`}
+          >
+            Simulasi ({simulationCount})
+          </button>
+        </div>
+      </div>
 
       {/* Moderation Queue Table */}
       <div className="border border-outline-variant/30 rounded-xl bg-surface-container-low overflow-x-auto shadow-md">
@@ -295,9 +343,9 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
                             </a>
                           )}
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1">
+                            <div className="flex items-center gap-2 mb-1 flex-wrap">
                               <span className="inline-block text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-surface-container border border-outline-variant/30 text-on-surface font-semibold">
-                                {CATEGORY_LABELS[report.category as keyof typeof CATEGORY_LABELS] || report.category}
+                                {report.category === 'kebakaran' ? '🔥 Kebakaran' : (CATEGORY_LABELS[report.category as keyof typeof CATEGORY_LABELS] || report.category)}
                               </span>
                               <span
                                 className={`text-[9px] font-mono uppercase font-bold px-1.5 py-0.2 rounded border ${
@@ -310,6 +358,16 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
                               >
                                 {report.urgency}
                               </span>
+                              {Boolean(report.is_simulation || report.is_demo) && (
+                                <span className="text-[9px] font-mono font-bold uppercase px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                                  Simulasi
+                                </span>
+                              )}
+                              {meta?.possible_duplicate && (
+                                <span className="text-[9px] font-mono font-bold uppercase px-1.5 py-0.2 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
+                                  Duplikat Dekat
+                                </span>
+                              )}
                             </div>
 
                             <p className="text-xs text-on-surface line-clamp-2 leading-relaxed">
@@ -568,6 +626,84 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
                                 Koordinat: {(report.lat ?? report.latitude)?.toFixed(5)}, {(report.lng ?? report.longitude)?.toFixed(5)}
                               </span>
                             </div>
+
+                            {/* Duplicate Advisory Alert */}
+                            {meta?.possible_duplicate && (
+                              <div className="p-3 rounded-lg bg-cyan-500/15 border border-cyan-500/30 text-xs flex items-start gap-2 text-cyan-200 font-mono">
+                                <AlertTriangle className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
+                                <div>
+                                  <strong className="block text-cyan-300">Indikasi Laporan Kemungkinan Duplikasi:</strong>
+                                  <span>{meta.duplicate_warning || 'Terdeteksi laporan serupa dalam radius 300m & selang waktu 60 menit.'}</span>
+                                  {meta.suspected_duplicate_of && meta.suspected_duplicate_of.length > 0 && (
+                                    <span className="block mt-0.5 text-[10px] text-cyan-400 font-bold">
+                                      Kode Laporan Serupa: {meta.suspected_duplicate_of.join(', ')}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Dynamic Incident Structured Attributes */}
+                            {report.incident_details && (() => {
+                              const inc = report.incident_details as any
+                              const fDet = inc.fire || (inc.incident_type === 'kebakaran' ? inc : null)
+                              const tDet = inc.tree || (inc.incident_type === 'pohon_tumbang' ? inc : null)
+                              const catName = inc.category || inc.incident_type || report.category
+
+                              return (
+                                <div className="p-3 rounded-lg bg-surface-container-low border border-outline-variant/20">
+                                  <span className="font-mono text-[10px] uppercase tracking-wider text-primary font-bold block mb-2">
+                                    Atribut Terstruktur ({String(catName).toUpperCase()})
+                                  </span>
+                                  {fDet && (
+                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                                      <div className="p-2 rounded bg-surface-container border border-outline-variant/20">
+                                        <span className="text-[10px] text-on-surface-variant font-mono block">Kondisi Api</span>
+                                        <strong className="text-on-surface">{fDet.fire_condition || 'Terlihat'}</strong>
+                                      </div>
+                                      <div className="p-2 rounded bg-surface-container border border-outline-variant/20">
+                                        <span className="text-[10px] text-on-surface-variant font-mono block">Lokasi Subtipe</span>
+                                        <strong className="text-on-surface">{fDet.location_subtype || 'Bangunan'}</strong>
+                                      </div>
+                                      <div className="p-2 rounded bg-surface-container border border-outline-variant/20">
+                                        <span className="text-[10px] text-on-surface-variant font-mono block">Intensitas Asap</span>
+                                        <strong className="text-on-surface">{fDet.smoke_intensity || 'Sedang'}</strong>
+                                      </div>
+                                      <div className="p-2 rounded bg-surface-container border border-outline-variant/20">
+                                        <span className="text-[10px] text-on-surface-variant font-mono block">Potensi Korban</span>
+                                        <strong className="text-on-surface">{fDet.casualty_potential || 'Nihil'}</strong>
+                                      </div>
+                                      {fDet.additional_hazards && fDet.additional_hazards.length > 0 && (
+                                        <div className="col-span-2 sm:col-span-4 p-2 rounded bg-red-500/10 border border-red-500/20 text-red-200 text-xs">
+                                          <span className="text-[10px] font-mono font-bold uppercase text-red-400 block mb-1">Bahaya Tambahan:</span>
+                                          <div className="flex flex-wrap gap-1">
+                                            {(fDet.additional_hazards as string[]).map((h: string, i: number) => (
+                                              <span key={i} className="px-1.5 py-0.5 rounded bg-red-500/20 text-[10px]">⚠️ {h}</span>
+                                            ))}
+                                          </div>
+                                        </div>
+                                      )}
+                                    </div>
+                                  )}
+                                  {tDet && (
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
+                                      <div className="p-2 rounded bg-surface-container border border-outline-variant/20">
+                                        <span className="text-[10px] text-on-surface-variant font-mono block">Ukuran Pohon</span>
+                                        <strong className="text-on-surface">{tDet.tree_size || 'Terdampak'}</strong>
+                                      </div>
+                                      <div className="p-2 rounded bg-surface-container border border-outline-variant/20">
+                                        <span className="text-[10px] text-on-surface-variant font-mono block">Jalan Terhalang</span>
+                                        <strong className="text-on-surface">{tDet.road_blocked || 'Tercatat'}</strong>
+                                      </div>
+                                      <div className="p-2 rounded bg-surface-container border border-outline-variant/20">
+                                        <span className="text-[10px] text-on-surface-variant font-mono block">Kabel Listrik</span>
+                                        <strong className="text-on-surface">{tDet.electricity_impact || 'Status terpantau'}</strong>
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              )
+                            })()}
 
                             {/* Evidence Grid: Positive vs Warnings */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
