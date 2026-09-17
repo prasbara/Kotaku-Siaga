@@ -71,7 +71,17 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
       })
       const data = await res.json()
       if (data.success && Array.isArray(data.data)) {
-        setLocalReports(data.data)
+        // Prevent background polling from overwriting an ongoing update with stale data
+        setLocalReports((prev) => {
+          if (!updatingId) return data.data
+          return data.data.map((incoming: Report) => {
+            if (incoming.id === updatingId) {
+              const current = prev.find((p) => p.id === updatingId)
+              return current || incoming
+            }
+            return incoming
+          })
+        })
       }
       setLastSyncTime(
         new Date().toLocaleTimeString('id-ID', {
@@ -87,7 +97,7 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
     } finally {
       setIsRefreshing(false)
     }
-  }, [])
+  }, [updatingId])
 
   // Auto-refresh polling every 12 seconds for real-time operator moderation
   React.useEffect(() => {
@@ -98,18 +108,22 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
 
   // Sync if reports prop changes
   React.useEffect(() => {
-    if (reports && reports.length > 0) {
+    if (reports && reports.length > 0 && !updatingId) {
       setLocalReports(reports)
     }
-  }, [reports])
+  }, [reports, updatingId])
 
   const handleAnalyzeReportAI = async (report: Report) => {
-    if (aiInsights[report.id]) return
+    if (aiInsights[report.id] || loadingAiId === report.id || updatingId === report.id) return
     setLoadingAiId(report.id)
     try {
       const res = await fetch('/api/ai/analyze-report', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-operator-view': 'true',
+        },
+        credentials: 'include',
         body: JSON.stringify({
           category: report.category,
           description: report.description,
@@ -121,9 +135,24 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
       const data = await res.json()
       if (data.success && data.analysis) {
         setAiInsights((prev) => ({ ...prev, [report.id]: data.analysis }))
+        toast({
+          title: 'Ringkasan AI Siap',
+          description: `Analisis AI untuk laporan ${report.report_code} berhasil dimuat. Status laporan tidak berubah.`,
+        })
+      } else {
+        toast({
+          title: 'Gagal Memuat Ringkasan AI',
+          description: data.error || 'Layanan AI sementara tidak dapat memproses laporan ini.',
+          variant: 'destructive',
+        })
       }
     } catch (err) {
       console.warn('AI analysis error in ReportModerationView:', err)
+      toast({
+        title: 'Kesalahan Jaringan',
+        description: 'Gagal menghubungi server untuk menganalisis laporan.',
+        variant: 'destructive',
+      })
     } finally {
       setLoadingAiId(null)
     }
@@ -140,6 +169,8 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
   }
 
   const handleUpdateStatus = async (reportId: string, newStatus: string) => {
+    // Guard against concurrent clicks
+    if (updatingId) return
     setUpdatingId(reportId)
     const previousReports = [...localReports]
 
@@ -151,13 +182,22 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
     try {
       const res = await fetch(`/api/reports/${reportId}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-operator-view': 'true',
+        },
         credentials: 'include',
         body: JSON.stringify({ status: newStatus }),
       })
       const data = await res.json()
 
       if (res.ok && data.success) {
+        // Sync state with canonical server response
+        if (data.data) {
+          setLocalReports((prev) =>
+            prev.map((r) => (r.id === reportId ? { ...r, ...data.data } : r))
+          )
+        }
         toast({
           title: 'Status Laporan Diperbarui',
           description: `Status berhasil diubah menjadi "${STATUS_LABELS_MAP[newStatus] || newStatus}".`,
@@ -165,19 +205,23 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
         if (onReportUpdated) onReportUpdated()
         if (onRefresh) onRefresh()
       } else {
-        // Revert on server error
+        // Revert optimistic update on failure
         setLocalReports(previousReports)
+        const errorDesc = data.detail
+          ? `${data.error} (${data.detail})`
+          : data.error || 'Terjadi kendala saat memperbarui status di basis data.'
+
         toast({
           title: 'Gagal Memperbarui Status',
-          description: data.error || 'Terjadi kendala saat memperbarui status di basis data.',
+          description: errorDesc,
           variant: 'destructive',
         })
       }
-    } catch (err) {
+    } catch (err: any) {
       setLocalReports(previousReports)
       toast({
         title: 'Kesalahan Jaringan',
-        description: 'Gagal menghubungi server untuk memperbarui status.',
+        description: err?.message || 'Gagal menghubungi server untuk memperbarui status.',
         variant: 'destructive',
       })
       console.error('handleUpdateStatus error:', err)
@@ -904,11 +948,15 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
                   {/* Bantuan Ringkasan AI */}
                   <button
                     type="button"
-                    disabled={loadingAiId === report.id}
+                    disabled={loadingAiId === report.id || isUpdating}
                     onClick={() => handleAnalyzeReportAI(report)}
                     className="min-h-[36px] px-3 py-1.5 rounded-lg border border-[#c4a8d4] bg-[#fdf9ff] text-[#4a154b] hover:bg-[#eddcf7] font-mono text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 shadow-2xs"
                   >
-                    <Bot className="w-3.5 h-3.5 text-[#4a154b]" />
+                    {loadingAiId === report.id ? (
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin text-[#4a154b]" />
+                    ) : (
+                      <Bot className="w-3.5 h-3.5 text-[#4a154b]" />
+                    )}
                     <span>{loadingAiId === report.id ? 'Menganalisis...' : aiInsights[report.id] ? 'Ringkasan Siap' : 'Bantuan Ringkasan'}</span>
                   </button>
 
@@ -916,7 +964,7 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
                   {report.status !== 'verified' && report.status !== 'resolved' && (
                     <button
                       type="button"
-                      disabled={isUpdating}
+                      disabled={isUpdating || loadingAiId === report.id}
                       onClick={() => handleUpdateStatus(report.id, 'verified')}
                       className="min-h-[36px] px-3.5 py-1.5 rounded-lg text-xs font-mono font-bold uppercase bg-[#007a5a] text-white hover:bg-[#006046] active:scale-95 transition-all shadow-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                       title="Verifikasi laporan ini"
@@ -930,12 +978,12 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
                   {report.status !== 'under_review' && report.status !== 'resolved' && (
                     <button
                       type="button"
-                      disabled={isUpdating}
+                      disabled={isUpdating || loadingAiId === report.id}
                       onClick={() => handleUpdateStatus(report.id, 'under_review')}
                       className="min-h-[36px] px-3 py-1.5 rounded-lg text-xs font-mono font-bold uppercase bg-white text-[#4a154b] border border-[#d0c8be] hover:bg-[#f4ede4] active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                       title="Minta peninjauan ulang"
                     >
-                      <Clock className="w-3.5 h-3.5" />
+                      {isUpdating ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Clock className="w-3.5 h-3.5" />}
                       <span>Tinjau</span>
                     </button>
                   )}
@@ -944,12 +992,12 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
                   {report.status !== 'rejected' && (
                     <button
                       type="button"
-                      disabled={isUpdating}
+                      disabled={isUpdating || loadingAiId === report.id}
                       onClick={() => handleUpdateStatus(report.id, 'rejected')}
                       className="min-h-[36px] px-3 py-1.5 rounded-lg text-xs font-mono font-bold uppercase bg-[#fdf2f0] text-[#cc4117] border border-[#fca5a5] hover:bg-[#fee2e2] active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                       title="Tolak laporan"
                     >
-                      <XCircle className="w-3.5 h-3.5" />
+                      {isUpdating ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <XCircle className="w-3.5 h-3.5" />}
                       <span>Tolak</span>
                     </button>
                   )}
@@ -958,11 +1006,11 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
                   {report.status === 'verified' && (
                     <button
                       type="button"
-                      disabled={isUpdating}
+                      disabled={isUpdating || loadingAiId === report.id}
                       onClick={() => handleUpdateStatus(report.id, 'in_progress')}
                       className="min-h-[36px] px-3.5 py-1.5 rounded-lg text-xs font-mono font-bold uppercase bg-[#4a154b] text-white hover:bg-[#3d123e] transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 shadow-xs"
                     >
-                      <Building2 className="w-3.5 h-3.5" />
+                      {isUpdating ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Building2 className="w-3.5 h-3.5" />}
                       <span>Tugaskan Petugas</span>
                     </button>
                   )}
@@ -971,11 +1019,11 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
                   {report.status === 'in_progress' && (
                     <button
                       type="button"
-                      disabled={isUpdating}
+                      disabled={isUpdating || loadingAiId === report.id}
                       onClick={() => handleUpdateStatus(report.id, 'resolved')}
                       className="min-h-[36px] px-3.5 py-1.5 rounded-lg text-xs font-mono font-bold uppercase bg-[#007a5a] text-white hover:bg-[#006046] transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 shadow-xs"
                     >
-                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      {isUpdating ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
                       <span>Tandai Selesai</span>
                     </button>
                   )}

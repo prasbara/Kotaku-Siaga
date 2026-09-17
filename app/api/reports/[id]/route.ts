@@ -102,21 +102,45 @@ export async function GET(
   }
 }
 
+const VALID_STATUSES = [
+  'submitted',
+  'under_review',
+  'verified',
+  'investigating',
+  'in_progress',
+  'resolved',
+  'rejected',
+  'suspicious',
+  'duplicate',
+]
+
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const startTime = Date.now()
+
   if (!(await isRequestAuthorizedAdmin(request))) {
     return NextResponse.json(
-      { error: 'Unauthorized: Diperlukan autentikasi administrator untuk memperbarui status laporan.' },
+      {
+        error: 'Sesi kedaluwarsa atau tidak memiliki izin administrator.',
+        detail: 'Diperlukan autentikasi administrator untuk memperbarui status laporan.',
+        code: 'UNAUTHORIZED',
+      },
       { status: 401 }
     )
   }
 
   try {
     const { id } = await params
-    const body = await request.json()
+    if (!id || typeof id !== 'string' || !id.trim()) {
+      return NextResponse.json(
+        { error: 'ID laporan tidak valid.', code: 'INVALID_ID' },
+        { status: 400 }
+      )
+    }
 
+    const body = await request.json()
     const allowedFields = ['status', 'urgency', 'credibility_score', 'verification_status', 'title', 'description']
     const updateData: Record<string, unknown> = {}
     
@@ -127,62 +151,198 @@ export async function PATCH(
     }
 
     if (Object.keys(updateData).length === 0) {
-      return NextResponse.json({ error: 'Tidak ada field yang diperbarui.' }, { status: 400 })
+      return NextResponse.json(
+        { error: 'Tidak ada field yang diperbarui.', code: 'NO_FIELDS' },
+        { status: 400 }
+      )
     }
+
+    // Validate status if provided
+    if (updateData.status !== undefined) {
+      const statusStr = String(updateData.status).toLowerCase().trim()
+      if (!VALID_STATUSES.includes(statusStr)) {
+        return NextResponse.json(
+          {
+            error: `Status laporan tidak valid: "${updateData.status}".`,
+            detail: `Status yang diizinkan: ${VALID_STATUSES.join(', ')}`,
+            code: 'INVALID_STATUS',
+          },
+          { status: 400 }
+        )
+      }
+      updateData.status = statusStr
+
+      // Automatically synchronize verification status
+      if (statusStr === 'verified' && updateData.verification_status === undefined) {
+        updateData.verification_status = 'verified'
+      } else if (statusStr === 'rejected' && updateData.verification_status === undefined) {
+        updateData.verification_status = 'rejected'
+      } else if (statusStr === 'under_review' && updateData.verification_status === undefined) {
+        updateData.verification_status = 'under_review'
+      }
+    }
+
+    updateData.updated_at = new Date().toISOString()
+    const sanitizedId = id.length > 8 ? `${id.slice(0, 8)}...` : id
+    const actionName = (updateData.status as string) || 'data_update'
 
     // Local Testing: If Supabase is not configured, update local file store
     if (!isSupabaseConfigured()) {
       const updated = localReportStore.update(id, updateData)
       if (!updated) {
-        return NextResponse.json({ error: 'Laporan tidak ditemukan.' }, { status: 404 })
+        return NextResponse.json(
+          { error: 'Laporan tidak ditemukan di penyimpanan lokal.', code: 'NOT_FOUND' },
+          { status: 404 }
+        )
       }
       return NextResponse.json({ success: true, data: updated, is_local_store: true })
     }
 
     const supabase = await createAdminClient()
-    const { data, error } = await supabase
-      .from('reports')
-      .update(updateData)
-      .eq('id', id)
-      .select()
-      .single()
 
-    if (error) {
-      console.warn(`PATCH /api/reports/${id} Supabase error [${error.code}]: ${error.message}`)
+    // Helper: detect transient database network or timeout errors
+    const isTransientError = (err: any) => {
+      if (!err) return false
+      const msg = (err.message || '').toLowerCase()
+      const code = String(err.code || '')
+      return (
+        code === '57014' || // query_canceled
+        code === '08006' || // connection_failure
+        code === '08001' || // sqlclient_unable_to_establish_sqlconnection
+        msg.includes('timeout') ||
+        msg.includes('fetch failed') ||
+        msg.includes('socket hang up') ||
+        msg.includes('connection terminated') ||
+        msg.includes('502') ||
+        msg.includes('503') ||
+        msg.includes('504')
+      )
+    }
+
+    let result = null
+    let lastError = null
+
+    // Safe retry loop (2 attempts with 250ms backoff for transient issues)
+    for (let attempt = 1; attempt <= 2; attempt++) {
+      const res = await supabase
+        .from('reports')
+        .update(updateData)
+        .eq('id', id)
+        .select()
+        .single()
+
+      if (!res.error && res.data) {
+        result = res
+        break
+      }
+
+      lastError = res.error
+      if (attempt < 2 && isTransientError(res.error)) {
+        console.warn(`[REPORT_STATUS_UPDATE] Retrying after transient DB error [attempt ${attempt}]: ${res.error?.message || 'unknown'}`)
+        await new Promise((resolve) => setTimeout(resolve, 250))
+      }
+    }
+
+    if (lastError || !result) {
+      console.error(
+        `[REPORT_STATUS_UPDATE_ERROR] ReportId=${sanitizedId} Action=${actionName} Code=${lastError?.code}: ${lastError?.message}`
+      )
 
       // Always try local store fallback on ANY Supabase error
-      // (e.g., report exists in localStore but not yet synced to Supabase,
-      //  or UUID format mismatch on local test IDs, or Supabase RLS/network errors)
       const localUpdated = localReportStore.update(id, updateData)
       if (localUpdated) {
+        console.log(`[REPORT_STATUS_UPDATE] Fallback to local store succeeded for ReportId=${sanitizedId}`)
         return NextResponse.json({ success: true, data: localUpdated, is_local_store: true })
       }
 
-      // Report not found anywhere
-      if (error.code === 'PGRST116') {
-        return NextResponse.json({ error: 'Laporan tidak ditemukan.' }, { status: 404 })
+      // Check if report exists in database
+      if (lastError?.code === 'PGRST116') {
+        const { data: existing } = await supabase.from('reports').select('id').eq('id', id).maybeSingle()
+        if (!existing) {
+          return NextResponse.json(
+            { error: 'Laporan tidak ditemukan di basis data.', code: 'NOT_FOUND' },
+            { status: 404 }
+          )
+        }
+        return NextResponse.json(
+          { error: 'Pembaruan tidak dapat diterapkan. Status laporan mungkin telah diubah oleh operator lain.', code: 'CONFLICT' },
+          { status: 409 }
+        )
       }
 
       // PostgreSQL invalid UUID syntax — ID format mismatch
-      if (error.code === '22P02') {
+      if (lastError?.code === '22P02') {
         return NextResponse.json(
-          { error: 'ID laporan tidak valid.', detail: 'Format ID tidak sesuai dengan basis data.' },
+          {
+            error: 'Format ID laporan tidak valid.',
+            detail: 'ID laporan harus berupa UUID yang sesuai dengan basis data.',
+            code: 'INVALID_ID',
+          },
           { status: 400 }
         )
       }
 
+      // Check constraint violation (e.g. status constraint or check condition)
+      if (lastError?.code === '23514') {
+        return NextResponse.json(
+          {
+            error: 'Nilai pembaruan melanggar batasan integritas basis data.',
+            detail: lastError.message,
+            code: 'CONSTRAINT_VIOLATION',
+          },
+          { status: 400 }
+        )
+      }
+
+      // Permission denied
+      if (lastError?.code === '42501') {
+        return NextResponse.json(
+          {
+            error: 'Izin akses ditolak oleh kebijakan keamanan basis data.',
+            detail: 'Kredensial administrator tidak memiliki wewenang untuk baris ini.',
+            code: 'PERMISSION_DENIED',
+          },
+          { status: 403 }
+        )
+      }
+
+      // Timeout
+      if (lastError?.code === '57014' || (lastError?.message || '').toLowerCase().includes('timeout')) {
+        return NextResponse.json(
+          {
+            error: 'Koneksi ke basis data melebihi batas waktu (timeout). Silakan coba beberapa saat lagi.',
+            code: 'TIMEOUT',
+          },
+          { status: 504 }
+        )
+      }
+
       return NextResponse.json(
-        { error: 'Gagal memperbarui status laporan di basis data.', detail: error.message },
+        {
+          error: 'Gagal memperbarui status laporan di basis data.',
+          code: lastError?.code || 'DB_ERROR',
+          detail: lastError?.message || 'Terjadi kendala internal pada layanan basis data.',
+        },
         { status: 503 }
       )
     }
 
+    console.log(
+      `[REPORT_STATUS_UPDATE_SUCCESS] ReportId=${sanitizedId} Action=${actionName} Duration=${Date.now() - startTime}ms`
+    )
+
     // Also update local store mirror if present
     localReportStore.update(id, updateData)
 
-    return NextResponse.json({ success: true, data })
+    return NextResponse.json({ success: true, data: result.data })
   } catch (error) {
-    console.error('PATCH /api/reports/[id] error:', error)
-    return NextResponse.json({ error: 'Gagal memperbarui laporan.' }, { status: 500 })
+    console.error('PATCH /api/reports/[id] unhandled exception:', error)
+    return NextResponse.json(
+      {
+        error: 'Terjadi kesalahan internal server saat memproses pembaruan laporan.',
+        code: 'INTERNAL_ERROR',
+      },
+      { status: 500 }
+    )
   }
 }

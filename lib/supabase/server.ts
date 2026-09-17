@@ -1,4 +1,5 @@
 import { createServerClient } from '@supabase/ssr'
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 import { getSupabaseUrl, getSupabaseAnonKey, getSupabaseServiceRoleKey } from './config'
 
@@ -45,27 +46,29 @@ export async function createClient() {
   )
 }
 
+/**
+ * createAdminClient — Privileged server-side Supabase client using SUPABASE_SERVICE_ROLE_KEY.
+ * Bypasses Row Level Security (RLS) for server operations: moderation, data ingestion, and cron.
+ *
+ * CRITICAL FIX FOR INTERMITTENT STATUS UPDATE ERROR:
+ * Previously used createServerClient with cookieStore, which extracted the browser's user token
+ * from cookies and attached Authorization: Bearer <user_token> to PostgREST requests, overriding
+ * the service role key. If the browser had a citizen auth cookie, RLS rejected administrative
+ * updates with 0 rows modified / PGRST116.
+ *
+ * Pure supabase-js client with persistSession: false guarantees service_role privileges regardless
+ * of what cookies the client sends.
+ */
 export async function createAdminClient() {
-  const cookieStore = await cookies()
-
-  return createServerClient(
+  return createSupabaseClient(
     getSupabaseUrl(),
     getSupabaseServiceRoleKey(),
     {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll()
-        },
-        setAll(cookiesToSet: Array<{ name: string; value: string; options?: any }>) {
-          try {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
-            )
-          } catch {
-            // Server Component
-          }
-        },
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
       },
     }
   )
 }
+
