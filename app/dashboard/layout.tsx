@@ -20,6 +20,10 @@ export const metadata: Metadata = {
     description:
       'Pusat kendali dan komando darurat bencana hidrometeorologis Kota Semarang. Monitor telemetri cuaca BMKG, CCTV aktif, status polder, dan koordinasi tanggap darurat.',
   },
+  robots: {
+    index: false,
+    follow: false,
+  },
 }
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {

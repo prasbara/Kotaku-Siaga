@@ -23,14 +23,14 @@ export interface QuizQuestion {
 export interface EducationModuleItem {
   id: string
   slug: string
-  moduleCode: 'MODUL-01' | 'MODUL-02' | 'MODUL-03'
+  moduleCode: 'MODUL-01' | 'MODUL-02' | 'MODUL-03' | 'MODUL-04'
   overline: string
   title: string
   subtitle: string
   readingTime: string
-  category: 'banjir_rob' | 'drainase_perkotaan' | 'kestabilan_lereng'
+  category: 'banjir_rob' | 'drainase_perkotaan' | 'kestabilan_lereng' | 'kebakaran'
   targetArea: string
-  topographyType: 'pesisir' | 'dataran_rendah' | 'perbukitan'
+  topographyType: 'pesisir' | 'dataran_rendah' | 'perbukitan' | 'permukiman_padat'
   fivePillars: {
     apa: string
     mengapa: string
@@ -38,7 +38,7 @@ export interface EducationModuleItem {
     apaDampaknya: string[]
     apaYangDapatDilakukan: string[]
   }
-  diagramType: 'coastal_hydrology' | 'drainage_blockage' | 'slope_stability'
+  diagramType: 'coastal_hydrology' | 'drainage_blockage' | 'slope_stability' | 'fire_propagation'
   riskFactorSliders: {
     label: string
     value: number // 0 - 100
@@ -93,6 +93,21 @@ export const SCIENTIFIC_GLOSSARY: Record<string, { term: string; definition: str
     term: 'Kekuatan Geser Tanah (Shear Strength)',
     definition: 'Daya tahan internal massa tanah terhadap tegangan geser yang menahan lereng agar tidak runtuh. Menurun saat kadar air mencapai titik jenuh.',
     source: 'Standar Penyelidikan Geoteknik',
+  },
+  'segitiga-api': {
+    term: 'Segitiga Api (Fire Triangle)',
+    definition: 'Tiga elemen mutlak yang dibutuhkan untuk memicu dan mempertahankan pembakaran: bahan bakar (fuel), oksigen (oxygen), dan energi panas penyulut (heat). Menghilangkan salah satu elemen akan memadamkan api.',
+    source: 'Prinsip Dasar Proteksi Kebakaran Damkar',
+  },
+  'flashover': {
+    term: 'Flashover (Transisi Kilat Kebakaran)',
+    definition: 'Fase kritis saat seluruh permukaan bahan mudah terbakar di dalam suatu ruangan mendadak menyala serentak akibat akumulasi radiasi termal dari gas panas di bawah plafon.',
+    source: 'Standar Penyelidikan Kebakaran Bangunan',
+  },
+  'apar-pass': {
+    term: 'Prosedur APAR P.A.S.S',
+    definition: 'Kaidah standar penggunaan Alat Pemadam Api Ringan: Pull (tarik pin), Aim (arahkan nosel ke dasar api), Squeeze (tekan tuas penyemprot), Sweep (sapukan ke kiri dan ke kanan).',
+    source: 'NFPA 10 & Petunjuk Operasional Damkar',
   },
 }
 
@@ -378,11 +393,109 @@ export const EDUCATION_MODULES: EducationModuleItem[] = [
       { title: 'Rencana Penanggulangan Bencana Kota Semarang 2022-2026', publisher: 'BPBD Kota Semarang', year: '2024' },
     ],
   },
+  {
+    id: 'modul-04',
+    slug: 'kebakaran-permukiman-dan-lahan-kering',
+    moduleCode: 'MODUL-04',
+    overline: 'Proteksi Kebakaran & APAR',
+    title: 'Mitigasi Kebakaran Permukiman & Lahan Kering',
+    subtitle: 'Memahami sains pemicu kebakaran korsleting listrik di lorong padat hunian, pencegahan api loncat lahan ilalang kering, dan penguasaan APAR mandiri.',
+    readingTime: '5 menit baca interaktif',
+    category: 'kebakaran',
+    targetArea: 'Kawasan Semarang Tengah (Pecinan, Kauman), Gayamsari, Mijen, Banyumanik (ilalang perbukitan)',
+    topographyType: 'permukiman_padat',
+    fivePillars: {
+      apa: 'Kebakaran perkotaan dan lahan kering adalah reaksi pembakaran tak terkendali yang dipicu interaksi bahan mudah terbakar, oksigen melimpah, dan panas pemicu (segitiga api), merambat cepat melalui konveksi udara panas dan radiasi termal.',
+      mengapa: 'Pada musim kemarau di Semarang, suhu udara tinggi (> 34°C) dan kelembapan rendah mengeringkan vegetasi ilalang. Di permukiman padat bersejarah seperti Pecinan dan Kauman, instalasi listrik kabel serabut yang kelebihan beban (overload) ditambah dinding bangunan yang saling menempel membuat api mudah melompat tanpa sekat pemutus.',
+      bagaimanaMengenali: [
+        'Bau sangit isolasi kabel plastik terbakar atau lampu di rumah sering berkedip saat beban alat elektronik naik.',
+        'Asap pekat abu-abu tebal membubung dari ventilasi atau atap rumah di sekitar lingkungan.',
+        'Terdengar suara letupan beruntun dari kabel tiang listrik atau sekring MCB yang tidak memutus otomatis.',
+        'Bara api melayang terbawa angin kencang di area semak ilalang kering perbukitan.',
+      ],
+      apaDampaknya: [
+        'Kerugian material aset hunian, pertokoan, dan terhentinya mata pencaharian warga.',
+        'Ancaman cedera luka bakar dan keracunan gas monoksida (CO) bagi penghuni lansia dan anak-anak.',
+        'Pemadaman listrik darurat bergilir oleh PLN untuk mengisolasi jaringan tegangan tinggi.',
+        'Hambatan akses armada pemadam karena lorong pemukiman sempit terhalang parkir liar.',
+      ],
+      apaYangDapatDilakukan: [
+        'Menggunakan kabel berstandar SNI dan tidak menumpuk steker cabang listrik (T-steker) secara berlebihan.',
+        'Menyediakan minimal 1 tabung APAR Dry Chemical Powder 3 kg di setiap rumah atau pos ronda RT.',
+        'Membuat sekat bakar pembersih ilalang selebar 3-5 meter di batas kebun kering dan perumahan.',
+        'Segera evakuasi merunduk dan telepon hotline darurat Damkar Kota Semarang 113 / Call Center 112.',
+      ],
+    },
+    diagramType: 'fire_propagation',
+    riskFactorSliders: [
+      { label: 'Kepadatan Bangunan & Material Kayu', value: 85, description: 'Jarak antar bangunan < 1 meter mempercepat transmisi panas radiasi ke tetangga.' },
+      { label: 'Beban Arus Listrik Non-Standar (Overload)', value: 80, description: 'Kabel serabut kecil dipaksa menyuplai AC, mesin pompa, dan pemanas air bersamaan.' },
+      { label: 'Aksesibilitas Mobil Damkar (Lebar Gang)', value: 45, description: 'Gang pemukiman < 2.5 meter memperlambat gelar selang air pemadam kebakaran.' },
+      { label: 'Suhu Udara Kemarau & Angin Muson', value: 75, description: 'Kecepatan angin mempercepat pembesaran kobaran api di lahan semak kering.' },
+    ],
+    dangerSigns: [
+      { sign: 'Stop kontak dinding terasa panas saat disentuh dan mengeluarkan bau gosong.', severity: 'kritis', fieldNote: 'Tanda arus pendek lokal aktif yang dapat menyulut api ke triplek atau gorden dalam hitungan detik.' },
+      { sign: 'Asap hitam tebal dan udara di dekat pintu ruangan terasa mendadak sangat panas.', severity: 'kritis', fieldNote: 'Indikasi ruangan mendekati tahap kilat (flashover). Jangan buka pintu sembarangan!' },
+      { sign: 'Bara api tertiup angin melompati jalan selebar 4 meter menuju kebun kering.', severity: 'waspada', fieldNote: 'Fenomena spotting fire yang memerlukan pembuatan sekat bakar basah segera.' },
+    ],
+    actionChecklist: {
+      sebelum: [
+        'Lakukan pemeriksaan instalasi kelistrikan berkala minimal tiap 5 tahun oleh instalatur resmi bersertifikat.',
+        'Pastikan nomor telepon Pos Damkar terdekat (113) tercatat di dekat pintu keluar rumah.',
+        'Latih seluruh anggota keluarga cara mengoperasikan pin dan tuas APAR dengan prinsip P.A.S.S.',
+      ],
+      saatTerjadi: [
+        'Jika api masih berukuran kecil, padamkan segera menggunakan APAR atau karung goni basah dari arah membelakangi angin.',
+        'Jika api membesar atau tercium asap tebal, segera evakuasi dengan cara merunduk merayap dekat lantai.',
+        'Tutup pintu kamar saat keluar untuk memperlambat suplai oksigen ke titik api (contain the fire).',
+        'Hubungi Damkar 113 dan BPBD 112 sebutkan alamat jelas, patokan lokasi, dan ada/tidaknya korban terjebak.',
+      ],
+      setelah: [
+        'Jangan kembali masuk ke dalam bangunan sebelum dinyatakan aman dan dingin oleh komandan regu pemadam.',
+        'Waspadai potensi gas beracun yang masih tertahan di sudut ruangan tanpa sirkulasi udara.',
+        'Laporkan insiden ke pengurus lingkungan dan koordinasikan posko logistik darurat.',
+      ],
+    },
+    quiz: [
+      {
+        id: 'q4-1',
+        question: 'Mengapa menyiram air secara langsung pada kebakaran yang bersumber dari korsleting panel listrik sangat berbahaya?',
+        options: [
+          'Karena air membuat api menjadi semakin harum.',
+          'Karena air dapat menghantarkan arus listrik bertegangan tinggi yang menyengat orang yang menyiram.',
+          'Karena air membuat kabel listrik menjadi dingin terlalu cepat.',
+          'Karena air akan merusak dinding rumah tetangga.',
+        ],
+        correctIndex: 1,
+        explanation: 'Air tawar adalah konduktor listrik. Menyiram air ke instalasi beraliran listrik aktif berisiko fatal menyengat penolong. Gunakan APAR jenis Dry Chemical Powder, gas CO2, atau matikan MCB terlebih dahulu.',
+      },
+      {
+        id: 'q4-2',
+        question: 'Dalam kaidah pengoperasian APAR P.A.S.S, ke manakah arah semprotan nosel harus ditujukan?',
+        options: [
+          'Ke puncak kobaran lidah api paling atas.',
+          'Ke arah langit-langit ruangan.',
+          'Ke dasar bahan yang terbakar (base of the fire) dengan sapuan mendatar.',
+          'Ke arah jendela kaca yang tertutup.',
+        ],
+        correctIndex: 2,
+        explanation: 'Semprotan bahan pemadam APAR harus diarahkan ke dasar bahan yang terbakar (base of fire) agar memutus suplai segitiga api, bukan ke asap atau puncak kobaran api.',
+      },
+    ],
+    references: [
+      { title: 'Pedoman Penanggulangan Bahaya Kebakaran di Lingkungan Perumahan', publisher: 'Dinas Pemadam Kebakaran Kota Semarang', year: '2025' },
+      { title: 'SNI 03-3987: Tata Cara Perencanaan dan Pemasangan Sistem Pemadam Api Ringan', publisher: 'Badan Standardisasi Nasional (BSN)', year: '2023' },
+      { title: 'Kajian Kerentanan Kebakaran Permukiman Padat Perkotaan', publisher: 'Pusat Riset Kebencanaan BRIN', year: '2024' },
+    ],
+  },
 ]
 
 // Mapping helper to connect map/report location coordinates or category to education modules
 export function getRecommendedModuleForLocation(lat: number, lng: number, category?: string): EducationModuleItem {
   // 1. By category first if explicit
+  if (category === 'kebakaran') {
+    return EDUCATION_MODULES[3] // Kebakaran permukiman & lahan kering
+  }
   if (category === 'longsor') {
     return EDUCATION_MODULES[2] // Kestabilan lereng
   }

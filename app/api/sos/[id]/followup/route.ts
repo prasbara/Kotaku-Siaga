@@ -34,7 +34,7 @@ export async function POST(
     if (description) updatePayload.description = description.trim().slice(0, 1000)
     if (photo_url) updatePayload.photo_url = photo_url
 
-    let updatedResult = localSosStore.update(id, updatePayload)
+    const updatedResult = localSosStore.update(id, updatePayload)
 
     if (isSupabaseConfigured()) {
       try {

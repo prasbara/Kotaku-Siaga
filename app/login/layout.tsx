@@ -1,8 +1,9 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Masuk Petugas & Admin | KotaKu Siaga',
-  description: 'Portal autentikasi petugas tanggap darurat dan administrator sistem KotaKu Siaga Semarang.',
+  title: 'Masuk Operator EOC | KotaKu Siaga',
+  description:
+    'Portal autentikasi petugas dan operator Pusat Kendali Operasi Kebencanaan Kota Semarang.',
   robots: {
     index: false,
     follow: false,

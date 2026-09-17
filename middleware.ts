@@ -18,6 +18,7 @@ export const config = {
      * Match dashboard protected routes, command center, and auth routes.
      * Prevents running heavyweight auth middleware on public static/CDN assets.
      */
+    '/dashboard',
     '/dashboard/:path*',
     '/command-center',
     '/command-center/:path*',

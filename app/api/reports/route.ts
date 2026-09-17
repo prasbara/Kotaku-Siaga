@@ -405,9 +405,9 @@ export async function POST(request: NextRequest) {
     })
 
     const primaryEvidence = evidenceSummary.evidenceList[0] || null
-    let validatedPhotoSha256 = primaryEvidence?.sha256 || photo_sha256 || null
-    let validatedPhotoDhash = primaryEvidence?.phash || photo_dhash || null
-    let exifTimestampResult: any = primaryEvidence?.exif || {
+    const validatedPhotoSha256 = primaryEvidence?.sha256 || photo_sha256 || null
+    const validatedPhotoDhash = primaryEvidence?.phash || photo_dhash || null
+    const exifTimestampResult: any = primaryEvidence?.exif || {
       capture_timestamp: null,
       capture_timestamp_wib: null,
       capture_timestamp_source: 'none',
@@ -549,7 +549,59 @@ export async function POST(request: NextRequest) {
       determinedStatus = 'verified'
     }
 
-    // 7. Save Report
+    // 7. Verification Photo & Metadata Payload Hardening
+    let safeVerificationPhotoUrl: string | null = null
+    if (typeof body.verification_photo_url === 'string' && body.verification_photo_url.trim()) {
+      const photoStr = body.verification_photo_url.trim()
+      // Enforce data URI format or secure HTTPS URL and max 5MB payload
+      if (
+        photoStr.startsWith('data:image/jpeg;base64,') ||
+        photoStr.startsWith('data:image/png;base64,') ||
+        photoStr.startsWith('data:image/webp;base64,') ||
+        (photoStr.startsWith('https://') && !photoStr.includes('<') && !photoStr.includes('>'))
+      ) {
+        if (photoStr.length < 5 * 1024 * 1024 * 1.37) {
+          safeVerificationPhotoUrl = photoStr
+        }
+      }
+    }
+
+    const unifiedVerificationMetadata = {
+      ...verification.metadata,
+      actual_category: category,
+      abuse_score: abuseScore,
+      incident_cluster_id: clusterResult.clusterId,
+      cluster_code: clusterResult.clusterCode,
+      independent_reporter_count: clusterResult.independentReporterCount,
+      incident_details: incident_details || null,
+      is_simulation: isSimulationReport,
+      reporter_email: normalizedEmail,
+      reporter_phone: normalizedPhone,
+      email_verified: Boolean(email_verified),
+      turnstile_verified: true,
+      verification_method:
+        body.verification_method ||
+        (safeVerificationPhotoUrl ? 'camera_liveness' : email_verified ? 'otp' : 'none'),
+      verification_status:
+        body.verification_status ||
+        (safeVerificationPhotoUrl || email_verified ? 'verified' : 'pending'),
+      verification_photo_url: safeVerificationPhotoUrl,
+      verification_timestamp: body.verification_timestamp || new Date().toISOString(),
+      liveness_score:
+        typeof body.liveness_score === 'number'
+          ? Math.max(0, Math.min(100, body.liveness_score))
+          : null,
+      spoof_risk:
+        typeof body.spoof_risk === 'number'
+          ? Math.max(0, Math.min(100, body.spoof_risk))
+          : null,
+      quality_score:
+        typeof body.quality_score === 'number'
+          ? Math.max(0, Math.min(100, body.quality_score))
+          : null,
+    }
+
+    // 8. Save Report
     if (!isSupabaseConfigured()) {
       const createdLocal = localReportStore.create({
         report_code: reportCode,
@@ -561,13 +613,7 @@ export async function POST(request: NextRequest) {
         urgency,
         status: determinedStatus,
         credibility_score: verification.credibilityScore,
-        verification_metadata: {
-          ...verification.metadata,
-          abuse_score: abuseScore,
-          incident_cluster_id: clusterResult.clusterId,
-          cluster_code: clusterResult.clusterCode,
-          independent_reporter_count: clusterResult.independentReporterCount,
-        },
+        verification_metadata: unifiedVerificationMetadata,
         photo_url: primaryEvidence?.photoUrl || photo_url || (rawPhotos[0] ?? null),
         reporter_name,
         reporter_contact: normalizedPhone,
@@ -608,27 +654,7 @@ export async function POST(request: NextRequest) {
       urgency,
       status: determinedStatus,
       credibility_score: verification.credibilityScore,
-      verification_metadata: {
-        ...verification.metadata,
-        actual_category: category,
-        abuse_score: abuseScore,
-        incident_cluster_id: clusterResult.clusterId,
-        cluster_code: clusterResult.clusterCode,
-        independent_reporter_count: clusterResult.independentReporterCount,
-        incident_details: incident_details || null,
-        is_simulation: isSimulationReport,
-        reporter_email: normalizedEmail,
-        reporter_phone: normalizedPhone,
-        email_verified: Boolean(email_verified),
-        turnstile_verified: true,
-        verification_method: body.verification_method || (body.verification_photo_url ? 'camera_liveness' : email_verified ? 'otp' : 'none'),
-        verification_status: body.verification_status || (body.verification_photo_url || email_verified ? 'verified' : 'pending'),
-        verification_photo_url: body.verification_photo_url || null,
-        verification_timestamp: body.verification_timestamp || new Date().toISOString(),
-        liveness_score: typeof body.liveness_score === 'number' ? body.liveness_score : null,
-        spoof_risk: typeof body.spoof_risk === 'number' ? body.spoof_risk : null,
-        quality_score: typeof body.quality_score === 'number' ? body.quality_score : null,
-      },
+      verification_metadata: unifiedVerificationMetadata,
       photo_url: primaryEvidence?.photoUrl || photo_url || (rawPhotos[0] ?? null),
       photo_hash: validatedPhotoSha256,
       photo_taken_at: exifTimestampResult?.capture_timestamp || photo_taken_at || null,

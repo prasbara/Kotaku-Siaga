@@ -131,6 +131,8 @@ export interface Report {
   urgency: UrgencyLevel
   status: ReportStatus
   photo_url?: string | null
+  photo_hash?: string | null
+  photo_dhash?: string | null
   reporter_name?: string | null
   reporter_contact?: string | null
   reporter_id?: string | null

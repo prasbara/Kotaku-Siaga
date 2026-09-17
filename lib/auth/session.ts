@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server'
+import type { NextRequest } from 'next/server'
 
 // ============================================================
 // KotaKu Siaga — Role-Based Access Control (RBAC) & Cryptographic Session Manager
@@ -121,6 +121,17 @@ export async function verifyAdminSessionToken(token?: string | null): Promise<bo
   return result.valid && result.role === 'admin'
 }
 
+/** Verifies that a token belongs to an authorized operator (admin or officer) */
+export async function verifyOperatorSession(
+  token?: string | null
+): Promise<{ valid: boolean; role: 'admin' | 'officer' | null }> {
+  const result = await verifySessionToken(token)
+  if (result.valid && (result.role === 'admin' || result.role === 'officer')) {
+    return { valid: true, role: result.role }
+  }
+  return { valid: false, role: null }
+}
+
 /**
  * Extracts and verifies the user's role from request cookies or Authorization Bearer header.
  */
@@ -147,7 +158,7 @@ export async function getUserRole(request: NextRequest | Request): Promise<UserR
     }
   }
 
-  // 2. Check Cookie in NextRequest or standard Request
+  // 2. Check Cryptographic Signed Session Cookie
   let cookieVal: string | null = null
   if ('cookies' in request && typeof (request as any).cookies?.get === 'function') {
     cookieVal = (request as NextRequest).cookies.get(SESSION_COOKIE_NAME)?.value || null
@@ -170,16 +181,18 @@ export async function getUserRole(request: NextRequest | Request): Promise<UserR
     }
   }
 
-  // 3. Operator view from dashboard or dev environment
-  const isOperatorView =
-    request.headers.get('x-operator-view') === 'true' ||
-    request.headers.get('referer')?.includes('/dashboard') ||
-    (request as any).nextUrl?.searchParams?.get('view') === 'operator' ||
-    (request as any).url?.includes('view=operator') ||
-    (request as any).url?.includes('/dashboard')
+  // 3. Demo / Local test environment fallback (STRICTLY DISALLOWED in production)
+  const isDevOrDemo =
+    process.env.NODE_ENV !== 'production' || process.env.NEXT_PUBLIC_DEMO_MODE === 'true'
+  if (isDevOrDemo) {
+    const isMockOperator =
+      request.headers.get('x-operator-view') === 'true' ||
+      (request as any).nextUrl?.searchParams?.get('view') === 'operator' ||
+      (request as any).url?.includes('view=operator')
 
-  if (isOperatorView) {
-    return 'admin'
+    if (isMockOperator) {
+      return 'admin'
+    }
   }
 
   return 'public'
@@ -196,28 +209,13 @@ export async function isRequestAuthorizedAdmin(request: NextRequest | Request): 
     return true
   }
 
-  // Development / Demo tolerance for local test and operator review
-  if (process.env.NODE_ENV !== 'production' || process.env.NEXT_PUBLIC_DEMO_MODE === 'true') {
-    return true
-  }
-
-  // Check operator header or referer
-  const isOpView =
-    request.headers.get('x-operator-view') === 'true' ||
-    request.headers.get('referer')?.includes('/dashboard') ||
-    (request as any).nextUrl?.searchParams?.get('view') === 'operator' ||
-    (request as any).url?.includes('view=operator') ||
-    (request as any).url?.includes('/dashboard')
-  if (isOpView) {
-    return true
-  }
-
   return false
 }
 
 /**
  * Strips confidential/operator-only data from citizen reports when served to PUBLIC role.
  * Preserves reporter contact details for operational dispatch and moderation.
+ * PROTECTS CITIZEN PRIVACY: Never leaks biometric verification selfies to public queries.
  */
 export function sanitizeReportForRole(report: any, role: UserRole): any {
   if (role === 'admin' || role === 'officer') {
@@ -233,13 +231,18 @@ export function sanitizeReportForRole(report: any, role: UserRole): any {
     client_ip,
     internal_notes,
     raw_telemetry,
+    verification_photo_url, // Strip raw citizen selfie
     ...publicFields
   } = report
 
-  const meta = report.verification_metadata || {}
+  // Strip verification selfie from metadata if present
+  const meta = { ...(report.verification_metadata || {}) }
+  delete meta.verification_photo_url
 
   return {
     ...publicFields,
+    verification_photo_url: null,
+    verification_metadata: meta,
     // Preserve reporter contacts for operational coordination and follow-up
     reporter_name:
       publicFields.reporter_name ||

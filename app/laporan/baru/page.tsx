@@ -1759,6 +1759,7 @@ export default function LaporBaruPage() {
                             description: `Liveness Score: ${data.livenessScore}%. Siap mengirim laporan.`,
                           })
                         }}
+                        onCancel={() => setVerificationMethod('otp')}
                       />
 
                       {cameraVerified && (

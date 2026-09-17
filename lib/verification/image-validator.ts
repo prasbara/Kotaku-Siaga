@@ -115,6 +115,7 @@ export async function processAndValidateImage(
   sha256: string
   dhash: string
   photoTakenAt: string | null
+  exifValidation?: any
   error?: string
 }> {
   const sizeBytes = buffer.length

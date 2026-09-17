@@ -5,18 +5,18 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = 'https://kotaku-siaga.vercel.app'
   const currentDate = new Date().toISOString()
 
-  // 1. Core Public Pages
+  // 1. Core Public Verified Routes (HTTP 200)
   const corePages: MetadataRoute.Sitemap = [
     {
       url: baseUrl,
       lastModified: currentDate,
-      changeFrequency: 'hourly',
+      changeFrequency: 'daily',
       priority: 1.0,
     },
     {
       url: `${baseUrl}/peta`,
       lastModified: currentDate,
-      changeFrequency: 'always',
+      changeFrequency: 'hourly',
       priority: 0.95,
     },
     {
@@ -26,19 +26,19 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.9,
     },
     {
-      url: `${baseUrl}/lapor-genangan`,
+      url: `${baseUrl}/laporan/baru`,
       lastModified: currentDate,
       changeFrequency: 'weekly',
       priority: 0.85,
     },
     {
-      url: `${baseUrl}/matriks-risiko`,
+      url: `${baseUrl}/priorities`,
       lastModified: currentDate,
       changeFrequency: 'daily',
       priority: 0.85,
     },
     {
-      url: `${baseUrl}/integritas-data`,
+      url: `${baseUrl}/data`,
       lastModified: currentDate,
       changeFrequency: 'weekly',
       priority: 0.8,
@@ -47,19 +47,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       url: `${baseUrl}/edukasi`,
       lastModified: currentDate,
       changeFrequency: 'weekly',
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/pusat-kendali`,
-      lastModified: currentDate,
-      changeFrequency: 'hourly',
       priority: 0.85,
-    },
-    {
-      url: `${baseUrl}/priorities`,
-      lastModified: currentDate,
-      changeFrequency: 'daily',
-      priority: 0.8,
     },
   ]
 

@@ -128,6 +128,8 @@ export interface VerificationMetadata {
   rate_limit_flag: boolean
   is_within_semarang?: boolean
   is_mock_spoofed?: boolean
+  evidence_summary?: any | null
+  evidence_photos?: any[] | null
   district_mismatch?: boolean
   capture_timestamp?: string | null
   capture_timestamp_wib?: string | null

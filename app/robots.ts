@@ -1,29 +1,28 @@
 import { MetadataRoute } from 'next'
 
 export default function robots(): MetadataRoute.Robots {
+  const disallowedPaths = [
+    '/api/',
+    '/dashboard',
+    '/dashboard/',
+    '/command-center',
+    '/command-center/',
+    '/login',
+    '/register',
+    '/supabase-demo',
+  ]
+
   return {
     rules: [
       {
         userAgent: '*',
         allow: '/',
-        disallow: [
-          '/api/',
-          '/admin/',
-          '/login',
-          '/register',
-          '/supabase-demo',
-        ],
+        disallow: disallowedPaths,
       },
       {
         userAgent: 'Googlebot',
         allow: '/',
-        disallow: [
-          '/api/',
-          '/admin/',
-          '/login',
-          '/register',
-          '/supabase-demo',
-        ],
+        disallow: disallowedPaths,
       },
     ],
     sitemap: 'https://kotaku-siaga.vercel.app/sitemap.xml',

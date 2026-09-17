@@ -61,7 +61,7 @@ export async function PATCH(
     if (reporter_phone) updatePayload.reporter_phone = reporter_phone.trim()
     if (description) updatePayload.description = description.trim()
 
-    let updatedResult = localSosStore.update(id, updatePayload)
+    const updatedResult = localSosStore.update(id, updatePayload)
 
     if (isSupabaseConfigured()) {
       try {

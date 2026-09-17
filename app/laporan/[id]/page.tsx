@@ -1,5 +1,7 @@
+import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { localReportStore } from '@/lib/services/local-report-store'
 import type { Report } from '@/types'
 import { CATEGORY_LABELS, URGENCY_LABELS, STATUS_LABELS } from '@/types'
 import { formatDate, formatRelativeTime } from '@/lib/utils'
@@ -32,10 +34,7 @@ const STATUS_ORDER: Record<string, number> = {
   duplicate: -1,
 }
 
-export default async function ReportDetailPage({ params }: Props) {
-  const { id } = await params
-  let report: Report | null = null
-
+async function fetchReport(id: string): Promise<Report | null> {
   try {
     const supabase = await createClient()
     const { data, error } = await supabase
@@ -45,11 +44,60 @@ export default async function ReportDetailPage({ params }: Props) {
       .single()
 
     if (!error && data) {
-      report = data as Report
+      return data as Report
     }
-  } catch (err) {
-    console.warn('Failed to fetch report from Supabase:', err)
+  } catch {
+    // Fallback to local store
   }
+
+  return localReportStore.getById(id)
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { id } = await params
+  const report = await fetchReport(id)
+
+  if (!report) {
+    return {
+      title: 'Laporan Tidak Ditemukan | KotaKu Siaga',
+      description: 'Tiket laporan kejadian kebencanaan tidak ditemukan atau telah diarsipkan.',
+      robots: { index: false, follow: false },
+    }
+  }
+
+  const category =
+    CATEGORY_LABELS[report.category as keyof typeof CATEGORY_LABELS] || report.category
+  const district = report.district_name || 'Kota Semarang'
+  const title = `Laporan ${report.report_code}: ${category} di ${district} | KotaKu Siaga`
+  const description =
+    report.description?.slice(0, 160) ||
+    `Status dan validasi laporan kejadian ${category} di wilayah ${district}, Kota Semarang.`
+
+  return {
+    title,
+    description,
+    alternates: {
+      canonical: `https://kotaku-siaga.vercel.app/laporan/${id}`,
+    },
+    openGraph: {
+      title,
+      description,
+      url: `https://kotaku-siaga.vercel.app/laporan/${id}`,
+      type: 'article',
+      images: report.photo_url ? [{ url: report.photo_url }] : ['/opengraph-image'],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: report.photo_url ? [report.photo_url] : ['/opengraph-image'],
+    },
+  }
+}
+
+export default async function ReportDetailPage({ params }: Props) {
+  const { id } = await params
+  const report = await fetchReport(id)
 
   if (!report) {
     notFound()
@@ -65,8 +113,37 @@ export default async function ReportDetailPage({ params }: Props) {
   const isCritical = (r.urgency as string) === 'kritis' || (r.urgency as string) === 'tinggi' || (r.urgency as string) === 'critical'
   const isResolved = r.status === 'resolved'
 
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'Beranda',
+        item: 'https://kotaku-siaga.vercel.app',
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: 'Daftar Laporan Warga',
+        item: 'https://kotaku-siaga.vercel.app/laporan',
+      },
+      {
+        '@type': 'ListItem',
+        position: 3,
+        name: `Laporan ${r.report_code || id}`,
+        item: `https://kotaku-siaga.vercel.app/laporan/${id}`,
+      },
+    ],
+  }
+
   return (
     <div className="flex flex-col w-full bg-[#fdfbf9] text-[#1d1d1d] min-h-screen pb-24">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
       {/* Header */}
       <section className="pt-10 pb-8 bg-white border-b border-[#e6e6e6] px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto flex flex-col gap-4">

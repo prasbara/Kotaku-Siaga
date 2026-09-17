@@ -95,10 +95,10 @@ const AREAS_DB: Record<string, AreaDetail> = {
 import type { Metadata } from 'next'
 import { SEMARANG_KECAMATAN } from '@/lib/ingestion/semarang-admin'
 
-function getAreaDetail(slug: string): AreaDetail {
+function getAreaDetail(slug: string): AreaDetail | null {
   if (AREAS_DB[slug]) return AREAS_DB[slug]
   const k = SEMARANG_KECAMATAN.find((x) => x.slug === slug || x.id === slug)
-  if (!k) return AREAS_DB['semarang-utara']
+  if (!k) return null
 
   const isCoastal = k.elevation_avg_m <= 4.0
   const isHill = k.elevation_avg_m >= 60.0
@@ -139,22 +139,29 @@ export async function generateMetadata({
   const { area } = await params
   const data = getAreaDetail(area)
 
+  if (!data) {
+    return {
+      title: 'Wilayah Tidak Ditemukan | KotaKu Siaga',
+      description: 'Halaman prioritas penanganan bencana wilayah Kota Semarang tidak ditemukan.',
+    }
+  }
+
   return {
-    title: `Prioritas Penanganan Banjir ${data.name} | KotaKu Siaga`,
-    description: `Audit deterministik risiko bencana banjir dan rob ${data.name} Kota Semarang. Skor prioritas ${data.score}/100 dengan status ${data.level}. Pelajari profil elevasi, densitas penduduk, dan data historis.`,
+    title: `Prioritas Penanganan Bencana ${data.name} | KotaKu Siaga`,
+    description: `Audit deterministik risiko bencana hidrometeorologis & drainase ${data.name} Kota Semarang. Skor prioritas ${data.score}/100 dengan status ${data.level}. Pelajari profil elevasi, densitas penduduk, dan data historis.`,
     alternates: {
-      canonical: `https://kotaku-siaga.vercel.app/priorities/${area}`,
+      canonical: `https://kotaku-siaga.vercel.app/priorities/${data.slug}`,
     },
     openGraph: {
-      title: `Prioritas Penanganan Banjir ${data.name} | KotaKu Siaga`,
-      description: `Audit deterministik risiko bencana banjir dan rob ${data.name} Kota Semarang. Skor prioritas ${data.score}/100.`,
-      url: `https://kotaku-siaga.vercel.app/priorities/${area}`,
+      title: `Prioritas Penanganan Bencana ${data.name} | KotaKu Siaga`,
+      description: `Audit deterministik risiko bencana hidrometeorologis ${data.name} Kota Semarang. Skor prioritas ${data.score}/100.`,
+      url: `https://kotaku-siaga.vercel.app/priorities/${data.slug}`,
       type: 'article',
     },
     twitter: {
       card: 'summary_large_image',
-      title: `Prioritas Penanganan Banjir ${data.name} | KotaKu Siaga`,
-      description: `Audit deterministik risiko bencana banjir dan rob ${data.name} Kota Semarang. Skor prioritas ${data.score}/100.`,
+      title: `Prioritas Penanganan Bencana ${data.name} | KotaKu Siaga`,
+      description: `Audit deterministik risiko bencana ${data.name} Kota Semarang. Skor prioritas ${data.score}/100.`,
     },
   }
 }
@@ -167,8 +174,41 @@ export default async function AreaDetailPage({
   const { area } = await params
   const data = getAreaDetail(area)
 
+  if (!data) {
+    notFound()
+  }
+
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'Beranda',
+        item: 'https://kotaku-siaga.vercel.app',
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: 'Prioritas Wilayah',
+        item: 'https://kotaku-siaga.vercel.app/priorities',
+      },
+      {
+        '@type': 'ListItem',
+        position: 3,
+        name: data.name,
+        item: `https://kotaku-siaga.vercel.app/priorities/${data.slug}`,
+      },
+    ],
+  }
+
   return (
     <div className="flex flex-col w-full bg-surface text-on-surface min-h-screen pb-20">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
       {/* Tactical Header */}
       <section className="pt-8 pb-8 bg-surface-container-lowest border-b border-outline-variant/30 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto flex flex-col gap-4">

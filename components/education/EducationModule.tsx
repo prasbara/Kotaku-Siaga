@@ -8,6 +8,7 @@ import {
   Waves,
   Droplets,
   Mountain,
+  Flame,
   ShieldAlert,
   PhoneCall,
   ArrowRight,
@@ -21,6 +22,7 @@ import { EducationalTooltip } from '@/components/education/EducationalTooltip'
 import { InteractiveHydrologyDiagram } from '@/components/education/InteractiveHydrologyDiagram'
 import { InteractiveDrainageFlowVisualizer } from '@/components/education/InteractiveDrainageFlowVisualizer'
 import { InteractiveSlopeStabilityVisualizer } from '@/components/education/InteractiveSlopeStabilityVisualizer'
+import { InteractiveFireSafetyVisualizer } from '@/components/education/InteractiveFireSafetyVisualizer'
 import { DangerSignsExplorer } from '@/components/education/DangerSignsExplorer'
 import { ActionCardPhases } from '@/components/education/ActionCardPhases'
 import { RiskFactorsChart } from '@/components/education/RiskFactorsChart'
@@ -78,7 +80,7 @@ export function EducationModule() {
       {/* 2. MAIN WORKSPACE CONTAINER */}
       <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-8 space-y-12">
         {/* TOPIC SELECTION NAV TABS */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {EDUCATION_MODULES.map((mod) => {
             const isSelected = mod.slug === selectedSlug
             const Icon =
@@ -86,6 +88,8 @@ export function EducationModule() {
                 ? Waves
                 : mod.category === 'drainase_perkotaan'
                 ? Droplets
+                : mod.category === 'kebakaran'
+                ? Flame
                 : Mountain
 
             return (
@@ -267,6 +271,7 @@ export function EducationModule() {
             {currentModule.diagramType === 'coastal_hydrology' && <InteractiveHydrologyDiagram />}
             {currentModule.diagramType === 'drainage_blockage' && <InteractiveDrainageFlowVisualizer />}
             {currentModule.diagramType === 'slope_stability' && <InteractiveSlopeStabilityVisualizer />}
+            {currentModule.diagramType === 'fire_propagation' && <InteractiveFireSafetyVisualizer />}
           </div>
 
           {/* 5. EDUCATIONAL RISK FACTOR MIX CHART (Requirement #10) */}

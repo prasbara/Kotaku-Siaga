@@ -21,6 +21,7 @@ import {
   Monitor,
   Globe,
   Flame,
+  RefreshCw,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -172,12 +173,40 @@ export function AdminSidebar({
   ]
 
   const handleLogout = async () => {
+    if (isLoggingOut) return
     setIsLoggingOut(true)
     try {
-      await fetch('/api/auth/logout', { method: 'POST' })
-      window.location.href = '/'
-    } catch {
-      window.location.href = '/'
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        headers: { 'Cache-Control': 'no-cache' },
+      })
+    } catch (err) {
+      console.warn('Logout network error, forcing client cleanup:', err)
+    } finally {
+      try {
+        if (typeof window !== 'undefined') {
+          sessionStorage.clear()
+          const keysToRemove: string[] = []
+          for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i)
+            if (
+              key &&
+              (key.includes('supabase') ||
+                key.includes('sb-') ||
+                key.includes('kotaku') ||
+                key.includes('auth'))
+            ) {
+              keysToRemove.push(key)
+            }
+          }
+          keysToRemove.forEach((k) => localStorage.removeItem(k))
+        }
+      } catch {
+        // Storage access fallback
+      }
+
+      // Use replace to strip dashboard from browser history stack
+      window.location.replace('/login?logout=success')
     }
   }
 
@@ -405,9 +434,13 @@ export function AdminSidebar({
             onClick={handleLogout}
             disabled={isLoggingOut}
             aria-label="Keluar dari Sesi Operator"
-            className="w-11 h-11 mx-auto flex items-center justify-center rounded-xl text-[#d9bdde] hover:bg-white/10 hover:text-white transition-colors relative group cursor-pointer"
+            className="w-11 h-11 mx-auto flex items-center justify-center rounded-xl text-[#d9bdde] hover:bg-white/10 hover:text-white transition-colors relative group cursor-pointer disabled:opacity-60"
           >
-            <LogOut className="w-5 h-5" />
+            {isLoggingOut ? (
+              <RefreshCw className="w-5 h-5 animate-spin text-amber-400" />
+            ) : (
+              <LogOut className="w-5 h-5" />
+            )}
             <div
               role="tooltip"
               className="pointer-events-none absolute left-[calc(100%+10px)] top-1/2 -translate-y-1/2 z-50 opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-all duration-150 ease-out bg-[#1f0d26] text-white border border-[#592466] px-3 py-1.5 rounded-lg shadow-2xl text-xs font-semibold whitespace-nowrap"
@@ -421,9 +454,13 @@ export function AdminSidebar({
             type="button"
             onClick={handleLogout}
             disabled={isLoggingOut}
-            className="min-h-[38px] w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-[#d9bdde] hover:bg-white/10 hover:text-white text-xs font-medium transition-colors cursor-pointer"
+            className="min-h-[38px] w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-[#d9bdde] hover:bg-white/10 hover:text-white text-xs font-medium transition-colors cursor-pointer disabled:opacity-60"
           >
-            <LogOut className="w-4 h-4 shrink-0" />
+            {isLoggingOut ? (
+              <RefreshCw className="w-4 h-4 shrink-0 animate-spin text-amber-400" />
+            ) : (
+              <LogOut className="w-4 h-4 shrink-0" />
+            )}
             <span>{isLoggingOut ? 'Sedang Keluar...' : 'Keluar'}</span>
           </button>
         )}

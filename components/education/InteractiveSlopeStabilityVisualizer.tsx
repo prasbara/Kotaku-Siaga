@@ -714,7 +714,7 @@ export function InteractiveSlopeStabilityVisualizer() {
 
             {/* Tegangan Normal Efektif */}
             <div className="flex items-center justify-between p-2 rounded bg-white/5 border border-white/5">
-              <span className="text-[#a8a8a8] text-[10px]">TEGANGAN EFEKTIF (σ'):</span>
+              <span className="text-[#a8a8a8] text-[10px]">{"TEGANGAN EFEKTIF (σ'):"}</span>
               <span className="text-sky-300 font-bold">{current.effectiveStress} kPa</span>
             </div>
 
