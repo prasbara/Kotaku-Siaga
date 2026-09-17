@@ -65,6 +65,8 @@ Jawab HANYA dalam format JSON valid tanpa markdown formatting tambahan:
   const geminiKeys = [
     process.env.GEMINI_API_KEY,
     process.env.GEMINI_FALLBACK_API_KEY,
+    'AQ.Ab8RN6JFOyey3t79TMrTKjRr8nPkHIg1CRcew2ev-x9wfDAOgA',
+    'AQ.Ab8RN6JrXoy4okZ-mpKgfejtkRRhvFZjhD2aGiMAY_3LCT8y4A',
   ].filter(Boolean) as string[]
 
   for (const key of geminiKeys) {
