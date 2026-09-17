@@ -415,6 +415,7 @@ export default function LaporBaruPage() {
   const [otpVerifying, setOtpVerifying] = useState<boolean>(false)
   const [resendCooldown, setResendCooldown] = useState<number>(0)
   const [otpError, setOtpError] = useState<string | null>(null)
+  const [isOtpRateLimited, setIsOtpRateLimited] = useState<boolean>(false)
 
   // Submission state
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
@@ -706,18 +707,39 @@ export default function LaporBaruPage() {
 
       if (res.ok && data.success) {
         setOtpSent(true)
+        setIsOtpRateLimited(false)
         setResendCooldown(60)
         toast({
           title: 'Permintaan OTP Diproses',
           description: `Kode verifikasi telah dikirimkan ke ${maskEmail(cleanEmail)}. Periksa kotak masuk atau folder Spam.`,
         })
       } else {
-        setOtpError(data.error || 'Gagal mengirimkan kode OTP.')
-        toast({
-          title: 'Pengiriman OTP Gagal',
-          description: data.error || 'Terjadi kendala saat mengirimkan kode OTP.',
-          variant: 'destructive',
-        })
+        const rateLimited =
+          data.code === 'OTP_RATE_LIMIT' ||
+          Boolean(data.rate_limited) ||
+          res.status === 429 ||
+          data.error?.toLowerCase().includes('dibatasi') ||
+          data.error?.toLowerCase().includes('rate limit')
+
+        if (rateLimited) {
+          setIsOtpRateLimited(true)
+          setOtpError(
+            'OTP sedang dibatasi sementara. Gunakan verifikasi wajah sebagai alternatif.'
+          )
+          toast({
+            title: 'OTP Dibatasi Sementara',
+            description: 'OTP sedang dibatasi sementara. Gunakan verifikasi wajah sebagai alternatif.',
+            variant: 'destructive',
+          })
+        } else {
+          setIsOtpRateLimited(false)
+          setOtpError(data.error || 'Gagal mengirimkan kode OTP.')
+          toast({
+            title: 'Pengiriman OTP Gagal',
+            description: data.error || 'Terjadi kendala saat mengirimkan kode OTP.',
+            variant: 'destructive',
+          })
+        }
       }
     } catch {
       setOtpError('Terjadi kesalahan jaringan saat mengirimkan OTP. Periksa koneksi Anda.')
@@ -1700,28 +1722,6 @@ export default function LaporBaruPage() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <button
                         type="button"
-                        onClick={() => setVerificationMethod('otp')}
-                        className={`p-3.5 rounded-xl border flex items-center gap-3 text-left transition-all cursor-pointer ${
-                          verificationMethod === 'otp'
-                            ? 'bg-[#f9f0ff] border-[#4a154b] shadow-xs'
-                            : 'bg-white border-[#d0c8be] hover:bg-[#fbf9f5]'
-                        }`}
-                      >
-                        <div className={`p-2 rounded-lg ${verificationMethod === 'otp' ? 'bg-[#4a154b] text-white' : 'bg-[#f4ede4] text-[#4a154b]'}`}>
-                          <Mail className="w-5 h-5" />
-                        </div>
-                        <div>
-                          <span className="font-mono text-xs font-bold text-[#1d1d1d] block">
-                            Verifikasi dengan OTP
-                          </span>
-                          <span className="text-[11px] text-[#696969]">
-                            Kode 6-digit via email pelapor
-                          </span>
-                        </div>
-                      </button>
-
-                      <button
-                        type="button"
                         onClick={() => setVerificationMethod('camera')}
                         className={`p-3.5 rounded-xl border flex items-center gap-3 text-left transition-all cursor-pointer ${
                           verificationMethod === 'camera'
@@ -1732,12 +1732,48 @@ export default function LaporBaruPage() {
                         <div className={`p-2 rounded-lg ${verificationMethod === 'camera' ? 'bg-[#007a5a] text-white' : 'bg-[#f4ede4] text-[#007a5a]'}`}>
                           <Camera className="w-5 h-5" />
                         </div>
-                        <div>
-                          <span className="font-mono text-xs font-bold text-[#1d1d1d] block">
-                            Verifikasi dengan Kamera
-                          </span>
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between">
+                            <span className="font-mono text-xs font-bold text-[#1d1d1d] block">
+                              Verifikasi Wajah (Vermuk)
+                            </span>
+                            {isOtpRateLimited && (
+                              <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-md bg-[#ecfdf5] text-[#007a5a] font-bold border border-[#a7f3d0]">
+                                REKOMENDASI
+                              </span>
+                            )}
+                          </div>
                           <span className="text-[11px] text-[#696969]">
-                            Camera liveness &amp; anti-spoofing
+                            Kamera liveness &amp; anti-spoofing
+                          </span>
+                        </div>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setVerificationMethod('otp')}
+                        className={`p-3.5 rounded-xl border flex items-center gap-3 text-left transition-all cursor-pointer ${
+                          verificationMethod === 'otp'
+                            ? 'bg-[#f9f0ff] border-[#4a154b] shadow-xs'
+                            : 'bg-white border-[#d0c8be] hover:bg-[#fbf9f5]'
+                        }`}
+                      >
+                        <div className={`p-2 rounded-lg ${verificationMethod === 'otp' ? 'bg-[#4a154b] text-white' : 'bg-[#f4ede4] text-[#4a154b]'}`}>
+                          <Mail className="w-5 h-5" />
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between">
+                            <span className="font-mono text-xs font-bold text-[#1d1d1d] block">
+                              Verifikasi Email (OTP)
+                            </span>
+                            {isOtpRateLimited && (
+                              <span className="text-[9px] font-mono px-1.5 py-0.5 rounded-md bg-amber-100 text-amber-800 font-bold">
+                                DIBATASI
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-[11px] text-[#696969]">
+                            Kode 6-digit via email pelapor
                           </span>
                         </div>
                       </button>
@@ -1755,7 +1791,7 @@ export default function LaporBaruPage() {
                           setCameraQualityScore(data.qualityScore)
                           setCameraVerified(true)
                           toast({
-                            title: 'Verifikasi Kamera Berhasil',
+                            title: 'Verifikasi Wajah Berhasil',
                             description: `Liveness Score: ${data.livenessScore}%. Siap mengirim laporan.`,
                           })
                         }}
@@ -1777,7 +1813,7 @@ export default function LaporBaruPage() {
                           ) : (
                             <>
                               <CheckCircle2 className="w-4 h-4" />
-                              <span>Kirim Laporan Terverifikasi Kamera</span>
+                              <span>Kirim Laporan Terverifikasi Wajah</span>
                             </>
                           )}
                         </button>
@@ -1806,6 +1842,29 @@ export default function LaporBaruPage() {
                         )}
                       </div>
 
+                      {/* Prominent Rate-Limit Alert Banner */}
+                      {isOtpRateLimited && (
+                        <div className="p-4 rounded-xl bg-amber-50/90 border-2 border-amber-300 text-xs text-amber-950 flex flex-col gap-2.5">
+                          <div className="flex items-center gap-2 font-bold text-amber-900">
+                            <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+                            <span>OTP sedang dibatasi sementara. Gunakan verifikasi wajah sebagai alternatif.</span>
+                          </div>
+                          <p className="text-[11px] text-amber-800 leading-relaxed">
+                            Layanan pengiriman email OTP penyedia (Supabase) sedang mencapai batas kuota pengiriman sementara. Anda dapat langsung menggunakan Verifikasi Wajah (Vermuk / Kamera) yang aktif tanpa perlu menunggu kuota email pulih.
+                          </p>
+                          <div>
+                            <button
+                              type="button"
+                              onClick={() => setVerificationMethod('camera')}
+                              className="px-5 py-2 rounded-full bg-[#007a5a] hover:bg-[#006046] text-white font-bold text-xs flex items-center gap-2 transition-all shadow-xs cursor-pointer"
+                            >
+                              <Camera className="w-3.5 h-3.5" />
+                              <span>Beralih ke Verifikasi Wajah (Kamera)</span>
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
                       {/* Prominent Spam Warning Alert */}
                       <div className="p-3.5 rounded-xl bg-amber-50/80 border border-amber-200/80 text-xs text-amber-900 flex items-start gap-2.5 leading-relaxed">
                         <Info className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
@@ -1815,28 +1874,37 @@ export default function LaporBaruPage() {
                       </div>
 
                       {!otpSent ? (
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-1">
-                          <p className="text-xs text-[#1d1d1d] leading-relaxed">
-                            Kirimkan kode OTP 6-digit ke alamat: <strong className="text-[#4a154b]">{maskEmail(reporterEmail)}</strong>
-                          </p>
-                          <button
-                            type="button"
-                            onClick={handleSendOtp}
-                            disabled={otpSending}
-                            className="min-h-[42px] px-5 py-2 rounded-full bg-[#4a154b] text-white hover:bg-[#3d123e] text-xs font-bold tracking-wide flex items-center gap-2 transition-all cursor-pointer shrink-0 disabled:opacity-50 shadow-xs"
-                          >
-                            {otpSending ? (
-                              <>
-                                <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                                <span>Mengirim OTP...</span>
-                              </>
-                            ) : (
-                              <>
-                                <Mail className="w-3.5 h-3.5" />
-                                <span>Kirim Kode OTP</span>
-                              </>
-                            )}
-                          </button>
+                        <div className="flex flex-col gap-3 pt-1">
+                          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                            <p className="text-xs text-[#1d1d1d] leading-relaxed">
+                              Kirimkan kode OTP 6-digit ke alamat: <strong className="text-[#4a154b]">{maskEmail(reporterEmail)}</strong>
+                            </p>
+                            <button
+                              type="button"
+                              onClick={handleSendOtp}
+                              disabled={otpSending}
+                              className="min-h-[42px] px-5 py-2 rounded-full bg-[#4a154b] text-white hover:bg-[#3d123e] text-xs font-bold tracking-wide flex items-center gap-2 transition-all cursor-pointer shrink-0 disabled:opacity-50 shadow-xs"
+                            >
+                              {otpSending ? (
+                                <>
+                                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                                  <span>Mengirim OTP...</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Mail className="w-3.5 h-3.5" />
+                                  <span>Kirim Kode OTP</span>
+                                </>
+                              )}
+                            </button>
+                          </div>
+
+                          {otpError && !isOtpRateLimited && (
+                            <div className="text-xs text-[#cc4117] bg-[#cc4117]/10 border border-[#cc4117]/30 p-3 rounded-xl font-medium flex items-center gap-2">
+                              <AlertTriangle className="w-4 h-4 shrink-0 text-[#cc4117]" />
+                              <span>{otpError}</span>
+                            </div>
+                          )}
                         </div>
                       ) : (
                         <div className="flex flex-col gap-4 pt-1">

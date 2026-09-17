@@ -94,21 +94,34 @@ export async function POST(request: NextRequest) {
     })
 
     if (error) {
-      console.error(`[OTP_REQUEST_FAILED] Supabase Auth error for ${masked}:`, error.status, error.message)
+      console.error(`[OTP_REQUEST_FAILED] Supabase Auth error for ${masked}:`, error.status, error.message, (error as any).code)
       
+      const isRateLimit =
+        error.message?.toLowerCase().includes('rate limit') ||
+        error.status === 429 ||
+        (error as any).code === 'over_email_send_rate_limit' ||
+        (error as any).code === 'over_request_rate_limit'
+
       let userFriendlyError = 'Gagal mengirimkan kode OTP melalui layanan email.'
-      if (error.message.includes('rate limit') || error.status === 429) {
-        userFriendlyError = 'Batas pengiriman email OTP tercapai. Harap tunggu beberapa menit atau periksa email sebelumnya.'
-      } else if (error.message.includes('invalid email')) {
-        userFriendlyError = 'Alamat email ditolak oleh penyedia layanan autentikasi.'
+      if (isRateLimit) {
+        userFriendlyError =
+          'Batas kuota pengiriman email OTP penyedia (Supabase) sedang dibatasi sementara. Gunakan verifikasi wajah (kamera) sebagai alternatif.'
+      } else if (
+        error.message?.toLowerCase().includes('invalid email') ||
+        (error as any).code === 'email_address_invalid'
+      ) {
+        userFriendlyError = 'Alamat email ditolak oleh penyedia layanan autentikasi. Pastikan email valid atau gunakan verifikasi wajah.'
       }
 
       return NextResponse.json(
         {
           error: userFriendlyError,
-          code: 'SUPABASE_OTP_ERROR',
+          code: isRateLimit ? 'OTP_RATE_LIMIT' : 'SUPABASE_OTP_ERROR',
+          rate_limited: isRateLimit,
+          suggest_face_verification: true,
+          provider_error: error.message,
         },
-        { status: error.status || 400 }
+        { status: isRateLimit ? 429 : error.status || 400 }
       )
     }
 
