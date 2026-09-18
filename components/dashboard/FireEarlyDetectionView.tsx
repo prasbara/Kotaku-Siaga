@@ -140,9 +140,27 @@ export function FireEarlyDetectionView() {
 
   useEffect(() => {
     fetchData()
-    // Auto-refresh every 15s
-    const timer = setInterval(() => fetchData(false), 15000)
+    // Auto-refresh every 8s for faster stale marker cleanup
+    const timer = setInterval(() => fetchData(false), 8000)
     return () => clearInterval(timer)
+  }, [fetchData])
+
+  // Listen for cross-component status change events (e.g. from ReportModerationView).
+  // When an operator rejects/resolves a report from any view, immediately purge
+  // it from the active citizen reports state and force a server refetch.
+  useEffect(() => {
+    const handleExternalStatusChange = (e: Event) => {
+      const { reportId, newStatus } = (e as CustomEvent<{ reportId: string; newStatus: string }>).detail || {}
+      if (!reportId) return
+      if (newStatus === 'rejected' || newStatus === 'resolved' || newStatus === 'cancelled') {
+        // Optimistically remove from map immediately
+        setCitizenReports((prev) => prev.filter((r) => r.id !== reportId))
+        // Then refetch from server to ensure consistency
+        fetchData(false)
+      }
+    }
+    window.addEventListener('kotaku-report-status-changed', handleExternalStatusChange)
+    return () => window.removeEventListener('kotaku-report-status-changed', handleExternalStatusChange)
   }, [fetchData])
 
   // Operator Actions
@@ -174,12 +192,16 @@ export function FireEarlyDetectionView() {
     )
 
     if (status === 'REJECTED' || status === 'DISMISSED') {
-      // Immediately purge related citizen reports from active map markers
+      // Immediately purge related citizen reports from active map markers (optimistic)
       const targetCase = cases.find((c) => c.id === caseId)
       const linkedReportIds = new Set(targetCase?.citizen_reports?.map((r) => r.id) || [])
       if (linkedReportIds.size > 0) {
         setCitizenReports((prev) => prev.filter((r) => !linkedReportIds.has(r.id)))
       }
+      // Also force a full server refetch to catch any unlinked fire reports in the same area
+      // that should also be purged (standalone reports not correlated to this case).
+      // This runs in parallel with the API call below.
+      fetchData(false)
     }
 
     try {
@@ -200,10 +222,21 @@ export function FireEarlyDetectionView() {
             setSelectedCase(updated.data)
           }
         }
+        // Final server-authoritative refetch after API confirms the status change
+        fetchData(false)
+      } else {
+        // API failed — rollback optimistic case update
+        setCases((prev) =>
+          prev.map((c) =>
+            c.id === caseId ? { ...c, status: cases.find((x) => x.id === caseId)?.status ?? c.status } : c
+          )
+        )
+        // Refetch to restore server state
         fetchData(false)
       }
     } catch (err) {
       console.error('Error updating case status:', err)
+      // Always refetch on error to restore consistent state
       fetchData(false)
     }
   }

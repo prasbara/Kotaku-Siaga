@@ -235,6 +235,19 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
           title: 'Status Laporan Diperbarui',
           description: `Status berhasil diubah menjadi "${STATUS_LABELS_MAP[newStatus] || newStatus}".`,
         })
+        // Broadcast to other components (e.g. FireEarlyDetectionView) so they immediately
+        // purge this report's marker from the active fire map without waiting for the next polling cycle.
+        if (newStatus === 'rejected' || newStatus === 'resolved' || newStatus === 'cancelled') {
+          try {
+            window.dispatchEvent(
+              new CustomEvent('kotaku-report-status-changed', {
+                detail: { reportId, newStatus },
+              })
+            )
+          } catch {
+            // Non-critical — polling will clean up within 8 seconds regardless
+          }
+        }
         if (onReportUpdated) onReportUpdated()
         if (onRefresh) onRefresh()
       } else {

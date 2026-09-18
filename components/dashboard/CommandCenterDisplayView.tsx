@@ -156,7 +156,7 @@ export function CommandCenterDisplayView() {
     try {
       const [reportsRes, statsRes, sosRes, weatherRes, fireStatsRes, fireObsRes, fireCasesRes, fireIncRes] =
         await Promise.all([
-          fetch('/api/reports?limit=100'),
+          fetch('/api/reports?limit=100&status=active'),
           fetch('/api/dashboard/stats'),
           fetch('/api/sos'),
           fetch('/api/weather'),
@@ -247,6 +247,20 @@ export function CommandCenterDisplayView() {
     const interval = setInterval(fetchAllData, 10000)
     return () => clearInterval(interval)
   }, [fetchAllData])
+
+  // Listen for cross-component status change events to immediately purge rejected/resolved
+  // report markers from the command center map without waiting for the next polling cycle.
+  useEffect(() => {
+    const handleExternalStatusChange = (e: Event) => {
+      const { reportId, newStatus } = (e as CustomEvent<{ reportId: string; newStatus: string }>).detail || {}
+      if (!reportId) return
+      if (newStatus === 'rejected' || newStatus === 'resolved' || newStatus === 'cancelled') {
+        setReports((prev) => prev.filter((r: Report) => r.id !== reportId))
+      }
+    }
+    window.addEventListener('kotaku-report-status-changed', handleExternalStatusChange)
+    return () => window.removeEventListener('kotaku-report-status-changed', handleExternalStatusChange)
+  }, [])
 
   // Compute Active Emergency Metrics
   const activeSOS = sosList.filter((s: SOSEvent) => s.status === 'NEW' || s.status === 'DISPATCHED' || s.status === 'ACKNOWLEDGED')
