@@ -39,12 +39,14 @@ export async function POST(
     if (isSupabaseConfigured()) {
       try {
         const supabase = await createAdminClient()
-        const { data, error } = await supabase
-          .from('sos_events')
-          .update(updatePayload)
-          .or(`id.eq.${id},sos_code.eq.${id}`)
-          .select()
-          .single()
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
+        let query = supabase.from('sos_events').update(updatePayload)
+        if (isUuid) {
+          query = query.eq('id', id)
+        } else {
+          query = query.eq('sos_code', id)
+        }
+        const { data, error } = await query.select().single()
 
         if (!error && data) {
           return NextResponse.json({
@@ -52,6 +54,9 @@ export async function POST(
             data,
             message: 'Status dan informasi darurat SOS berhasil diperbarui.',
           })
+        }
+        if (error) {
+          console.warn('[Supabase SOS followup update error]:', error.message)
         }
       } catch (dbErr) {
         console.warn('Supabase SOS followup update error:', dbErr)

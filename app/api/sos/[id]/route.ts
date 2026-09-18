@@ -11,11 +11,14 @@ export async function GET(
 
     if (isSupabaseConfigured()) {
       const supabase = await createAdminClient()
-      const { data, error } = await supabase
-        .from('sos_events')
-        .select('*')
-        .or(`id.eq.${id},sos_code.eq.${id}`)
-        .single()
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
+      let query = supabase.from('sos_events').select('*')
+      if (isUuid) {
+        query = query.eq('id', id)
+      } else {
+        query = query.eq('sos_code', id)
+      }
+      const { data, error } = await query.single()
 
       if (!error && data) {
         return NextResponse.json({ success: true, data })
@@ -66,12 +69,14 @@ export async function PATCH(
     if (isSupabaseConfigured()) {
       try {
         const supabase = await createAdminClient()
-        const { data, error } = await supabase
-          .from('sos_events')
-          .update(updatePayload)
-          .or(`id.eq.${id},sos_code.eq.${id}`)
-          .select()
-          .single()
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
+        let query = supabase.from('sos_events').update(updatePayload)
+        if (isUuid) {
+          query = query.eq('id', id)
+        } else {
+          query = query.eq('sos_code', id)
+        }
+        const { data, error } = await query.select().single()
 
         if (!error && data) {
           return NextResponse.json({
@@ -79,6 +84,9 @@ export async function PATCH(
             data,
             message: 'Status SOS berhasil diperbarui.',
           })
+        }
+        if (error) {
+          console.warn('[Supabase SOS PATCH error]:', error.message)
         }
       } catch (dbErr) {
         console.warn('Supabase SOS PATCH error:', dbErr)

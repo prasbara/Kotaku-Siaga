@@ -15,8 +15,10 @@ import {
   User,
   Camera,
   Check,
+  Loader2,
 } from 'lucide-react'
 import { formatRelativeTime } from '@/lib/utils'
+import { toast } from '@/components/ui/use-toast'
 
 interface SOSEvent {
   id: string
@@ -93,9 +95,37 @@ export function SOSEmergencyView() {
       const result = await res.json()
       if (res.ok && result.data) {
         setSelectedSos(result.data)
+        setSosList((prev) =>
+          prev.map((item) =>
+            item.id === result.data.id || item.sos_code === result.data.sos_code
+              ? result.data
+              : item
+          )
+        )
+        toast({
+          title: 'Status Berhasil Diperbarui',
+          description: `Status darurat ${selectedSos.sos_code} kini ${
+            status === 'DISPATCHED'
+              ? 'TIM TERJUN'
+              : status === 'RESOLVED'
+              ? 'SELESAI DITANGANI'
+              : status
+          }.`,
+        })
+      } else {
+        toast({
+          title: 'Gagal Memperbarui Status',
+          description: result.error || 'Terjadi kendala saat memperbarui status sinyal SOS.',
+          variant: 'destructive',
+        })
       }
-    } catch (err) {
+    } catch (err: any) {
       console.warn('Update SOS status error:', err)
+      toast({
+        title: 'Kesalahan Jaringan',
+        description: err.message || 'Gagal menghubungi server.',
+        variant: 'destructive',
+      })
     } finally {
       setIsUpdating(false)
       fetchSosList()
@@ -176,7 +206,15 @@ export function SOSEmergencyView() {
                           {sos.sos_code}
                         </span>
                       </div>
-                      <span className="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider bg-[#cc4117]/10 text-[#cc4117]">
+                      <span
+                        className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${
+                          sos.status === 'RESOLVED'
+                            ? 'bg-emerald-100 text-emerald-700'
+                            : sos.status === 'DISPATCHED'
+                            ? 'bg-blue-100 text-blue-700'
+                            : 'bg-[#cc4117]/10 text-[#cc4117]'
+                        }`}
+                      >
                         {sos.status}
                       </span>
                     </div>
@@ -217,6 +255,17 @@ export function SOSEmergencyView() {
                   <h3 className="text-xl font-bold font-mono text-[#1d1d1d]">{selectedSos.sos_code}</h3>
                 </div>
                 <div className="flex items-center gap-2">
+                  <span
+                    className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${
+                      selectedSos.status === 'RESOLVED'
+                        ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                        : selectedSos.status === 'DISPATCHED'
+                        ? 'bg-blue-100 text-blue-800 border border-blue-300'
+                        : 'bg-amber-100 text-amber-800 border border-amber-300'
+                    }`}
+                  >
+                    STATUS: {selectedSos.status}
+                  </span>
                   <span className="px-3 py-1 rounded-full bg-[#cc4117] text-white text-xs font-bold uppercase">
                     PRIORITAS {selectedSos.priority}
                   </span>
@@ -283,6 +332,7 @@ export function SOSEmergencyView() {
                 </div>
 
                 <div className="flex items-center gap-2">
+                  {/* Tandai Tim Terjun Button */}
                   <button
                     type="button"
                     onClick={() => handleUpdateStatus('DISPATCHED')}
@@ -290,25 +340,42 @@ export function SOSEmergencyView() {
                     className={`min-h-[42px] px-4 py-2 rounded-[90px] font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer ${
                       selectedSos.status === 'DISPATCHED'
                         ? 'bg-[#007a5a] text-white ring-2 ring-[#007a5a]/30 shadow-sm'
+                        : selectedSos.status === 'RESOLVED'
+                        ? 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-100'
                         : 'bg-[#007a5a] text-white hover:bg-[#006046]'
                     }`}
                   >
-                    <CheckCircle2 className="w-4 h-4" />
-                    <span>{selectedSos.status === 'DISPATCHED' ? 'Tim di Lapangan' : 'Tandai Tim Terjun'}</span>
+                    {isUpdating ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <CheckCircle2 className="w-4 h-4" />
+                    )}
+                    <span>
+                      {selectedSos.status === 'DISPATCHED'
+                        ? 'Tim di Lapangan'
+                        : selectedSos.status === 'RESOLVED'
+                        ? 'Tugaskan Kembali Tim'
+                        : 'Tandai Tim Terjun'}
+                    </span>
                   </button>
 
+                  {/* Selesai Ditangani Button */}
                   <button
                     type="button"
                     onClick={() => handleUpdateStatus('RESOLVED')}
                     disabled={isUpdating}
                     className={`min-h-[42px] px-4 py-2 rounded-[90px] font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer ${
                       selectedSos.status === 'RESOLVED'
-                        ? 'bg-[#007a5a] text-white ring-2 ring-[#007a5a]/30'
-                        : 'bg-[#f4ede4] hover:bg-[#e8ded2] text-[#1d1d1d]'
+                        ? 'bg-[#007a5a] text-white ring-2 ring-[#007a5a]/30 shadow-sm'
+                        : 'bg-[#f4ede4] hover:bg-[#e8ded2] text-[#1d1d1d] border border-[#d8cbba]'
                     }`}
                   >
-                    {selectedSos.status === 'RESOLVED' && <Check className="w-4 h-4" />}
-                    <span>{selectedSos.status === 'RESOLVED' ? 'Selesai Ditangani' : 'Selesai'}</span>
+                    {isUpdating ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Check className="w-4 h-4" />
+                    )}
+                    <span>Selesai Ditangani</span>
                   </button>
                 </div>
               </div>
