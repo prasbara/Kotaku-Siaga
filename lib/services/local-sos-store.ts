@@ -127,6 +127,11 @@ class LocalSOSStore {
     const current = this.sosList[index]
     const now = new Date().toISOString()
 
+    // Status is strictly sealed once final (RESOLVED / FALSE_ALARM)
+    if (updates.status && (current.status === 'RESOLVED' || current.status === 'FALSE_ALARM')) {
+      return current
+    }
+
     const updated: SOSEventRecord = {
       ...current,
       ...updates,
