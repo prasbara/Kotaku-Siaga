@@ -156,11 +156,43 @@ ALTER TABLE priority_scores ENABLE ROW LEVEL SECURITY;
 ALTER TABLE educational_contents ENABLE ROW LEVEL SECURITY;
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 
+-- Helper functions for non-recursive RLS checks
+CREATE OR REPLACE FUNCTION public.is_admin()
+RETURNS boolean
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+STABLE
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.profiles
+    WHERE id = (SELECT auth.uid()) AND role = 'admin'
+  );
+$$;
+
+CREATE OR REPLACE FUNCTION public.is_staff()
+RETURNS boolean
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+STABLE
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.profiles
+    WHERE id = (SELECT auth.uid()) AND role IN ('admin', 'government')
+  );
+$$;
+
+GRANT EXECUTE ON FUNCTION public.is_admin() TO authenticated, anon;
+GRANT EXECUTE ON FUNCTION public.is_staff() TO authenticated, anon;
+
 -- Reports: Everyone can read, authenticated users can insert
 CREATE POLICY "reports_select" ON reports FOR SELECT USING (true);
 CREATE POLICY "reports_insert" ON reports FOR INSERT WITH CHECK (true);
 CREATE POLICY "reports_update_admin" ON reports FOR UPDATE USING (
-  EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('admin', 'government'))
+  public.is_staff()
+) WITH CHECK (
+  public.is_staff()
 );
 
 -- AI Analysis: Everyone can read
@@ -170,7 +202,7 @@ CREATE POLICY "ai_analysis_insert" ON ai_analysis FOR INSERT WITH CHECK (true);
 -- Areas: Everyone can read
 CREATE POLICY "areas_select" ON areas FOR SELECT USING (true);
 CREATE POLICY "areas_insert_admin" ON areas FOR INSERT WITH CHECK (
-  EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('admin', 'government'))
+  public.is_staff()
 );
 
 -- Priority scores: Everyone can read
@@ -180,13 +212,13 @@ CREATE POLICY "priority_scores_insert" ON priority_scores FOR INSERT WITH CHECK 
 -- Educational contents: Everyone can read
 CREATE POLICY "educational_contents_select" ON educational_contents FOR SELECT USING (true);
 CREATE POLICY "educational_contents_insert_admin" ON educational_contents FOR INSERT WITH CHECK (
-  EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('admin'))
+  public.is_admin()
 );
 
 -- Profiles: Users can read their own, admins can read all
 CREATE POLICY "profiles_select_own" ON profiles FOR SELECT USING (auth.uid() = id);
 CREATE POLICY "profiles_select_admin" ON profiles FOR SELECT USING (
-  EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
+  public.is_admin()
 );
 CREATE POLICY "profiles_update_own" ON profiles FOR UPDATE USING (auth.uid() = id);
 

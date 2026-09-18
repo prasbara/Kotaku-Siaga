@@ -1,4 +1,4 @@
-﻿-- ============================================================
+-- ============================================================
 -- KotaKu Siaga - Production Migration: Email OTP + SOS + Incident Clustering
 -- Run this in Supabase SQL Editor
 -- ============================================================
@@ -54,8 +54,7 @@ CREATE TABLE IF NOT EXISTS incident_clusters (
 ALTER TABLE incident_clusters ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "clusters_select_public" ON incident_clusters FOR SELECT USING (true);
 CREATE POLICY "clusters_all_service" ON incident_clusters FOR ALL USING (
-  auth.role() = 'service_role' OR
-  EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('admin', 'government'))
+  auth.role() = 'service_role' OR public.is_staff()
 );
 
 CREATE TRIGGER incident_clusters_updated_at
@@ -98,12 +97,10 @@ CREATE TABLE IF NOT EXISTS sos_events (
 ALTER TABLE sos_events ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "sos_insert_public" ON sos_events FOR INSERT WITH CHECK (true);
 CREATE POLICY "sos_select_admin" ON sos_events FOR SELECT USING (
-  auth.role() = 'service_role' OR
-  EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('admin', 'government'))
+  auth.role() = 'service_role' OR public.is_staff()
 );
 CREATE POLICY "sos_update_admin" ON sos_events FOR UPDATE USING (
-  auth.role() = 'service_role' OR
-  EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('admin', 'government'))
+  auth.role() = 'service_role' OR public.is_staff()
 );
 
 CREATE TRIGGER sos_events_updated_at
