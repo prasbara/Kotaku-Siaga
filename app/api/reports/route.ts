@@ -87,8 +87,15 @@ export async function GET(request: NextRequest) {
         query = query.eq('category', category)
       }
     }
-    if (urgency && urgency !== 'all') query = query.eq('urgency', urgency)
-    if (status && status !== 'all') query = query.eq('status', status)
+    if (status && status !== 'all') {
+      if (status === 'active') {
+        query = query
+          .not('status', 'in', '("rejected","resolved","cancelled","duplicate")')
+          .not('verification_status', 'in', '("rejected","failed")')
+      } else {
+        query = query.eq('status', status)
+      }
+    }
     if (district && district !== 'all') query = query.ilike('district_name', `%${district}%`)
     if (simulationParam !== null && simulationParam !== undefined) {
       query = query.eq('is_demo', simulationParam === 'true')

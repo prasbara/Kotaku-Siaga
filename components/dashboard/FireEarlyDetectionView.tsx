@@ -35,6 +35,7 @@ import type {
 import type { Report } from '@/types'
 import { InteractiveMap } from '@/components/map/InteractiveMap'
 import { formatRelativeTime } from '@/lib/utils'
+import { isActiveFireReport } from '@/lib/services/fire-status'
 
 export function FireEarlyDetectionView() {
   const [observations, setObservations] = useState<FireObservation[]>([])
@@ -89,7 +90,7 @@ export function FireEarlyDetectionView() {
         fetch('/api/fire/cases'),
         fetch('/api/fire/incidents'),
         fetch('/api/fire/stats'),
-        fetch('/api/reports?category=kebakaran&limit=50'),
+        fetch('/api/reports?category=kebakaran&status=active&limit=50'),
       ])
 
       const nowWib =
@@ -124,7 +125,10 @@ export function FireEarlyDetectionView() {
 
       if (repRes.ok) {
         const repData = await repRes.json()
-        if (repData.success) setCitizenReports(repData.data || [])
+        if (repData.success && Array.isArray(repData.data)) {
+          // Canonical single source of truth: strictly filter out rejected, resolved, or cancelled reports
+          setCitizenReports(repData.data.filter(isActiveFireReport))
+        }
       }
     } catch (err) {
       console.error('Failed to fetch fire early detection data:', err)
@@ -147,6 +151,37 @@ export function FireEarlyDetectionView() {
     status: FireInvestigationCase['status'],
     notes?: string
   ) => {
+    // 1. Optimistic instant local state update (eliminates stale UI without hard refresh)
+    setCases((prev) =>
+      prev.map((c) =>
+        c.id === caseId
+          ? {
+              ...c,
+              status,
+              updated_at: new Date().toISOString(),
+              timeline: [
+                ...c.timeline,
+                {
+                  time: new Date().toISOString(),
+                  label: `Status kasus diubah menjadi ${status}`,
+                  actor: 'Operator Pusat Kendali Siaga',
+                  details: notes || undefined,
+                },
+              ],
+            }
+          : c
+      )
+    )
+
+    if (status === 'REJECTED' || status === 'DISMISSED') {
+      // Immediately purge related citizen reports from active map markers
+      const targetCase = cases.find((c) => c.id === caseId)
+      const linkedReportIds = new Set(targetCase?.citizen_reports?.map((r) => r.id) || [])
+      if (linkedReportIds.size > 0) {
+        setCitizenReports((prev) => prev.filter((r) => !linkedReportIds.has(r.id)))
+      }
+    }
+
     try {
       const res = await fetch(`/api/fire/cases/${caseId}`, {
         method: 'PATCH',
@@ -158,14 +193,18 @@ export function FireEarlyDetectionView() {
         }),
       })
       if (res.ok) {
-        fetchData()
-        if (selectedCase?.id === caseId) {
-          const updated = await res.json()
-          if (updated.success) setSelectedCase(updated.data)
+        const updated = await res.json()
+        if (updated.success && updated.data) {
+          setCases((prev) => prev.map((c) => (c.id === caseId ? updated.data : c)))
+          if (selectedCase?.id === caseId) {
+            setSelectedCase(updated.data)
+          }
         }
+        fetchData(false)
       }
     } catch (err) {
       console.error('Error updating case status:', err)
+      fetchData(false)
     }
   }
 

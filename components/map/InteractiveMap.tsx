@@ -8,6 +8,7 @@ import type { CCTVPoint } from '@/lib/data/cctv-pantausemar'
 import type { FloodEvent } from '@/types/flood-event'
 import type { SafeRoutePreset } from '@/components/map/SafeRouteNavigator'
 import type { FireObservation, FireInvestigationCase, FireIncident } from '@/types/fire'
+import { isReportActive, isActiveFireReport, isFireCaseActive, isFireObservationActive } from '@/lib/services/fire-status'
 
 interface InteractiveMapProps {
   reports: Report[]
@@ -229,9 +230,16 @@ export function InteractiveMap({
       fireIncidentMarkersRef.current = []
 
       reports.forEach((report) => {
+        // Strict active check: Inactive/rejected/resolved/cancelled reports must NEVER be rendered as active markers
+        const isFire = report.category === 'kebakaran' || (report.verification_metadata as any)?.actual_category === 'kebakaran'
+        if (isFire) {
+          if (!isActiveFireReport(report)) return
+        } else {
+          if (!isReportActive(report)) return
+        }
+
         const isSelected = selectedReport?.id === report.id
         const urgency = report.urgency || 'sedang'
-        const isFire = report.category === 'kebakaran'
         const isSimulation = Boolean(report.is_simulation || report.is_demo)
 
         // Tactical Civic Intelligence Color Tokens
@@ -709,6 +717,7 @@ export function InteractiveMap({
       // Render Fire Observation Layers (Satellite Thermal Anomalies)
       if (showFireLayers && fireObservations && fireObservations.length > 0) {
         fireObservations.forEach((obs) => {
+          if (!isFireObservationActive(obs)) return
           const obsSize = 32
           const isHighConf = obs.confidence === 'high'
           const obsColor = isHighConf ? '#EA580C' : '#F59E0B'
@@ -821,6 +830,7 @@ export function InteractiveMap({
       // Render Fire Investigation Cases (Multi-Source Correlated)
       if (showFireLayers && fireCases && fireCases.length > 0) {
         fireCases.forEach((cItem) => {
+          if (!isFireCaseActive(cItem)) return
           const caseSize = 36
           const isCritical = cItem.detection_priority === 'CRITICAL'
           const caseColor = isCritical ? '#DC2626' : '#D97706'
@@ -900,6 +910,7 @@ export function InteractiveMap({
       // Render Verified Fire Incidents
       if (showFireLayers && fireIncidents && fireIncidents.length > 0) {
         fireIncidents.forEach((inc) => {
+          if (inc.verification_status === 'RESOLVED') return
           const incSize = 34
           const incIcon = L.divIcon({
             className: 'custom-verified-fire-marker',

@@ -71,7 +71,15 @@ class LocalReportStore {
       list = list.filter((r) => r.urgency === filters.urgency)
     }
     if (filters.status && filters.status !== 'all') {
-      list = list.filter((r) => r.status === filters.status)
+      if (filters.status === 'active') {
+        list = list.filter(
+          (r) =>
+            !['rejected', 'resolved', 'cancelled', 'closed', 'duplicate'].includes(r.status) &&
+            !['rejected', 'failed'].includes(r.verification_status || '')
+        )
+      } else {
+        list = list.filter((r) => r.status === filters.status)
+      }
     }
     if (filters.district && filters.district !== 'all') {
       const distLower = filters.district.toLowerCase()

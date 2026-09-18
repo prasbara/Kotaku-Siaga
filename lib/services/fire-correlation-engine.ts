@@ -14,6 +14,7 @@ import type {
 import { localFireStore } from './local-fire-store'
 import { localReportStore } from './local-report-store'
 import { PANTAUSEMAR_CCTV_POINTS } from '@/lib/data/cctv-pantausemar'
+import { isActiveFireReport } from './fire-status'
 
 /**
  * Haversine formula to compute great-circle distance in kilometers
@@ -124,10 +125,8 @@ export class FireCorrelationEngine {
     const observations = localFireStore.getObservations({ limit: 100 })
     const { data: allReports } = localReportStore.getAll({ limit: 200 })
 
-    // Filter only fire reports or emergency reports
-    const fireCitizenReports = allReports.filter(
-      (r) => r.category === 'kebakaran' || (r.description && r.description.toLowerCase().includes('kebakaran') || r.description?.toLowerCase().includes('api'))
-    )
+    // Filter only active, verified/investigating fire reports (strictly exclude rejected/resolved)
+    const fireCitizenReports = allReports.filter(isActiveFireReport)
 
     const generatedCases: FireInvestigationCase[] = []
     const nowIso = new Date().toISOString()

@@ -16,6 +16,7 @@ import type {
   DetectionPriority,
 } from '@/types/fire'
 import { nasaFirmsService } from './nasa-firms'
+import { localReportStore } from './local-report-store'
 
 const DATA_DIR = path.join(process.cwd(), '.data')
 const FIRE_STORE_FILE = path.join(DATA_DIR, 'fire_store.json')
@@ -255,6 +256,20 @@ class LocalFireStore {
       if (status === 'UNDER_REVIEW') this.updateObservationStatus(sig.id, 'UNDER_REVIEW')
       else if (status === 'VERIFIED') this.updateObservationStatus(sig.id, 'VERIFIED')
       else if (status === 'DISMISSED' || status === 'REJECTED') this.updateObservationStatus(sig.id, 'DISMISSED')
+    }
+
+    // Synchronize member citizen reports: If case is rejected/dismissed, reject linked reports
+    if (status === 'REJECTED' || status === 'DISMISSED') {
+      try {
+        for (const cr of caseItem.citizen_reports) {
+          localReportStore.update(cr.id, {
+            status: 'rejected',
+            verification_status: 'rejected',
+          })
+        }
+      } catch {
+        // Safe fallback
+      }
     }
 
     this.save()

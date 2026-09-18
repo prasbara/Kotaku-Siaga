@@ -66,6 +66,24 @@ export async function PATCH(
       )
     }
 
+    // If case is rejected/dismissed, synchronize Supabase database reports as well
+    if ((body.status === 'REJECTED' || body.status === 'DISMISSED') && updated.citizen_reports?.length > 0) {
+      try {
+        const { createAdminClient, isSupabaseConfigured } = await import('@/lib/supabase/server')
+        if (isSupabaseConfigured()) {
+          const supabase = await createAdminClient()
+          const ids = updated.citizen_reports.map((cr) => cr.id)
+          await supabase.from('reports').update({
+            status: 'rejected',
+            verification_status: 'rejected',
+            updated_at: new Date().toISOString(),
+          }).in('id', ids)
+        }
+      } catch (syncErr) {
+        console.warn('Failed to sync rejected status to Supabase reports:', syncErr)
+      }
+    }
+
     return NextResponse.json({
       success: true,
       data: updated,
