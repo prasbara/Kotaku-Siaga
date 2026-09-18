@@ -43,6 +43,9 @@ CREATE TABLE IF NOT EXISTS reports (
   status TEXT NOT NULL DEFAULT 'submitted' CHECK (status IN (
     'submitted', 'under_review', 'verified', 'in_progress', 'resolved', 'rejected', 'suspicious', 'duplicate'
   )),
+  verification_status TEXT DEFAULT 'pending' CHECK (verification_status IN (
+    'pending', 'submitted', 'under_review', 'verified', 'rejected', 'failed', 'suspicious'
+  )),
   credibility_score INTEGER CHECK (credibility_score >= 0 AND credibility_score <= 100),
   verification_metadata JSONB,
   photo_url TEXT,
@@ -71,6 +74,9 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER reports_updated_at
   BEFORE UPDATE ON reports
   FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+CREATE INDEX IF NOT EXISTS idx_reports_status ON reports(status);
+CREATE INDEX IF NOT EXISTS idx_reports_verification_status ON reports(verification_status);
 
 -- ============================================================
 -- AI ANALYSIS TABLE

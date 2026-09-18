@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import type { Report } from '@/types'
+import type { Report, ReportStatus } from '@/types'
 import { CATEGORY_LABELS } from '@/types'
 import { formatRelativeTime } from '@/lib/utils'
 import {
@@ -174,10 +174,40 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
     setUpdatingId(reportId)
     const previousReports = [...localReports]
 
+    const typedStatus = newStatus as ReportStatus
+    const verStatus =
+      newStatus === 'verified'
+        ? 'verified'
+        : newStatus === 'rejected'
+        ? 'rejected'
+        : newStatus === 'under_review'
+        ? 'under_review'
+        : undefined
+
     // Optimistic local update
     setLocalReports((prev) =>
-      prev.map((r) => (r.id === reportId ? { ...r, status: newStatus as any } : r))
+      prev.map((r) =>
+        r.id === reportId
+          ? {
+              ...r,
+              status: typedStatus,
+              ...(verStatus ? { verification_status: verStatus } : {}),
+            }
+          : r
+      )
     )
+
+    if (selectedReportForModal && selectedReportForModal.id === reportId) {
+      setSelectedReportForModal((prev) =>
+        prev
+          ? {
+              ...prev,
+              status: typedStatus,
+              ...(verStatus ? { verification_status: verStatus } : {}),
+            }
+          : null
+      )
+    }
 
     try {
       const res = await fetch(`/api/reports/${reportId}`, {
@@ -197,6 +227,9 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
           setLocalReports((prev) =>
             prev.map((r) => (r.id === reportId ? { ...r, ...data.data } : r))
           )
+          if (selectedReportForModal && selectedReportForModal.id === reportId) {
+            setSelectedReportForModal((prev) => (prev ? { ...prev, ...data.data } : null))
+          }
         }
         toast({
           title: 'Status Laporan Diperbarui',
@@ -207,9 +240,12 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
       } else {
         // Revert optimistic update on failure
         setLocalReports(previousReports)
-        const errorDesc = data.detail
-          ? `${data.error} (${data.detail})`
-          : data.error || 'Terjadi kendala saat memperbarui status di basis data.'
+        if (selectedReportForModal && selectedReportForModal.id === reportId) {
+          const original = previousReports.find((p) => p.id === reportId)
+          if (original) setSelectedReportForModal(original)
+        }
+        console.error('[STATUS_UPDATE_FAILURE]', data)
+        const errorDesc = data.error || 'Status laporan gagal diperbarui. Silakan coba lagi.'
 
         toast({
           title: 'Gagal Memperbarui Status',
@@ -219,12 +255,16 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
       }
     } catch (err: any) {
       setLocalReports(previousReports)
+      if (selectedReportForModal && selectedReportForModal.id === reportId) {
+        const original = previousReports.find((p) => p.id === reportId)
+        if (original) setSelectedReportForModal(original)
+      }
+      console.error('[STATUS_UPDATE_NETWORK_ERROR]', err)
       toast({
         title: 'Kesalahan Jaringan',
-        description: err?.message || 'Gagal menghubungi server untuk memperbarui status.',
+        description: 'Gagal menghubungi server untuk memperbarui status. Silakan coba lagi.',
         variant: 'destructive',
       })
-      console.error('handleUpdateStatus error:', err)
     } finally {
       setTimeout(() => setUpdatingId(null), 300)
     }

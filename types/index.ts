@@ -26,6 +26,15 @@ export type ReportStatus =
   | 'suspicious'
   | 'duplicate'
 
+export type VerificationStatus =
+  | 'pending'
+  | 'submitted'
+  | 'under_review'
+  | 'verified'
+  | 'rejected'
+  | 'failed'
+  | 'suspicious'
+
 // Structured Dynamic Incident Data Models
 export type FireCondition =
   | 'api_terlihat'
@@ -161,7 +170,7 @@ export interface Report {
   client_ip_hash?: string | null
   // Reporter Verification & Liveness Audit
   verification_method?: 'camera_liveness' | 'otp' | 'none' | null
-  verification_status?: 'verified' | 'failed' | 'pending' | null
+  verification_status?: VerificationStatus | null
   verification_photo_url?: string | null
   verification_timestamp?: string | null
   liveness_score?: number | null
@@ -346,6 +355,16 @@ export const STATUS_LABELS: Record<ReportStatus, string> = {
   rejected: 'Ditolak',
   suspicious: 'Mencurigakan / Spam',
   duplicate: 'Duplikat',
+}
+
+export const VERIFICATION_STATUS_LABELS: Record<VerificationStatus, string> = {
+  pending: 'Menunggu Verifikasi',
+  submitted: 'Menunggu Verifikasi',
+  under_review: 'Sedang Ditinjau',
+  verified: 'Terverifikasi',
+  rejected: 'Ditolak',
+  failed: 'Verifikasi Gagal',
+  suspicious: 'Mencurigakan / Spam',
 }
 
 export const URGENCY_COLORS: Record<UrgencyLevel, string> = {

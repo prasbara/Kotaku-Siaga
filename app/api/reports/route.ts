@@ -116,7 +116,7 @@ export async function GET(request: NextRequest) {
       const isCameraVerified = meta?.verification_method === 'camera_liveness' || Boolean(meta?.verification_photo_url)
       const isOtpVerified = Boolean(report.email_verified || meta?.email_verified)
       const verificationMethod = meta?.verification_method || (isCameraVerified ? 'camera_liveness' : isOtpVerified ? 'otp' : 'none')
-      const verificationStatus = meta?.verification_status || (isCameraVerified || isOtpVerified ? 'verified' : 'pending')
+      const verificationStatus = report.verification_status || meta?.verification_status || (isCameraVerified || isOtpVerified ? 'verified' : 'pending')
 
       const assignedAgency =
         report.assigned_agency ||
@@ -612,6 +612,9 @@ export async function POST(request: NextRequest) {
         location_accuracy: verification.metadata.location_accuracy,
         urgency,
         status: determinedStatus,
+        verification_status:
+          body.verification_status ||
+          (safeVerificationPhotoUrl || email_verified ? 'verified' : 'pending'),
         credibility_score: verification.credibilityScore,
         verification_metadata: unifiedVerificationMetadata,
         photo_url: primaryEvidence?.photoUrl || photo_url || (rawPhotos[0] ?? null),
@@ -653,6 +656,9 @@ export async function POST(request: NextRequest) {
       location_accuracy: verification.metadata.location_accuracy,
       urgency,
       status: determinedStatus,
+      verification_status:
+        body.verification_status ||
+        (safeVerificationPhotoUrl || email_verified ? 'verified' : 'pending'),
       credibility_score: verification.credibilityScore,
       verification_metadata: unifiedVerificationMetadata,
       photo_url: primaryEvidence?.photoUrl || photo_url || (rawPhotos[0] ?? null),

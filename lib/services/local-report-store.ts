@@ -128,6 +128,13 @@ class LocalReportStore {
       lng: reportData.longitude || 110.4203,
       urgency: reportData.urgency || 'sedang',
       status: reportData.status || 'submitted',
+      verification_status:
+        reportData.verification_status ||
+        (reportData.status === 'verified'
+          ? 'verified'
+          : reportData.status === 'rejected'
+          ? 'rejected'
+          : 'pending'),
       photo_url: reportData.photo_url || null,
       reporter_name: reportData.reporter_name || null,
       reporter_contact: reportData.reporter_contact || null,

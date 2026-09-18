@@ -48,7 +48,7 @@ export async function GET(
     const isCameraVerified = meta?.verification_method === 'camera_liveness' || Boolean(meta?.verification_photo_url)
     const isOtpVerified = Boolean(data.email_verified || meta?.email_verified)
     const verificationMethod = meta?.verification_method || (isCameraVerified ? 'camera_liveness' : isOtpVerified ? 'otp' : 'none')
-    const verificationStatus = meta?.verification_status || (isCameraVerified || isOtpVerified ? 'verified' : 'pending')
+    const verificationStatus = data.verification_status || meta?.verification_status || (isCameraVerified || isOtpVerified ? 'verified' : 'pending')
 
     const assignedAgency =
       data.assigned_agency ||
@@ -114,6 +114,16 @@ const VALID_STATUSES = [
   'duplicate',
 ]
 
+const VALID_VERIFICATION_STATUSES = [
+  'pending',
+  'submitted',
+  'under_review',
+  'verified',
+  'rejected',
+  'failed',
+  'suspicious',
+]
+
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -157,6 +167,29 @@ export async function PATCH(
       )
     }
 
+    // Validate verification_status if provided
+    if (updateData.verification_status !== undefined) {
+      const verStatusStr = String(updateData.verification_status).toLowerCase().trim()
+      if (!VALID_VERIFICATION_STATUSES.includes(verStatusStr)) {
+        return NextResponse.json(
+          {
+            error: `Status verifikasi tidak valid: "${updateData.verification_status}".`,
+            detail: `Status verifikasi yang diizinkan: ${VALID_VERIFICATION_STATUSES.join(', ')}`,
+            code: 'INVALID_VERIFICATION_STATUS',
+          },
+          { status: 400 }
+        )
+      }
+      updateData.verification_status = verStatusStr
+
+      // If status not explicitly provided, synchronize status
+      if (updateData.status === undefined) {
+        if (verStatusStr === 'verified') updateData.status = 'verified'
+        else if (verStatusStr === 'rejected') updateData.status = 'rejected'
+        else if (verStatusStr === 'under_review') updateData.status = 'under_review'
+      }
+    }
+
     // Validate status if provided
     if (updateData.status !== undefined) {
       const statusStr = String(updateData.status).toLowerCase().trim()
@@ -179,6 +212,8 @@ export async function PATCH(
         updateData.verification_status = 'rejected'
       } else if (statusStr === 'under_review' && updateData.verification_status === undefined) {
         updateData.verification_status = 'under_review'
+      } else if (statusStr === 'submitted' && updateData.verification_status === undefined) {
+        updateData.verification_status = 'pending'
       }
     }
 
@@ -314,6 +349,22 @@ export async function PATCH(
             code: 'TIMEOUT',
           },
           { status: 504 }
+        )
+      }
+
+      // Schema cache or column mismatch error
+      if (
+        lastError?.code === 'PGRST204' ||
+        (lastError?.message || '').toLowerCase().includes('schema cache') ||
+        (lastError?.message || '').toLowerCase().includes('could not find the')
+      ) {
+        return NextResponse.json(
+          {
+            error: 'Skema basis data belum tersinkronisasi. Silakan coba sesaat lagi.',
+            detail: lastError?.message || 'Skema basis data belum tersinkronisasi.',
+            code: 'SCHEMA_CACHE_ERROR',
+          },
+          { status: 503 }
         )
       }
 
