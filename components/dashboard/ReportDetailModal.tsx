@@ -1121,55 +1121,67 @@ export function ReportDetailModal({
           </div>
 
           <div className="flex items-center gap-2">
-            {report.status !== 'verified' && report.status !== 'resolved' && (
-              <button
-                type="button"
-                disabled={isUpdating}
-                onClick={async () => {
-                  if (onUpdateStatus) {
-                    await onUpdateStatus(report.id, 'verified')
-                    onClose()
-                  }
-                }}
-                className="px-4 py-2 rounded-xl text-xs font-mono font-bold uppercase bg-[#007a5a] text-white hover:bg-[#006046] active:scale-95 transition-all shadow-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-              >
-                <Check className="w-4 h-4" />
-                <span>Verifikasi Laporan</span>
-              </button>
-            )}
+            {report.status === 'resolved' ? (
+              <span className="px-3.5 py-2 rounded-xl text-xs font-mono font-bold uppercase bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center gap-1.5 shadow-xs">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                <span>Laporan Selesai (Status Final)</span>
+              </span>
+            ) : report.status === 'rejected' ? (
+              <span className="px-3.5 py-2 rounded-xl text-xs font-mono font-bold uppercase bg-rose-50 text-rose-800 border border-rose-200 flex items-center gap-1.5 shadow-xs">
+                <XCircle className="w-4 h-4 text-rose-600" />
+                <span>Laporan Ditolak (Status Final)</span>
+              </span>
+            ) : (
+              <>
+                {report.status !== 'verified' && (
+                  <button
+                    type="button"
+                    disabled={isUpdating}
+                    onClick={async () => {
+                      if (onUpdateStatus) {
+                        await onUpdateStatus(report.id, 'verified')
+                        onClose()
+                      }
+                    }}
+                    className="px-4 py-2 rounded-xl text-xs font-mono font-bold uppercase bg-[#007a5a] text-white hover:bg-[#006046] active:scale-95 transition-all shadow-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                  >
+                    <Check className="w-4 h-4" />
+                    <span>Verifikasi Laporan</span>
+                  </button>
+                )}
 
-            {report.status !== 'under_review' && report.status !== 'resolved' && (
-              <button
-                type="button"
-                disabled={isUpdating}
-                onClick={async () => {
-                  if (onUpdateStatus) {
-                    await onUpdateStatus(report.id, 'under_review')
-                    onClose()
-                  }
-                }}
-                className="px-3 py-2 rounded-xl text-xs font-mono font-bold uppercase bg-[#fbf9f5] text-[#4a154b] border border-[#d0c8be] hover:bg-[#ebdccb] active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-              >
-                <Clock className="w-4 h-4" />
-                <span>Minta Tinjauan</span>
-              </button>
-            )}
+                {report.status !== 'under_review' && (
+                  <button
+                    type="button"
+                    disabled={isUpdating}
+                    onClick={async () => {
+                      if (onUpdateStatus) {
+                        await onUpdateStatus(report.id, 'under_review')
+                        onClose()
+                      }
+                    }}
+                    className="px-3 py-2 rounded-xl text-xs font-mono font-bold uppercase bg-[#fbf9f5] text-[#4a154b] border border-[#d0c8be] hover:bg-[#ebdccb] active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                  >
+                    <Clock className="w-4 h-4" />
+                    <span>Minta Tinjauan</span>
+                  </button>
+                )}
 
-            {report.status !== 'rejected' && (
-              <button
-                type="button"
-                disabled={isUpdating}
-                onClick={async () => {
-                  if (onUpdateStatus) {
-                    await onUpdateStatus(report.id, 'rejected')
-                    onClose()
-                  }
-                }}
-                className="px-3 py-2 rounded-xl text-xs font-mono font-bold uppercase bg-[#fdf2f0] text-[#cc4117] border border-[#fca5a5] hover:bg-[#fee2e2] active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-              >
-                <XCircle className="w-4 h-4" />
-                <span>Tolak Laporan</span>
-              </button>
+                <button
+                  type="button"
+                  disabled={isUpdating}
+                  onClick={async () => {
+                    if (onUpdateStatus) {
+                      await onUpdateStatus(report.id, 'rejected')
+                      onClose()
+                    }
+                  }}
+                  className="px-3 py-2 rounded-xl text-xs font-mono font-bold uppercase bg-[#fdf2f0] text-[#cc4117] border border-[#fca5a5] hover:bg-[#fee2e2] active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                >
+                  <XCircle className="w-4 h-4" />
+                  <span>Tolak Laporan</span>
+                </button>
+              </>
             )}
 
             <button

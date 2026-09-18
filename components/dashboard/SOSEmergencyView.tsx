@@ -16,6 +16,7 @@ import {
   Camera,
   Check,
   Loader2,
+  XCircle,
 } from 'lucide-react'
 import { formatRelativeTime } from '@/lib/utils'
 import { toast } from '@/components/ui/use-toast'
@@ -73,6 +74,13 @@ export function SOSEmergencyView() {
 
   const handleUpdateStatus = async (status: string) => {
     if (!selectedSos) return
+    if (selectedSos.status === 'RESOLVED' || selectedSos.status === 'FALSE_ALARM') {
+      toast({
+        title: 'Status Sudah Final',
+        description: 'Sinyal darurat ini telah ditutup dan status penanganannya tidak dapat diubah lagi.',
+      })
+      return
+    }
     const targetId = selectedSos.id || selectedSos.sos_code
     setIsUpdating(true)
 
@@ -132,7 +140,7 @@ export function SOSEmergencyView() {
     }
   }
 
-  const activeCount = sosList.filter((s) => s.status === 'NEW' || s.status === 'ACKNOWLEDGED').length
+  const activeCount = sosList.filter((s) => s.status !== 'RESOLVED' && s.status !== 'FALSE_ALARM').length
 
   return (
     <div className="flex flex-col gap-6 animate-in fade-in duration-200">
@@ -259,6 +267,8 @@ export function SOSEmergencyView() {
                     className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${
                       selectedSos.status === 'RESOLVED'
                         ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                        : selectedSos.status === 'FALSE_ALARM'
+                        ? 'bg-rose-100 text-rose-800 border border-rose-300'
                         : selectedSos.status === 'DISPATCHED'
                         ? 'bg-blue-100 text-blue-800 border border-blue-300'
                         : 'bg-amber-100 text-amber-800 border border-amber-300'
@@ -331,53 +341,76 @@ export function SOSEmergencyView() {
                   </a>
                 </div>
 
-                <div className="flex items-center gap-2">
-                  {/* Tandai Tim Terjun Button */}
-                  <button
-                    type="button"
-                    onClick={() => handleUpdateStatus('DISPATCHED')}
-                    disabled={isUpdating}
-                    className={`min-h-[42px] px-4 py-2 rounded-[90px] font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer ${
-                      selectedSos.status === 'DISPATCHED'
-                        ? 'bg-[#007a5a] text-white ring-2 ring-[#007a5a]/30 shadow-sm'
-                        : selectedSos.status === 'RESOLVED'
-                        ? 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-100'
-                        : 'bg-[#007a5a] text-white hover:bg-[#006046]'
-                    }`}
-                  >
-                    {isUpdating ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
+                {selectedSos.status === 'RESOLVED' || selectedSos.status === 'FALSE_ALARM' ? (
+                  <div className="flex flex-wrap items-center gap-2.5">
+                    {selectedSos.status === 'RESOLVED' ? (
+                      <div className="min-h-[40px] px-4 py-2 rounded-[90px] bg-emerald-50 border border-emerald-300 text-emerald-800 text-xs font-bold flex items-center gap-2 shadow-xs">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                        <span>Selesai Ditangani (Status Final)</span>
+                      </div>
                     ) : (
-                      <CheckCircle2 className="w-4 h-4" />
+                      <div className="min-h-[40px] px-4 py-2 rounded-[90px] bg-rose-50 border border-rose-300 text-rose-800 text-xs font-bold flex items-center gap-2 shadow-xs">
+                        <XCircle className="w-4 h-4 text-rose-600" />
+                        <span>Ditolak / Alarm Palsu (Status Final)</span>
+                      </div>
                     )}
-                    <span>
-                      {selectedSos.status === 'DISPATCHED'
-                        ? 'Tim di Lapangan'
-                        : selectedSos.status === 'RESOLVED'
-                        ? 'Tugaskan Kembali Tim'
-                        : 'Tandai Tim Terjun'}
+                    <span className="text-[11px] text-[#696969] italic">
+                      Tiket telah selesai diproses dan tidak dapat diubah kembali.
                     </span>
-                  </button>
+                  </div>
+                ) : (
+                  <div className="flex flex-wrap items-center gap-2">
+                    {/* Tandai Tim Terjun Button */}
+                    <button
+                      type="button"
+                      onClick={() => handleUpdateStatus('DISPATCHED')}
+                      disabled={isUpdating || selectedSos.status === 'DISPATCHED'}
+                      className={`min-h-[42px] px-4 py-2 rounded-[90px] font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer ${
+                        selectedSos.status === 'DISPATCHED'
+                          ? 'bg-[#007a5a] text-white ring-2 ring-[#007a5a]/30 shadow-sm cursor-default'
+                          : 'bg-white border-2 border-[#007a5a] text-[#007a5a] hover:bg-[#007a5a] hover:text-white'
+                      }`}
+                    >
+                      {isUpdating ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <CheckCircle2 className="w-4 h-4" />
+                      )}
+                      <span>{selectedSos.status === 'DISPATCHED' ? 'Tim di Lapangan' : 'Tandai Tim Terjun'}</span>
+                    </button>
 
-                  {/* Selesai Ditangani Button */}
-                  <button
-                    type="button"
-                    onClick={() => handleUpdateStatus('RESOLVED')}
-                    disabled={isUpdating}
-                    className={`min-h-[42px] px-4 py-2 rounded-[90px] font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer ${
-                      selectedSos.status === 'RESOLVED'
-                        ? 'bg-[#007a5a] text-white ring-2 ring-[#007a5a]/30 shadow-sm'
-                        : 'bg-[#f4ede4] hover:bg-[#e8ded2] text-[#1d1d1d] border border-[#d8cbba]'
-                    }`}
-                  >
-                    {isUpdating ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <Check className="w-4 h-4" />
-                    )}
-                    <span>Selesai Ditangani</span>
-                  </button>
-                </div>
+                    {/* Selesai Ditangani Button */}
+                    <button
+                      type="button"
+                      onClick={() => handleUpdateStatus('RESOLVED')}
+                      disabled={isUpdating}
+                      className="min-h-[42px] px-4 py-2 rounded-[90px] font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer bg-[#007a5a] text-white hover:bg-[#006046] shadow-sm active:scale-95"
+                    >
+                      {isUpdating ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Check className="w-4 h-4" />
+                      )}
+                      <span>Selesai Ditangani</span>
+                    </button>
+
+                    {/* Tolak / Alarm Palsu Button */}
+                    <button
+                      type="button"
+                      onClick={() => handleUpdateStatus('FALSE_ALARM')}
+                      disabled={isUpdating}
+                      className="min-h-[42px] px-3.5 py-2 rounded-[90px] font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer bg-[#fdf2f0] text-[#cc4117] border border-[#fca5a5] hover:bg-[#fee2e2] active:scale-95"
+                      title="Tolak sinyal darurat sebagai alarm palsu"
+                    >
+                      {isUpdating ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <XCircle className="w-4 h-4" />
+                      )}
+                      <span>Tolak (Palsu)</span>
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           ) : (

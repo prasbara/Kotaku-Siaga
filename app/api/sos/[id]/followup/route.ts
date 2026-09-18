@@ -40,6 +40,19 @@ export async function POST(
       try {
         const supabase = await createAdminClient()
         const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
+
+        // Check if status is already final
+        let checkQuery = supabase.from('sos_events').select('status')
+        checkQuery = isUuid ? checkQuery.eq('id', id) : checkQuery.eq('sos_code', id)
+        const { data: existingData } = await checkQuery.single()
+
+        if (status && existingData && (existingData.status === 'RESOLVED' || existingData.status === 'FALSE_ALARM')) {
+          return NextResponse.json(
+            { error: 'Status tiket SOS ini sudah final (selesai/ditolak) dan tidak dapat diubah lagi.' },
+            { status: 400 }
+          )
+        }
+
         let query = supabase.from('sos_events').update(updatePayload)
         if (isUuid) {
           query = query.eq('id', id)

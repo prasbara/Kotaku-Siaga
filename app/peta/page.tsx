@@ -131,10 +131,11 @@ export default function PetaPage() {
   // Fetch active SOS signals
   const fetchSosList = useCallback(async () => {
     try {
-      const res = await fetch('/api/sos')
+      const res = await fetch('/api/sos?active_only=true')
       const data = await res.json()
       if (data.success && Array.isArray(data.data)) {
-        setSosList(data.data)
+        // Only display active SOS events on interactive map
+        setSosList(data.data.filter((s: any) => s.status !== 'RESOLVED' && s.status !== 'FALSE_ALARM'))
       }
     } catch (err) {
       console.warn('Gagal mengambil SOS untuk peta:', err)

@@ -1013,72 +1013,84 @@ export function ReportModerationView({ reports, onReportUpdated, onRefresh }: Re
                     <span>{loadingAiId === report.id ? 'Menganalisis...' : aiInsights[report.id] ? 'Ringkasan Siap' : 'Bantuan Ringkasan'}</span>
                   </button>
 
-                  {/* Verifikasi Button */}
-                  {report.status !== 'verified' && report.status !== 'resolved' && (
-                    <button
-                      type="button"
-                      disabled={isUpdating || loadingAiId === report.id}
-                      onClick={() => handleUpdateStatus(report.id, 'verified')}
-                      className="min-h-[36px] px-3.5 py-1.5 rounded-lg text-xs font-mono font-bold uppercase bg-[#007a5a] text-white hover:bg-[#006046] active:scale-95 transition-all shadow-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-                      title="Verifikasi laporan ini"
-                    >
-                      {isUpdating ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
-                      <span>Verifikasi</span>
-                    </button>
-                  )}
+                  {report.status === 'resolved' ? (
+                    <span className="min-h-[36px] px-3.5 py-1.5 rounded-lg text-xs font-mono font-bold uppercase bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center gap-1.5 shadow-xs">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>Selesai (Status Final)</span>
+                    </span>
+                  ) : report.status === 'rejected' ? (
+                    <span className="min-h-[36px] px-3.5 py-1.5 rounded-lg text-xs font-mono font-bold uppercase bg-rose-50 text-rose-800 border border-rose-200 flex items-center gap-1.5 shadow-xs">
+                      <XCircle className="w-3.5 h-3.5 text-rose-600" />
+                      <span>Ditolak (Status Final)</span>
+                    </span>
+                  ) : (
+                    <>
+                      {/* Verifikasi Button */}
+                      {report.status !== 'verified' && (
+                        <button
+                          type="button"
+                          disabled={isUpdating || loadingAiId === report.id}
+                          onClick={() => handleUpdateStatus(report.id, 'verified')}
+                          className="min-h-[36px] px-3.5 py-1.5 rounded-lg text-xs font-mono font-bold uppercase bg-[#007a5a] text-white hover:bg-[#006046] active:scale-95 transition-all shadow-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                          title="Verifikasi laporan ini"
+                        >
+                          {isUpdating ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                          <span>Verifikasi</span>
+                        </button>
+                      )}
 
-                  {/* Tinjau Button */}
-                  {report.status !== 'under_review' && report.status !== 'resolved' && (
-                    <button
-                      type="button"
-                      disabled={isUpdating || loadingAiId === report.id}
-                      onClick={() => handleUpdateStatus(report.id, 'under_review')}
-                      className="min-h-[36px] px-3 py-1.5 rounded-lg text-xs font-mono font-bold uppercase bg-white text-[#4a154b] border border-[#d0c8be] hover:bg-[#f4ede4] active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-                      title="Minta peninjauan ulang"
-                    >
-                      {isUpdating ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Clock className="w-3.5 h-3.5" />}
-                      <span>Tinjau</span>
-                    </button>
-                  )}
+                      {/* Tinjau Button */}
+                      {report.status !== 'under_review' && (
+                        <button
+                          type="button"
+                          disabled={isUpdating || loadingAiId === report.id}
+                          onClick={() => handleUpdateStatus(report.id, 'under_review')}
+                          className="min-h-[36px] px-3 py-1.5 rounded-lg text-xs font-mono font-bold uppercase bg-white text-[#4a154b] border border-[#d0c8be] hover:bg-[#f4ede4] active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                          title="Minta peninjauan ulang"
+                        >
+                          {isUpdating ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Clock className="w-3.5 h-3.5" />}
+                          <span>Tinjau</span>
+                        </button>
+                      )}
 
-                  {/* Tolak Button */}
-                  {report.status !== 'rejected' && (
-                    <button
-                      type="button"
-                      disabled={isUpdating || loadingAiId === report.id}
-                      onClick={() => handleUpdateStatus(report.id, 'rejected')}
-                      className="min-h-[36px] px-3 py-1.5 rounded-lg text-xs font-mono font-bold uppercase bg-[#fdf2f0] text-[#cc4117] border border-[#fca5a5] hover:bg-[#fee2e2] active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-                      title="Tolak laporan"
-                    >
-                      {isUpdating ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <XCircle className="w-3.5 h-3.5" />}
-                      <span>Tolak</span>
-                    </button>
-                  )}
+                      {/* Tolak Button */}
+                      <button
+                        type="button"
+                        disabled={isUpdating || loadingAiId === report.id}
+                        onClick={() => handleUpdateStatus(report.id, 'rejected')}
+                        className="min-h-[36px] px-3 py-1.5 rounded-lg text-xs font-mono font-bold uppercase bg-[#fdf2f0] text-[#cc4117] border border-[#fca5a5] hover:bg-[#fee2e2] active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                        title="Tolak laporan"
+                      >
+                        {isUpdating ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <XCircle className="w-3.5 h-3.5" />}
+                        <span>Tolak</span>
+                      </button>
 
-                  {/* Progress to Assigned / In Progress */}
-                  {report.status === 'verified' && (
-                    <button
-                      type="button"
-                      disabled={isUpdating || loadingAiId === report.id}
-                      onClick={() => handleUpdateStatus(report.id, 'in_progress')}
-                      className="min-h-[36px] px-3.5 py-1.5 rounded-lg text-xs font-mono font-bold uppercase bg-[#4a154b] text-white hover:bg-[#3d123e] transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 shadow-xs"
-                    >
-                      {isUpdating ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Building2 className="w-3.5 h-3.5" />}
-                      <span>Tugaskan Petugas</span>
-                    </button>
-                  )}
+                      {/* Progress to Assigned / In Progress */}
+                      {report.status === 'verified' && (
+                        <button
+                          type="button"
+                          disabled={isUpdating || loadingAiId === report.id}
+                          onClick={() => handleUpdateStatus(report.id, 'in_progress')}
+                          className="min-h-[36px] px-3.5 py-1.5 rounded-lg text-xs font-mono font-bold uppercase bg-[#4a154b] text-white hover:bg-[#3d123e] transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 shadow-xs"
+                        >
+                          {isUpdating ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Building2 className="w-3.5 h-3.5" />}
+                          <span>Tugaskan Petugas</span>
+                        </button>
+                      )}
 
-                  {/* Progress to Resolved */}
-                  {report.status === 'in_progress' && (
-                    <button
-                      type="button"
-                      disabled={isUpdating || loadingAiId === report.id}
-                      onClick={() => handleUpdateStatus(report.id, 'resolved')}
-                      className="min-h-[36px] px-3.5 py-1.5 rounded-lg text-xs font-mono font-bold uppercase bg-[#007a5a] text-white hover:bg-[#006046] transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 shadow-xs"
-                    >
-                      {isUpdating ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
-                      <span>Tandai Selesai</span>
-                    </button>
+                      {/* Progress to Resolved */}
+                      {report.status === 'in_progress' && (
+                        <button
+                          type="button"
+                          disabled={isUpdating || loadingAiId === report.id}
+                          onClick={() => handleUpdateStatus(report.id, 'resolved')}
+                          className="min-h-[36px] px-3.5 py-1.5 rounded-lg text-xs font-mono font-bold uppercase bg-[#007a5a] text-white hover:bg-[#006046] transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50 shadow-xs"
+                        >
+                          {isUpdating ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+                          <span>Tandai Selesai</span>
+                        </button>
+                      )}
+                    </>
                   )}
                 </div>
               </div>

@@ -572,7 +572,11 @@ export function InteractiveMap({
 
       // Render Active SOS Beacons (Critical Emergency Signals)
       if (sosList && sosList.length > 0) {
-        sosList.forEach((sos) => {
+        // Filter out RESOLVED and FALSE_ALARM SOS signals so they don't remain on the map
+        const activeSosList = sosList.filter(
+          (sos) => sos.status !== 'RESOLVED' && sos.status !== 'FALSE_ALARM'
+        )
+        activeSosList.forEach((sos) => {
           const sosSize = 36
           const sosIcon = L.divIcon({
             className: 'custom-sos-marker',

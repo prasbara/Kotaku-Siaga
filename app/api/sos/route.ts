@@ -102,16 +102,25 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// GET /api/sos — Fetch active emergency SOS signals (for Command Center)
+// GET /api/sos — Fetch emergency SOS signals (supports active_only filter)
 export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url)
+    const activeOnly = searchParams.get('active_only') === 'true' || searchParams.get('active') === 'true'
+
     if (isSupabaseConfigured()) {
       const supabase = await createAdminClient()
-      const { data, error } = await supabase
+      let query = supabase
         .from('sos_events')
         .select('*')
         .order('created_at', { ascending: false })
         .limit(50)
+
+      if (activeOnly) {
+        query = query.not('status', 'in', '("RESOLVED","FALSE_ALARM")')
+      }
+
+      const { data, error } = await query
 
       if (!error && data) {
         return NextResponse.json({
@@ -122,7 +131,11 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    const allLocal = localSosStore.getAll()
+    let allLocal = localSosStore.getAll()
+    if (activeOnly) {
+      allLocal = allLocal.filter((s: any) => s.status !== 'RESOLVED' && s.status !== 'FALSE_ALARM')
+    }
+
     return NextResponse.json({
       success: true,
       data: allLocal,
