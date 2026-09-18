@@ -1,8 +1,23 @@
 import assert from 'node:assert/strict'
+import fs from 'fs'
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+let envLocal = {}
+try {
+  const content = fs.readFileSync('.env.local', 'utf-8')
+  content.split('\n').forEach(line => {
+    const parts = line.split('=')
+    if (parts.length >= 2 && !parts[0].trim().startsWith('#')) {
+      const k = parts[0].trim()
+      const v = parts.slice(1).join('=').trim().replace(/^["'](.*)["']$/, '$1')
+      envLocal[k] = v
+    }
+  })
+} catch (e) {}
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || envLocal.NEXT_PUBLIC_SUPABASE_URL || 'https://njvwdjbaatdjgtuwstie.supabase.co'
+const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || envLocal.SUPABASE_SERVICE_ROLE_KEY || 'sb_secret_YVZngOJmOtUUtZuNXQ92-Q_lLLalASJ'
+const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || envLocal.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_8NgDDO9xMhkMk8v0aBZGRQ_ruE9gRrb'
 
 console.log('🧪 Starting Verification Status End-to-End Test Suite...\n')
 
@@ -120,7 +135,6 @@ async function runE2ETests() {
     // TEST 6: Unauthorized user -> tidak dapat mengubah status
     // ----------------------------------------------------
     console.log('\n--- TEST 6: Unauthorized User Access Control ---')
-    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
     if (anonKey) {
       const anonSupabase = createClient(supabaseUrl, anonKey)
       const { data: anonUpdate, error: anonErr } = await anonSupabase

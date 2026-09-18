@@ -1,8 +1,22 @@
 import assert from 'node:assert/strict'
+import fs from 'fs'
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+let envLocal = {}
+try {
+  const content = fs.readFileSync('.env.local', 'utf-8')
+  content.split('\n').forEach(line => {
+    const parts = line.split('=')
+    if (parts.length >= 2 && !parts[0].trim().startsWith('#')) {
+      const k = parts[0].trim()
+      const v = parts.slice(1).join('=').trim().replace(/^["'](.*)["']$/, '$1')
+      envLocal[k] = v
+    }
+  })
+} catch (e) {}
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || envLocal.NEXT_PUBLIC_SUPABASE_URL || 'https://njvwdjbaatdjgtuwstie.supabase.co'
+const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || envLocal.SUPABASE_SERVICE_ROLE_KEY || 'sb_secret_YVZngOJmOtUUtZuNXQ92-Q_lLLalASJ'
 
 console.log('🧪 Starting Report Status Update & Moderation Test Suite...\n')
 
