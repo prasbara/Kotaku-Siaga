@@ -1,23 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   typescript: {
-    ignoreBuildErrors: true,
-  },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
-  outputFileTracingExcludes: {
-    '*': [
-      'kotaku_siaga_presentation.mp4',
-      'yolov8n.pt',
-      '*.docx',
-      '*.pdf',
-      'asset file laporan/**',
-      'tests/**',
-      'scratch/**',
-      'docs/**',
-      'proposal/**',
-    ],
+    ignoreBuildErrors: false,
   },
   images: {
     formats: ['image/avif', 'image/webp'],
