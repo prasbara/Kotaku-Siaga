@@ -1,0 +1,25 @@
+# Large binary files, presentations, and documents
+kotaku_siaga_presentation.mp4
+yolov8n.pt
+*.docx
+*.pdf
+asset file laporan/
+proposal/
+proposal_*.html
+DESIGN.md
+PRODUCTION_DEPLOY.md
+
+# Development and testing files
+tests/
+scratch/
+.data/
+.agents/
+docs/
+supabase/
+*.sql
+
+# Logs and system files
+*.log
+*.tsbuildinfo
+.DS_Store
+Thumbs.db
