@@ -15,8 +15,6 @@ scratch/
 .data/
 .agents/
 docs/
-supabase/
-*.sql
 
 # Logs and system files
 *.log
