@@ -11,8 +11,7 @@ export interface TurnstileVerificationResult {
   isBypassed?: boolean
 }
 
-// Cloudflare Turnstile Secret Key
-const DEFAULT_SECRET_KEY = '0x4AAAAAAE17c7l5rDH4t54pcdLfvE3Bpfg'
+// Cloudflare Turnstile Secret Key (Loaded server-side from environment variables)
 const ALWAYS_PASS_SECRET = '1x0000000000000000000000000000000AA'
 
 export async function verifyTurnstileToken(
@@ -22,7 +21,7 @@ export async function verifyTurnstileToken(
   const secretKey =
     process.env.TURNSTILE_SECRET_KEY ||
     process.env.CLOUDFLARE_TURNSTILE_SECRET_KEY ||
-    DEFAULT_SECRET_KEY
+    ''
 
   // If token is missing
   if (!token || token.trim().length === 0) {

@@ -7,7 +7,8 @@
 export function getSupabaseUrl(): string {
   return (
     process.env.NEXT_PUBLIC_SUPABASE_URL ||
-    'https://njvwdjbaatdjgtuwstie.supabase.co'
+    process.env.SUPABASE_URL ||
+    ''
   )
 }
 
@@ -15,13 +16,15 @@ export function getSupabaseAnonKey(): string {
   return (
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-    'sb_publishable_8NgDDO9xMhkMk8v0aBZGRQ_ruE9gRrb'
+    process.env.SUPABASE_ANON_KEY ||
+    ''
   )
 }
 
 export function getSupabaseServiceRoleKey(): string {
   return (
     process.env.SUPABASE_SERVICE_ROLE_KEY ||
-    'sb_secret_YVZngOJmOtUUtZuNXQ92-Q_lLLalASJ'
+    process.env.SUPABASE_SECRET_KEY ||
+    ''
   )
 }

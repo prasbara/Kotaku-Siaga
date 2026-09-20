@@ -15,8 +15,8 @@ try {
   })
 } catch (e) {}
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || envLocal.NEXT_PUBLIC_SUPABASE_URL || 'https://njvwdjbaatdjgtuwstie.supabase.co'
-const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || envLocal.SUPABASE_SERVICE_ROLE_KEY || 'sb_secret_YVZngOJmOtUUtZuNXQ92-Q_lLLalASJ'
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || envLocal.NEXT_PUBLIC_SUPABASE_URL || ''
+const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || envLocal.SUPABASE_SERVICE_ROLE_KEY || ''
 
 console.log('🧪 Starting Report Status Update & Moderation Test Suite...\n')
 

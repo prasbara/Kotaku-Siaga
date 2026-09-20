@@ -15,9 +15,9 @@ try {
   })
 } catch (e) {}
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || envLocal.NEXT_PUBLIC_SUPABASE_URL || 'https://njvwdjbaatdjgtuwstie.supabase.co'
-const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || envLocal.SUPABASE_SERVICE_ROLE_KEY || 'sb_secret_YVZngOJmOtUUtZuNXQ92-Q_lLLalASJ'
-const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || envLocal.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_8NgDDO9xMhkMk8v0aBZGRQ_ruE9gRrb'
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || envLocal.NEXT_PUBLIC_SUPABASE_URL || ''
+const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || envLocal.SUPABASE_SERVICE_ROLE_KEY || ''
+const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || envLocal.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
 
 console.log('🧪 Starting Verification Status End-to-End Test Suite...\n')
 

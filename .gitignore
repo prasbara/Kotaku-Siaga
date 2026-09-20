@@ -16,5 +16,6 @@ scratch/
 .data/
 tests/*.log
 public/uploads/
+recordings/
 __pycache__/
 *.pyc

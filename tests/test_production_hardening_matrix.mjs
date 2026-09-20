@@ -18,9 +18,9 @@ try {
   })
 } catch (e) {}
 
-const url = envLocal.NEXT_PUBLIC_SUPABASE_URL || 'https://njvwdjbaatdjgtuwstie.supabase.co'
-const serviceKey = envLocal.SUPABASE_SERVICE_ROLE_KEY || 'sb_secret_YVZngOJmOtUUtZuNXQ92-Q_lLLalASJ'
-const anonKey = envLocal.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_8NgDDO9xMhkMk8v0aBZGRQ_ruE9gRrb'
+const url = process.env.NEXT_PUBLIC_SUPABASE_URL || envLocal.NEXT_PUBLIC_SUPABASE_URL || ''
+const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || envLocal.SUPABASE_SERVICE_ROLE_KEY || ''
+const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || envLocal.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
 
 console.log('=================================================================')
 console.log('   KOTAKU SIAGA — COMPREHENSIVE PRODUCTION HARDENING MATRIX')

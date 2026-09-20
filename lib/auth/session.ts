@@ -15,12 +15,18 @@ const SESSION_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000 // 7 days
 const enc = new TextEncoder()
 
 function getSessionSecret(): string {
-  return (
+  const secret =
     process.env.ADMIN_SESSION_SECRET ||
     process.env.SUPABASE_SERVICE_ROLE_KEY ||
-    process.env.SEED_SECRET ||
-    'kotaku-siaga-production-fallback-key-2026-secure-hmac-seed'
-  )
+    process.env.SUPABASE_SECRET_KEY ||
+    process.env.SEED_SECRET
+
+  if (secret) return secret
+
+  if (process.env.NODE_ENV === 'production') {
+    console.warn('[Security Warning] ADMIN_SESSION_SECRET or SUPABASE_SERVICE_ROLE_KEY is not set in environment.')
+  }
+  return 'kotaku-siaga-dev-session-key-local-only'
 }
 
 async function getHmacKey(secret: string): Promise<CryptoKey> {

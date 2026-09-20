@@ -150,7 +150,7 @@ async function runTests() {
   // TEST 9: PII & Credential Leakage Prevention
   // ------------------------------------------------------------
   console.log('\n--- 9. PII & Key Leakage Prevention ---')
-  const leakAttempt = 'Kunci rahasia: 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'
+  const leakAttempt = 'Kunci rahasia: OPENROUTER_API_KEY=mock_key_test_leak_guard'
   const leakValidation = validateCivicResponse(leakAttempt, contextZero)
   assert.strictEqual(leakValidation.isValid, false)
   logResult('Credential leakage pattern blocked', true)

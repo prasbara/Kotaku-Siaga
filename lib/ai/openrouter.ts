@@ -7,17 +7,13 @@
 
 const OPENROUTER_BASE_URL = 'https://openrouter.ai/api/v1'
 
-// The 4 Production OpenRouter API Keys (1 Primary + 3 Fallbacks)
-export const OPENROUTER_KEYS_POOL: string[] = [
-  // 1. Primary Key
-  process.env.OPENROUTER_API_KEY || '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',
-  // 2. Fallback Key 1
-  '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',
-  // 3. Fallback Key 2
-  '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',
-  // 4. Fallback Key 3
-  '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',
-]
+// Production OpenRouter API Keys Pool (Loaded strictly from Server-Side Environment Variables)
+export const OPENROUTER_KEYS_POOL: string[] = []
+
+if (process.env.OPENROUTER_API_KEY) {
+  const primary = process.env.OPENROUTER_API_KEY.trim()
+  if (primary) OPENROUTER_KEYS_POOL.push(primary)
+}
 
 // Allow extra fallback keys from env if configured
 if (process.env.OPENROUTER_FALLBACK_KEYS) {
@@ -59,7 +55,7 @@ const telemetryState: OpenRouterTelemetry = {
   model: process.env.OPENROUTER_MODEL || 'openrouter/free',
   activeKeyIndex: 0,
   totalKeys: OPENROUTER_KEYS_POOL.length,
-  activeKeyMasked: maskKey(OPENROUTER_KEYS_POOL[0]),
+  activeKeyMasked: OPENROUTER_KEYS_POOL.length > 0 ? maskKey(OPENROUTER_KEYS_POOL[0]) : 'None',
   keysStatus: OPENROUTER_KEYS_POOL.map((k, i) => ({
     index: i,
     masked: maskKey(k),
@@ -93,7 +89,9 @@ export function getOpenRouterTelemetry(): OpenRouterTelemetry {
   return {
     ...telemetryState,
     totalKeys: OPENROUTER_KEYS_POOL.length,
-    activeKeyMasked: maskKey(OPENROUTER_KEYS_POOL[telemetryState.activeKeyIndex]),
+    activeKeyMasked: OPENROUTER_KEYS_POOL[telemetryState.activeKeyIndex]
+      ? maskKey(OPENROUTER_KEYS_POOL[telemetryState.activeKeyIndex])
+      : 'None',
     failureRate: rate,
   }
 }
@@ -146,7 +144,13 @@ export async function callOpenRouter(
   let lastErrMessage = 'Unknown error'
   const startIndex = telemetryState.activeKeyIndex
 
-  // Attempt current key, if it fails, rotate through all 4 keys
+  if (OPENROUTER_KEYS_POOL.length === 0) {
+    telemetryState.status = 'UNAVAILABLE'
+    telemetryState.lastError = 'OPENROUTER_API_KEY environment variable is not configured on server.'
+    throw new Error('AI ANALYTICS UNAVAILABLE: OPENROUTER_API_KEY environment variable is not configured on server.')
+  }
+
+  // Attempt current key, if it fails, rotate through all available keys
   for (let attempt = 0; attempt < OPENROUTER_KEYS_POOL.length; attempt++) {
     const currentKeyIdx = (startIndex + attempt) % OPENROUTER_KEYS_POOL.length
     const currentKey = OPENROUTER_KEYS_POOL[currentKeyIdx]
@@ -232,6 +236,17 @@ export async function testOpenRouterConnection(): Promise<{
   totalKeys: number
   message: string
 }> {
+  if (OPENROUTER_KEYS_POOL.length === 0) {
+    return {
+      success: false,
+      status: 'DISCONNECTED',
+      latencyMs: 0,
+      activeKeyMasked: 'None',
+      totalKeys: 0,
+      message: 'OPENROUTER_API_KEY environment variable is not configured.',
+    }
+  }
+
   const startTime = Date.now()
 
   for (let i = 0; i < OPENROUTER_KEYS_POOL.length; i++) {
