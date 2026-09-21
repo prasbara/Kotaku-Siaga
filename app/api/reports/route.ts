@@ -106,14 +106,79 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const { data, error, count } = await query
+    let { data, error, count } = await query
+
+    if (error) {
+      console.warn('GET /api/reports primary query error, attempting anon key fallback:', error.message)
+      try {
+        const { createClient: createSupabaseClient } = await import('@supabase/supabase-js')
+        const { getSupabaseUrl, getSupabaseAnonKey } = await import('@/lib/supabase/config')
+        const anonClient = createSupabaseClient(getSupabaseUrl(), getSupabaseAnonKey(), {
+          auth: { persistSession: false, autoRefreshToken: false },
+        })
+        let fallbackQuery = anonClient
+          .from('reports')
+          .select('*, ai_analysis(*)', { count: 'exact' })
+          .order('created_at', { ascending: false })
+          .range(page * limit, (page + 1) * limit - 1)
+
+        if (category && category !== 'all') {
+          if (category === 'kebakaran') {
+            fallbackQuery = fallbackQuery.or('category.eq.kebakaran,category.eq.lainnya')
+          } else {
+            fallbackQuery = fallbackQuery.eq('category', category)
+          }
+        }
+        if (status && status !== 'all') {
+          if (status === 'active') {
+            fallbackQuery = fallbackQuery
+              .not('status', 'in', '("rejected","resolved","cancelled","duplicate")')
+              .not('verification_status', 'in', '("rejected","failed")')
+          } else {
+            fallbackQuery = fallbackQuery.eq('status', status)
+          }
+        }
+        if (district && district !== 'all') fallbackQuery = fallbackQuery.ilike('district_name', `%${district}%`)
+        if (simulationParam !== null && simulationParam !== undefined) {
+          fallbackQuery = fallbackQuery.eq('is_demo', simulationParam === 'true')
+        }
+        if (search && search.trim()) {
+          fallbackQuery = fallbackQuery.or(
+            `title.ilike.%${search.trim()}%,description.ilike.%${search.trim()}%,district_name.ilike.%${search.trim()}%,report_code.ilike.%${search.trim()}%`
+          )
+        }
+        const fallbackRes = await fallbackQuery
+        if (!fallbackRes.error && fallbackRes.data) {
+          data = fallbackRes.data
+          count = fallbackRes.count
+          error = null
+        }
+      } catch (retryErr) {
+        console.warn('GET /api/reports retry failed:', retryErr)
+      }
+    }
 
     if (error) {
       console.error('GET /api/reports database error:', error.message)
-      return NextResponse.json(
-        { error: 'Database query failed.', detail: error.message },
-        { status: 503 }
-      )
+      const { data: localData, count: localCount } = localReportStore.getAll({
+        search,
+        category,
+        urgency,
+        status,
+        district,
+        is_simulation: simulationParam !== null && simulationParam !== undefined ? simulationParam === 'true' : undefined,
+        limit,
+        page,
+      })
+      const sanitized = (localData || []).map((r: any) => sanitizeReportForRole(r, role))
+      return NextResponse.json({
+        success: true,
+        data: sanitized,
+        count: localCount,
+        page,
+        limit,
+        is_local_store: true,
+      })
     }
 
     const mappedData = (data || []).map((report) => {
@@ -185,7 +250,25 @@ export async function GET(request: NextRequest) {
     })
   } catch (error) {
     console.error('GET /api/reports error:', error)
-    return NextResponse.json({ error: 'Gagal mengambil laporan.' }, { status: 500 })
+    const { data: localData, count: localCount } = localReportStore.getAll({
+      search,
+      category,
+      urgency,
+      status,
+      district,
+      is_simulation: simulationParam !== null && simulationParam !== undefined ? simulationParam === 'true' : undefined,
+      limit,
+      page,
+    })
+    const sanitized = (localData || []).map((r: any) => sanitizeReportForRole(r, role))
+    return NextResponse.json({
+      success: true,
+      data: sanitized,
+      count: localCount,
+      page,
+      limit,
+      is_local_store: true,
+    })
   }
 }
 

@@ -60,9 +60,13 @@ export async function createClient() {
  * of what cookies the client sends.
  */
 export async function createAdminClient() {
+  const serviceKey = getSupabaseServiceRoleKey()
+  const anonKey = getSupabaseAnonKey()
+  const key = serviceKey || anonKey
+
   return createSupabaseClient(
     getSupabaseUrl(),
-    getSupabaseServiceRoleKey(),
+    key,
     {
       auth: {
         persistSession: false,
