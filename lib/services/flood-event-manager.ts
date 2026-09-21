@@ -171,6 +171,28 @@ class FloodEventManager {
       this.observations = this.observations.slice(-800)
     }
     this.saveObservations()
+
+    // Asynchronously sync observation to Supabase if configured
+    import('@/lib/supabase/server')
+      .then(async ({ createAdminClient, isSupabaseConfigured }) => {
+        if (!isSupabaseConfigured()) return
+        const supabase = await createAdminClient()
+        await supabase.from('cctv_observations').insert({
+          camera_id: obs.camera_id,
+          camera_code: obs.camera_code,
+          timestamp: obs.timestamp,
+          visual_score: obs.visual_score,
+          water_region_score: obs.water_region_score,
+          road_coverage_score: obs.road_coverage_score,
+          temporal_score: obs.temporal_score,
+          status: obs.status,
+          estimated_visual_severity: obs.estimated_visual_severity,
+          evidence_url: obs.evidence_url || null,
+        })
+      })
+      .catch((err) => {
+        console.warn('Background sync to cctv_observations failed:', err?.message || err)
+      })
   }
 
   /**

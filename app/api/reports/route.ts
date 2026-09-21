@@ -737,6 +737,11 @@ export async function POST(request: NextRequest) {
 
     // Supabase Insert — Safe & backward-compatible payload with constraint fallback
     const supabase = await createAdminClient()
+    const parsedWaterHeight =
+      incident_details?.water_height_cm !== undefined && incident_details?.water_height_cm !== null
+        ? Number(incident_details.water_height_cm)
+        : null
+
     const insertPayload: any = {
       report_code: reportCode,
       category,
@@ -754,8 +759,20 @@ export async function POST(request: NextRequest) {
       photo_url: primaryEvidence?.photoUrl || photo_url || (rawPhotos[0] ?? null),
       photo_hash: validatedPhotoSha256,
       photo_taken_at: exifTimestampResult?.capture_timestamp || photo_taken_at || null,
+      reported_at: reported_at || new Date().toISOString(),
       reporter_name,
       reporter_contact: normalizedPhone,
+      reporter_email: normalizedEmail,
+      reporter_phone: normalizedPhone,
+      email_verified: Boolean(email_verified),
+      turnstile_verified: true,
+      abuse_score: abuseScore,
+      client_session_id: client_session_id || null,
+      client_ip_hash: clientIpHash || null,
+      incident_cluster_id: clusterResult.clusterId || null,
+      independent_reporter_count: clusterResult.independentReporterCount || 1,
+      corroboration_count: clusterResult.totalReportsInCluster || 1,
+      water_height_cm: isNaN(parsedWaterHeight as any) ? null : parsedWaterHeight,
       is_demo: isSimulationReport,
       district_name: district_name || verification.metadata.nearest_district || null,
       address: address || null,
@@ -782,6 +799,47 @@ export async function POST(request: NextRequest) {
         { error: 'Gagal menyimpan laporan ke database.', detail: error.message },
         { status: 503 }
       )
+    }
+
+    // Link cluster first_report_id if new cluster
+    if (data?.id && clusterResult.clusterId) {
+      try {
+        await supabase
+          .from('incident_clusters')
+          .update({ first_report_id: data.id })
+          .eq('id', clusterResult.clusterId)
+          .is('first_report_id', null)
+      } catch (clusterUpdateErr) {
+        console.warn('Could not link cluster first_report_id:', clusterUpdateErr)
+      }
+    }
+
+    // Auto-create initial connected ai_analysis record
+    if (data?.id) {
+      try {
+        const aiCategory = primaryEvidence?.ai?.detected_category || category
+        const aiConfidence = primaryEvidence?.ai?.confidence || (verification.credibilityScore / 100)
+        const aiSeverity = urgency === 'kritis' ? 'critical' : urgency === 'tinggi' ? 'high' : 'medium'
+        const aiSummary = `Laporan terverifikasi sistem AI dengan keyakinan ${Math.round(aiConfidence * 100)}%. Indikasi kejadian ${category} di wilayah ${data.district_name || 'Kota Semarang'}.`
+        const aiRecommendation = category === 'kebakaran'
+          ? 'Kerahkan unit pos pemadam kebakaran terdekat dan amankan hidran/akses darurat.'
+          : ['banjir', 'genangan', 'rob'].includes(category)
+          ? 'Aktivasi rumah pompa polder dan pantau status kenaikan air secara berkala.'
+          : 'Koordinasikan petugas TRC BPBD untuk penanganan cepat di lapangan.'
+
+        await supabase.from('ai_analysis').insert({
+          report_id: data.id,
+          original_category: category,
+          ai_category: aiCategory,
+          ai_confidence: aiConfidence,
+          severity: aiSeverity,
+          summary: aiSummary,
+          recommended_action: aiRecommendation,
+          model_name: 'meta-llama/llama-3.2-11b-vision-instruct',
+        })
+      } catch (aiInsertErr) {
+        console.warn('ai_analysis insert error (non-fatal):', aiInsertErr)
+      }
     }
 
     // Insert individual evidence items into report_evidence table

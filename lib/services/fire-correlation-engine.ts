@@ -123,7 +123,30 @@ export class FireCorrelationEngine {
     generated_cases: FireInvestigationCase[]
   }> {
     const observations = localFireStore.getObservations({ limit: 100 })
-    const { data: allReports } = localReportStore.getAll({ limit: 200 })
+    let allReports: Report[] = []
+
+    try {
+      const { createAdminClient, isSupabaseConfigured } = await import('@/lib/supabase/server')
+      if (isSupabaseConfigured()) {
+        const supabase = await createAdminClient()
+        const { data: dbReports } = await supabase
+          .from('reports')
+          .select('*, ai_analysis(*)')
+          .in('category', ['kebakaran', 'lainnya'])
+          .order('created_at', { ascending: false })
+          .limit(100)
+        if (dbReports && dbReports.length > 0) {
+          allReports = dbReports as Report[]
+        }
+      }
+    } catch (e) {
+      console.warn('Fire correlation supabase reports fallback:', e)
+    }
+
+    if (allReports.length === 0) {
+      const local = localReportStore.getAll({ limit: 200 })
+      allReports = (local.data || []) as Report[]
+    }
 
     // Filter only active, verified/investigating fire reports (strictly exclude rejected/resolved)
     const fireCitizenReports = allReports.filter(isActiveFireReport)
