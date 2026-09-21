@@ -41,11 +41,14 @@ export async function GET(
       }
     } else {
       const supabase = await createAdminClient()
-      const { data, error } = await supabase
-        .from('reports')
-        .select('id, report_code, latitude, longitude, created_at, category, title')
-        .or(`id.eq.${reportId},report_code.eq.${reportId}`)
-        .single()
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(reportId)
+      let query = supabase.from('reports').select('id, report_code, latitude, longitude, created_at, category, title')
+      if (isUuid) {
+        query = query.eq('id', reportId)
+      } else {
+        query = query.eq('report_code', reportId)
+      }
+      const { data, error } = await query.single()
 
       if (error) {
         if (error.code === 'PGRST116') {

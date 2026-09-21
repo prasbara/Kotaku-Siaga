@@ -20,12 +20,14 @@ export async function PATCH(
 
     if (isSupabaseConfigured()) {
       const supabase = await createAdminClient()
-      const { data, error } = await supabase
-        .from('incident_clusters')
-        .update(updatePayload)
-        .or(`id.eq.${id},cluster_code.eq.${id}`)
-        .select()
-        .single()
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
+      let query = supabase.from('incident_clusters').update(updatePayload)
+      if (isUuid) {
+        query = query.eq('id', id)
+      } else {
+        query = query.eq('cluster_code', id)
+      }
+      const { data, error } = await query.select().single()
 
       if (!error && data) {
         return NextResponse.json({

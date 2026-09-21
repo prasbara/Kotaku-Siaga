@@ -20,11 +20,14 @@ export async function GET(
   try {
     const { id } = await params
     const supabase = await createAdminClient()
-    const { data, error } = await supabase
-      .from('reports')
-      .select('*, ai_analysis(*)')
-      .eq('id', id)
-      .single()
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
+    let query = supabase.from('reports').select('*, ai_analysis(*)')
+    if (isUuid) {
+      query = query.eq('id', id)
+    } else {
+      query = query.eq('report_code', id)
+    }
+    const { data, error } = await query.single()
 
     if (error) {
       if (error.code === 'PGRST116') {
@@ -259,12 +262,14 @@ export async function PATCH(
 
     // Safe retry loop (2 attempts with 250ms backoff for transient issues)
     for (let attempt = 1; attempt <= 2; attempt++) {
-      const res = await supabase
-        .from('reports')
-        .update(updateData)
-        .eq('id', id)
-        .select()
-        .single()
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
+      let updateQuery = supabase.from('reports').update(updateData)
+      if (isUuid) {
+        updateQuery = updateQuery.eq('id', id)
+      } else {
+        updateQuery = updateQuery.eq('report_code', id)
+      }
+      const res = await updateQuery.select().single()
 
       if (!res.error && res.data) {
         result = res

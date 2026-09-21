@@ -37,11 +37,14 @@ const STATUS_ORDER: Record<string, number> = {
 async function fetchReport(id: string): Promise<Report | null> {
   try {
     const supabase = await createClient()
-    const { data, error } = await supabase
-      .from('reports')
-      .select('*, ai_analysis(*)')
-      .eq('id', id)
-      .single()
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
+    let query = supabase.from('reports').select('*, ai_analysis(*)')
+    if (isUuid) {
+      query = query.eq('id', id)
+    } else {
+      query = query.eq('report_code', id)
+    }
+    const { data, error } = await query.single()
 
     if (!error && data) {
       return data as Report
